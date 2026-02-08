@@ -1,34 +1,80 @@
-import { useEffect } from "react"
-import { useRef } from "react"
-import Editing_Buttons from "./Editing_Buttons"
+import { useEffect } from "react";
+import { useRef } from "react";
+import Editing_Buttons from "./Editing_Buttons";
+import { useState } from "react";
 
 export default function Canvas() {
-  const canvasRef = useRef(null)
+	const canvasRef = useRef(null);
+	const contextRef = useRef(null);
+	const [isDrawing, setIsDrawing] = useState(false);
 
-  useEffect(() => {})
+	useEffect(() => {
+		const canvas = canvasRef.current;
 
-  return (
+		canvas.width = window.innerWidth * 2;
+		canvas.height = window.innerHeight * 2;
+		canvas.style.width = `${window.innerWidth}px`;
+		canvas.style.height = `${window.innerHeight}px`;
 
-    <div className="p-2 w-full h-full relative">
-      <canvas
-        id="canvas"
-        ref={canvasRef}
+		const ctx = canvas.getContext("2d");
+    ctx.scale(2, 2);
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 5;
 
-        className="border-2 border-gray-300 rounded-lg w-full h-full "
-        style={{
-         background: "#fafafa",
-        backgroundImage: `
+    contextRef.current = ctx;
+
+  });
+
+
+  // Function A: When mouse is pressed down
+  const startDrawing = ({ nativeEvent }) => {
+    const { offsetX, offsetY } = nativeEvent;
+    contextRef.current.beginPath();
+    contextRef.current.moveTo(offsetX, offsetY);
+    setIsDrawing(true);
+  };
+
+  // Function B: When mouse is released
+  const finishDrawing = () => {
+    contextRef.current.closePath();
+    setIsDrawing(false);
+  };
+
+  // Function C: When mouse moves
+  const draw = ({ nativeEvent }) => {
+    if (!isDrawing) {
+      return; // If mouse isn't down, don't draw anything
+    }
+    const { offsetX, offsetY } = nativeEvent;
+    contextRef.current.lineTo(offsetX, offsetY);
+    contextRef.current.stroke();
+  };
+
+
+	return (
+		<div className="p-2 w-full h-full relative">
+			<canvas
+				id="canvas"
+        onMouseDown={startDrawing}
+        onMouseUp={finishDrawing}
+        onMouseMove={draw}
+				ref={canvasRef}
+				className="border-2 border-gray-300 rounded-lg w-full h-full "
+				style={{
+					background: "#fafafa",
+					backgroundImage: `
           linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px),
           linear-gradient(to bottom, rgba(0,0,0,0.04) 1px, transparent 1px),
           radial-gradient(circle, rgba(0,0,0,0.08) 1px, transparent 1px)
         `,
-        backgroundSize: "24px 24px, 24px 24px, 24px 24px",
-      }}
-      >
-         Your browser does not support the HTML5 canvas element.
-      </canvas>
+					backgroundSize: "24px 24px, 24px 24px, 24px 24px",
+				}}
+			>
+				Your browser does not support the HTML5 canvas element.
+			</canvas>
 
-      <Editing_Buttons />
-    </div>
-  )
+			<Editing_Buttons />
+		</div>
+	);
 }
