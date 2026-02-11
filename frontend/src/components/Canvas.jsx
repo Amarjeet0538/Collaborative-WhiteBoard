@@ -17,30 +17,41 @@ export default function Canvas() {
 		canvas.style.height = `${window.innerHeight}px`;
 
 		const ctx = canvas.getContext("2d");
+
+		//pen;
 		ctx.scale(2, 2);
 		ctx.lineCap = "round";
 		ctx.strokeStyle = "black";
 		ctx.lineWidth = 5;
 
 		contextRef.current = ctx;
-	});
+	},[]);
 
 	// When mouse is pressed down
-	const startDrawing = ({ e }) => {
+	const startDrawing = ({ nativeEvent }) => {
+		const {offsetX, offsetY} = nativeEvent;
 		setIsDrawing(true);
+		contextRef.current.beginPath();
+		contextRef.current.moveTo(offsetX, offsetY);
 	};
 
-	// When mouse is released
+	// When mouse is releasedz
 	const finishDrawing = () => {
 		setIsDrawing(false);
+		contextRef.current.closePath();
 	};
 
 	// When mouse moves
-	const draw = ({ e }) => {
+	const draw = ({ nativeEvent }) => {
 		if (!isDrawing) {
 			return;
 		}
+		const {offsetX, offsetY} = nativeEvent;
+		contextRef.current.lineTo(offsetX, offsetY);
+		contextRef.current.stroke();
 	};
+
+
 
 	return (
 		<div className="p-2 w-full h-full relative">
