@@ -1,9 +1,8 @@
 import { useEffect } from "react";
 import { useRef } from "react";
-import Editing_Buttons from "./Editing_Buttons";
 import { useState } from "react";
 
-export default function Canvas() {
+export default function Canvas({ tool }) {
 	const canvasRef = useRef(null);
 	const contextRef = useRef(null);
 	const [isDrawing, setIsDrawing] = useState(false);
@@ -25,11 +24,11 @@ export default function Canvas() {
 		ctx.lineWidth = 5;
 
 		contextRef.current = ctx;
-	},[]);
+	}, []);
 
 	// When mouse is pressed down
 	const startDrawing = ({ nativeEvent }) => {
-		const {offsetX, offsetY} = nativeEvent;
+		const { offsetX, offsetY } = nativeEvent;
 		setIsDrawing(true);
 		contextRef.current.beginPath();
 		contextRef.current.moveTo(offsetX, offsetY);
@@ -43,15 +42,19 @@ export default function Canvas() {
 
 	// When mouse moves
 	const draw = ({ nativeEvent }) => {
-		if (!isDrawing) {
-			return;
+		if (!isDrawing || tool === "hand") return;
+
+		if (tool === "eraser") {
+			contextRef.current.globalCompositeOperation = "destination-out";
+			contextRef.current.lineWidth = 20;
+		} else {
+			contextRef.current.globalCompositeOperation = "source-over";
 		}
-		const {offsetX, offsetY} = nativeEvent;
+
+		const { offsetX, offsetY } = nativeEvent;
 		contextRef.current.lineTo(offsetX, offsetY);
 		contextRef.current.stroke();
 	};
-
-
 
 	return (
 		<div className="p-2 w-full h-full relative">
@@ -74,8 +77,6 @@ export default function Canvas() {
 			>
 				Your browser does not support the HTML5 canvas element.
 			</canvas>
-
-			<Editing_Buttons />
 		</div>
 	);
 }
