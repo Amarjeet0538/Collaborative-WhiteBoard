@@ -1,8 +1,9 @@
 import { useEffect } from "react";
+import { use } from "react";
 import { useRef } from "react";
 import { useState } from "react";
 
-export default function Canvas({ tool }) {
+export default function Canvas({ tool, color, penSize }) {
 	const canvasRef = useRef(null);
 	const contextRef = useRef(null);
 	const [isDrawing, setIsDrawing] = useState(false);
@@ -20,11 +21,11 @@ export default function Canvas({ tool }) {
 		//pen;
 		ctx.scale(2, 2);
 		ctx.lineCap = "round";
-		ctx.strokeStyle = "black";
-		ctx.lineWidth = 5;
+		ctx.strokeStyle = color;
+		ctx.lineWidth = penSize;
 
 		contextRef.current = ctx;
-	}, []);
+	}, [color, penSize]);
 
 	// When mouse is pressed down
 	const startDrawing = ({ nativeEvent }) => {
@@ -49,6 +50,8 @@ export default function Canvas({ tool }) {
 			contextRef.current.lineWidth = 20;
 		} else {
 			contextRef.current.globalCompositeOperation = "source-over";
+			contextRef.current.lineWidth = penSize;
+			contextRef.current.strokeStyle = color;
 		}
 
 		const { offsetX, offsetY } = nativeEvent;

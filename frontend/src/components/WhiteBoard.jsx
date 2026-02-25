@@ -1,17 +1,22 @@
 import Canvas from "./Canvas";
 import Editing_Buttons from "./Editing_Buttons";
 import { useState } from "react";
-import { useEffect } from "react";
 
 export default function WhiteBoard() {
 	const [tool, setTool] = useState("hand");
-	useEffect(() => {
-		console.log(tool);
-	}, [tool]);
+	const [color, setColor] = useState("black");
+	const [penSize, setPenSize] = useState(5);
+
 	return (
 		<>
-			<Canvas tool={tool} />
-			<Editing_Buttons setTool={setTool} />
+			<Canvas tool={tool} color={color} penSize={penSize} />
+			<Editing_Buttons
+				setTool={setTool}
+				color={color}
+				setColor={setColor}
+				penSize={penSize}
+				setPenSize={setPenSize}
+			/>
 		</>
 	);
 }

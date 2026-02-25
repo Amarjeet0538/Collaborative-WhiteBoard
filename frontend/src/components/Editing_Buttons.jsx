@@ -1,9 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { PenLine, Hand, Eraser } from "lucide-react";
-import ToolDetails from "./ToolDetails";
+import PenTool from "./ToolDetails/PenTool";
 import { useState } from "react";
 
-export default function Editing_Buttons({ setTool }) {
+export default function Editing_Buttons({
+	color,
+	setColor,
+	penSize,
+	setPenSize,
+	setTool,
+}) {
 	const [details, setDetails] = useState(false);
 
 	return (
@@ -12,10 +18,25 @@ export default function Editing_Buttons({ setTool }) {
 				variant="outline"
 				size="lg"
 				className="text-lg cursor-pointer"
-				onClick={() => {setTool("pen"); setDetails(!details);}}
+				onClick={() => {
+					setTool("pen");
+					setDetails(!details);
+				}}
 			>
 				<PenLine />
-				{details && <ToolDetails className=" bottom-16 left-1/2 transform -translate-x-1/2" />}
+
+				{details && (
+					<div
+						className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50"
+					>
+						<PenTool
+							color={color}
+							setColor={setColor}
+							penSize={penSize}
+							setPenSize={setPenSize}
+						/>
+					</div>
+				)}
 			</Button>
 
 			<Button
