@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import { use } from "react";
 import { useRef } from "react";
 import { useState } from "react";
+import { useCallback } from "react";
 
-export default function Canvas({ tool, color, penSize }) {
+export default function Canvas({ tool, color, penSize, eraserSize,onClearCanvas }) {
 	const canvasRef = useRef(null);
 	const contextRef = useRef(null);
 	const [isDrawing, setIsDrawing] = useState(false);
@@ -25,6 +25,12 @@ export default function Canvas({ tool, color, penSize }) {
 		ctx.lineWidth = penSize;
 
 		contextRef.current = ctx;
+	}, []);
+
+	useEffect(() => {
+		if (!contextRef.current) return;
+		contextRef.current.strokeStyle = color;
+		contextRef.current.lineWidth = penSize;
 	}, [color, penSize]);
 
 	// When mouse is pressed down
@@ -47,7 +53,7 @@ export default function Canvas({ tool, color, penSize }) {
 
 		if (tool === "eraser") {
 			contextRef.current.globalCompositeOperation = "destination-out";
-			contextRef.current.lineWidth = 20;
+			contextRef.current.lineWidth = eraserSize;
 		} else {
 			contextRef.current.globalCompositeOperation = "source-over";
 			contextRef.current.lineWidth = penSize;
@@ -59,6 +65,19 @@ export default function Canvas({ tool, color, penSize }) {
 		contextRef.current.stroke();
 	};
 
+	const clearCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    contextRef.current.clearRect(0, 0, canvas.width, canvas.height);
+  }, []);
+
+	useEffect(() => {
+    if (onClearCanvas) onClearCanvas(clearCanvas);
+  }, [clearCanvas, onClearCanvas]);
+
+
+	const cursorStyle =
+		tool === "hand" ? "grab" : tool === "eraser" ? "cell" : "crosshair";
+
 	return (
 		<div className="p-2 w-full h-full relative">
 			<canvas
@@ -69,6 +88,7 @@ export default function Canvas({ tool, color, penSize }) {
 				ref={canvasRef}
 				className="border-2 border-gray-300 rounded-lg w-full h-full "
 				style={{
+					cursor: cursorStyle,
 					background: "#fafafa",
 					backgroundImage: `
           linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px),
