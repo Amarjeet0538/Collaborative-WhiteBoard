@@ -5,13 +5,13 @@ import { useEffect } from "react";
 
 export default function WhiteBoard() {
 	const [tool, setTool] = useState("hand");
-	useEffect(()=>{
-    console.log(tool)
-  },[tool])
+	useEffect(() => {
+		console.log(tool);
+	}, [tool]);
 	return (
 		<>
 			<Canvas tool={tool} />
-			<Editing_Buttons setTool={setTool}/>
+			<Editing_Buttons setTool={setTool} />
 		</>
 	);
 }

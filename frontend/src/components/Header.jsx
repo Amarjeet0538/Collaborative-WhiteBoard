@@ -15,12 +15,12 @@ export default function Header() {
           <Label htmlFor="dark-mode" className="text-lg">Dark Mode</Label>
         </div>
 
-        <Button variant="outline" size="lg" className="text-lg">
+        <Button variant="outline" size="lg" className="text-lg cursor-pointer">
           Login
         </Button>
       </div>
 
-      
+
 		</div>
 	);
 }
