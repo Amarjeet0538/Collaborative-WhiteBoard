@@ -14,7 +14,7 @@ export default function PenTool({ color, setColor, penSize, setPenSize }) {
 						onClick={() => setColor(c)}
 					></button>
 				))}
-        <EllipsisVertical />
+				<EllipsisVertical />
 				{/* color picker */}
 				<input
 					type="color"
@@ -24,13 +24,13 @@ export default function PenTool({ color, setColor, penSize, setPenSize }) {
 				></input>
 			</div>
 
-				<input
-					type="range"
-					value={penSize}
-					min="1"
-					max="10"
-					onChange={(e) => setPenSize(Number(e.target.value))}
-				/>
+			<input
+				type="range"
+				value={penSize}
+				min="1"
+				max="10"
+				onChange={(e) => setPenSize(Number(e.target.value))}
+			/>
 		</div>
 	);
 }

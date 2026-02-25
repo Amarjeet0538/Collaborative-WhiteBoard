@@ -8,6 +8,7 @@ export default function Whiteboard() {
 	const [color, setColor] = useState("black");
 	const [penSize, setPenSize] = useState(5);
 	const [eraserSize, setEraserSize] = useState(20);
+	const [zoom, setZoom] = useState(1);
 	const clearCanvasRef = useRef(null);
 
 	return (
@@ -17,8 +18,9 @@ export default function Whiteboard() {
 				color={color}
 				penSize={penSize}
 				eraserSize={eraserSize}
-				onClearCanvas={(fn) => clearCanvasRef.current = fn
-				}
+				zoom={zoom}
+				setZoom={setZoom}
+				onClearCanvas={(fn) => (clearCanvasRef.current = fn)}
 			/>
 			<Editing_Buttons
 				setTool={setTool}
@@ -28,6 +30,8 @@ export default function Whiteboard() {
 				setPenSize={setPenSize}
 				eraserSize={eraserSize}
 				setEraserSize={setEraserSize}
+				zoom={zoom}
+				setZoom={setZoom}
 				clearCanvas={() => clearCanvasRef.current?.()}
 			/>
 		</>

@@ -3,23 +3,34 @@ import { useRef } from "react";
 import { useState } from "react";
 import { useCallback } from "react";
 
-export default function Canvas({ tool, color, penSize, eraserSize,onClearCanvas }) {
+export default function Canvas({
+	tool,
+	color,
+	penSize,
+	eraserSize,
+	onClearCanvas,
+	zoom,
+	setZoom,
+}) {
 	const canvasRef = useRef(null);
 	const contextRef = useRef(null);
 	const [isDrawing, setIsDrawing] = useState(false);
 
+	
 	useEffect(() => {
 		const canvas = canvasRef.current;
 
-		canvas.width = window.innerWidth * 2;
-		canvas.height = window.innerHeight * 2;
-		canvas.style.width = `${window.innerWidth}px`;
-		canvas.style.height = `${window.innerHeight}px`;
+		const rect = canvas.getBoundingClientRect();
+		const dpr = window.devicePixelRatio || 2;
+
+		canvas.width = rect.width * dpr;
+		canvas.height = rect.height * dpr;
 
 		const ctx = canvas.getContext("2d");
 
 		//pen;
-		ctx.scale(2, 2);
+		ctx.scale(dpr, dpr);
+		ctx.lineJoin = "round";
 		ctx.lineCap = "round";
 		ctx.strokeStyle = color;
 		ctx.lineWidth = penSize;
@@ -66,14 +77,18 @@ export default function Canvas({ tool, color, penSize, eraserSize,onClearCanvas 
 	};
 
 	const clearCanvas = useCallback(() => {
-    const canvas = canvasRef.current;
-    contextRef.current.clearRect(0, 0, canvas.width, canvas.height);
-  }, []);
+		const canvas = canvasRef.current;
+		contextRef.current.clearRect(0, 0, canvas.width, canvas.height);
+	}, []);
+
+	const handleWheel = (e) => {
+		e.preventDefault();
+
+	};
 
 	useEffect(() => {
-    if (onClearCanvas) onClearCanvas(clearCanvas);
-  }, [clearCanvas, onClearCanvas]);
-
+		if (onClearCanvas) onClearCanvas(clearCanvas);
+	}, [clearCanvas, onClearCanvas]);
 
 	const cursorStyle =
 		tool === "hand" ? "grab" : tool === "eraser" ? "cell" : "crosshair";
@@ -85,6 +100,7 @@ export default function Canvas({ tool, color, penSize, eraserSize,onClearCanvas 
 				onMouseDown={startDrawing}
 				onMouseUp={finishDrawing}
 				onMouseMove={draw}
+				onWheel={handleWheel}
 				ref={canvasRef}
 				className="border-2 border-gray-300 rounded-lg w-full h-full "
 				style={{

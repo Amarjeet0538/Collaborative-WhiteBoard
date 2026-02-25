@@ -1,4 +1,3 @@
-
 export default function EraserTool({ eraserSize, setEraserSize, clearCanvas }) {
 	return (
 		<div className=" p-4 bg-white rounded-lg shadow-lg flex flex-col gap-4">
