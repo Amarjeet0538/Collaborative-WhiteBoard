@@ -16,7 +16,6 @@ export default function Canvas({
 	const contextRef = useRef(null);
 	const [isDrawing, setIsDrawing] = useState(false);
 
-	
 	useEffect(() => {
 		const canvas = canvasRef.current;
 
@@ -83,7 +82,6 @@ export default function Canvas({
 
 	const handleWheel = (e) => {
 		e.preventDefault();
-
 	};
 
 	useEffect(() => {

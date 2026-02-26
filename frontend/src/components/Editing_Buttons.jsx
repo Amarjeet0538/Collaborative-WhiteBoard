@@ -26,7 +26,7 @@ export default function Editing_Buttons({
 	return (
 		<div className="flex gap-2 absolute bottom-6 left-1/2 transform -translate-x-1/2">
 			{/* Zoom Button */}
-			<div className=" absolute -left-45 flex items-center gap-0 bg-white rounded-md">
+			<div className=" flex items-center gap-0 bg-white rounded-md">
 				<Button
 					variant="outline"
 					size="lg"
