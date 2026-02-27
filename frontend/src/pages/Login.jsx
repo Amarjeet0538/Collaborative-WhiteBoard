@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import LiquidWarp from "@/components/ui/background/LiquidWarp";
-import { supabase } from "@/lib/supabase";
+// import { supabase } from "@/lib/supabase";
 
 export default function Login() {
 	const { register, handleSubmit } = useForm();
