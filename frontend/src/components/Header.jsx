@@ -5,16 +5,18 @@ import { Link } from "react-router-dom";
 
 export default function Header() {
 	return (
-		<div className="p-2 flex justify-around ">
-			<span className="font-bold font-heading text-4xl">WhiteBoard</span>
+		<div className="py-3 px-6 w-3/4 flex justify-between bg-gray-100 rounded-l-full rounded-r-full">
+				<span className="font-bold font-heading text-4xl">Colloard</span>
 
-			<div className="flex gap-5 ">
-				<div className="flex items-center space-x-2">
-					<Switch id="dark-mode" />
-					<Label htmlFor="dark-mode" className="text-lg">
-						Dark Mode
-					</Label>
-				</div>
+				<div className="flex gap-5 ">
+          {/* dark mode */}
+					<div className="flex items-center space-x-2">
+						<Switch id="dark-mode" />
+						<Label htmlFor="dark-mode" className="text-lg">
+							Dark Mode
+						</Label>
+					</div>
+
 				<Link to="/login">
 					<Button size="lg" className="text-lg cursor-pointer ">
 						Get Started
@@ -24,3 +26,6 @@ export default function Header() {
 		</div>
 	);
 }
+
+
+

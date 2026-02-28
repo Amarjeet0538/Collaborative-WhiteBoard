@@ -9,4 +9,7 @@ pan-and-zoon ref -- https://harrisonmilbradt.com/blog/canvas-panning-and-zooming
 
 landing page ref -- https://www.canva.com/online-whiteboard/
 
+crdts
+webrtc
+
 Colloard5152
