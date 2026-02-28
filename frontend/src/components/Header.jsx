@@ -16,12 +16,8 @@ export default function Header() {
 					</Label>
 				</div>
 				<Link to="/login">
-					<Button
-						variant="outline"
-						size="lg"
-						className="text-lg cursor-pointer"
-					>
-						Login
+					<Button size="lg" className="text-lg cursor-pointer ">
+						Get Started
 					</Button>
 				</Link>
 			</div>
