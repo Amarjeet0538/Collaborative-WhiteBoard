@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Moon } from "lucide-react";
 import { Sun } from "lucide-react";
-import { Button } from "./ui/button";
 
 export default function DarkModeToggle() {
   const [isDark, setIsDark] = useState(false);
@@ -11,12 +10,11 @@ export default function DarkModeToggle() {
     document.body.classList.toggle("dark");
   };
   return (
-    <Button
-      variant="outline"
+    <button
       onClick={toggleDarkMode}
-      className="cursor-pointer border-none rounded-full "
+      className=" cursor-pointer p-3 mr-5 bg-(--bg-light) transition-all rounded-full"
     >
       {isDark ? <Moon /> : <Sun />}
-    </Button>
+    </button>
   );
 }

@@ -4,6 +4,7 @@
 [] add dark mode by making the color pallete constants
 [] correct the dark mode button it is slightly off
 [] remove shadcn button
+[] add notification use
 use this as ref -- https://dev.to/keyurparalkar/mastering-real-time-collaboration-building-figma-and-miro-inspired-features-with-supabase-57eh
 
 pan-and-zoon ref -- https://harrisonmilbradt.com/blog/canvas-panning-and-zooming
