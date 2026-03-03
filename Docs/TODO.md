@@ -1,8 +1,9 @@
 [] change the project from javascript to typescript
-[] add supabase to backend
+[] remove/replace supabase to backend
 [] add forget password and show password feature
-
-use ref for login page -- https://www.fluxstack.io/
+[] add dark mode by making the color pallete constants
+[] correct the dark mode button it is slightly off
+[] remove shadcn button
 use this as ref -- https://dev.to/keyurparalkar/mastering-real-time-collaboration-building-figma-and-miro-inspired-features-with-supabase-57eh
 
 pan-and-zoon ref -- https://harrisonmilbradt.com/blog/canvas-panning-and-zooming
