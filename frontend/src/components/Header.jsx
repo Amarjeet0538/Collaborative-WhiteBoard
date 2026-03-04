@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import DarkModeToggle from "./DarkModeToggle";
 
@@ -11,11 +10,14 @@ export default function Header() {
 
       <div className="flex gap-5 ">
         {/* dark mode */}
-        i<DarkModeToggle />
+        <DarkModeToggle />
         <Link to="/login">
-          <Button size="lg" className="text-lg cursor-pointer ">
+          <button
+            size="lg"
+            className="text-lg cursor-pointer bg-primary p-3 text-text rounded -md"
+          >
             Get Started
-          </Button>
+          </button>
         </Link>
       </div>
     </div>

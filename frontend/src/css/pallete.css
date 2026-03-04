@@ -1,0 +1,48 @@
+/*my theme variables*/
+
+:root {
+  /* hsl (fallback color) */
+  --bg-dark: hsl(300 10% 90%);
+  --bg: hsl(300 20% 92%);
+  --bg-light: hsl(300 50% 94%);
+  --text: hsl(330 0% 4%);
+  --text-highlighted: hsl(330 0% 1%);
+  --text-muted: hsl(0 0% 28%);
+  --highlight: hsl(300 50% 100%);
+  --border: hsl(300 0% 30%);
+  --border-muted: hsl(340 0% 62%);
+  --primary: hsl(219 51% 32%);
+  --secondary: hsl(43 100% 15%);
+  --danger: hsl(9 21% 41%);
+  --warning: hsl(52 23% 34%);
+  --success: hsl(147 19% 36%);
+  --info: hsl(217 22% 41%);
+  --gradient: linear-gradient(0deg, var(--bg) 95%, var(--bg-light));
+  --gradient-hover: linear-gradient(0deg, var(--bg), var(--bg-light));
+}
+body.dark {
+  /* hsl (fallback color) */
+  --bg-dark: hsl(336 0% 1%);
+  --bg: hsl(330 0% 6%);
+  --bg-light: hsl(0 0% 7%);
+  --text: hsl(0 0% 93%);
+  --text-highlighted: hsl(330 0% 100%);
+  --text-muted: hsl(300 0% 69%);
+  --highlight: hsl(330 0% 39%);
+  --border: hsl(0 0% 28%);
+  --border-muted: hsl(300 0% 18%);
+  --primary: hsl(219 78% 75%);
+  --secondary: hsl(39 54% 61%);
+  --danger: hsl(9 26% 64%);
+  --warning: hsl(52 19% 57%);
+  --success: hsl(146 17% 59%);
+  --info: hsl(217 28% 65%);
+  --gradient: linear-gradient(0deg, var(--bg) 95%, var(--bg-light));
+  --gradient-hover: linear-gradient(0deg, var(--bg), var(--bg-light));
+  --shadow-s: var(--bg-light);
+  --shadow-m: var(--bg-light);
+  --shadow-l: var(--bg-light);
+}
+
+@theme inline {
+}

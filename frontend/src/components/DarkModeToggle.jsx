@@ -12,9 +12,13 @@ export default function DarkModeToggle() {
   return (
     <button
       onClick={toggleDarkMode}
-      className=" cursor-pointer p-3 mr-5 bg-(--bg-light) transition-all rounded-full"
+      className=" cursor-pointer p-3 mr-5 bg-(--bg-light) transition-all rounded-full  hover:shadow-md"
     >
-      {isDark ? <Moon /> : <Sun />}
+      {isDark ? (
+        <Moon className="text-secondary" />
+      ) : (
+        <Sun className="text-primary" />
+      )}
     </button>
   );
 }
