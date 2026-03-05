@@ -1,13 +1,13 @@
 :root {
   /* Base Canvas & Text */
-  --background: hsl(300 20% 92%);
+  --background: hsl(300 5% 92%);
   --foreground: hsl(330 0% 4%);
 
   /* Muted/Highlight Canvas & Text */
   /*--background-muted: hsl(300 10% 90%);
   --background-highlight: hsl(300 50% 93%);*/
   --background-highlight: hsl(300 10% 90%);
-  --background-muted: hsl(300 20% 90%);
+  --background-muted: hsl(300 0% 90%);
   --foreground-highlighted: hsl(330 0% 1%);
   --foreground-muted: hsl(0 0% 28%);
 
