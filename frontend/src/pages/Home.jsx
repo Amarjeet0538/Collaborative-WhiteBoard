@@ -6,7 +6,7 @@ import Card from "../components/Card";
 import Logo from "@/components/Logo";
 import { Link } from "react-router-dom";
 
-export default function Dashboard() {
+export default function Home() {
   const { register, handleSubmit, setValue, control } = useForm();
   const [startDate, endDate] = useWatch({
     control,

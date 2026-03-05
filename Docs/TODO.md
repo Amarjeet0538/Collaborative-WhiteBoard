@@ -10,6 +10,7 @@
 - [-] merge signin and signup
 - [-] add a global state for dark/light mode
 - [ ] add owned boards and shared boards later -- https://dribbble.com/shots/26294998-Collaborative-Whiteboard-Dashboard-Clean-Minimal-UI
+- [ ] replace dashboard with home
 
 mobbin for design
 

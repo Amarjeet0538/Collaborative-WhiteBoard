@@ -2,7 +2,7 @@
 
 ## Real-Time Collaborative Whiteboard with AI/ML Features
 
-|             |               |
+| Colloard    |               |
 | ----------- | ------------- |
 | **Version** | 1.0           |
 | **Date**    | February 2025 |
@@ -246,18 +246,18 @@ Create a modern, real-time collaborative whiteboard application that combines se
 
 ```typescript
 interface Stroke {
-	id: string;
-	type: "freehand" | "shape" | "text" | "image";
-	points: Array<{ x: number; y: number }>;
-	color: string;
-	width: number;
-	userId: string;
-	timestamp: number;
-	// For shapes
-	shapeType?: "circle" | "rectangle" | "line" | "arrow";
-	// For text
-	text?: string;
-	fontSize?: number;
+  id: string;
+  type: "freehand" | "shape" | "text" | "image";
+  points: Array<{ x: number; y: number }>;
+  color: string;
+  width: number;
+  userId: string;
+  timestamp: number;
+  // For shapes
+  shapeType?: "circle" | "rectangle" | "line" | "arrow";
+  // For text
+  text?: string;
+  fontSize?: number;
 }
 ```
 
@@ -265,17 +265,17 @@ interface Stroke {
 
 ```typescript
 interface Room {
-	id: string;
-	name: string;
-	createdAt: Date;
-	updatedAt: Date;
-	strokes: Stroke[];
-	users: User[];
-	settings: {
-		isPublic: boolean;
-		readOnly: boolean;
-		maxUsers: number;
-	};
+  id: string;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+  strokes: Stroke[];
+  users: User[];
+  settings: {
+    isPublic: boolean;
+    readOnly: boolean;
+    maxUsers: number;
+  };
 }
 ```
 
@@ -283,13 +283,13 @@ interface Room {
 
 ```typescript
 interface User {
-	id: string;
-	name: string;
-	avatar?: string;
-	color: string;
-	cursorPosition: { x: number; y: number };
-	isActive: boolean;
-	joinedAt: Date;
+  id: string;
+  name: string;
+  avatar?: string;
+  color: string;
+  cursorPosition: { x: number; y: number };
+  isActive: boolean;
+  joinedAt: Date;
 }
 ```
 
