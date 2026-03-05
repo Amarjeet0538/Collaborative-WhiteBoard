@@ -57,8 +57,9 @@ export default function Login() {
           {/* 2 buttons */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             <button
-              className="cursor-pointer bg-background shadow-sm hover:shadow-md border  border-border-muted hover:border-border/60 rounded-md p-2 
-              flex justify-center items-center gap-4  text-md"
+              className="cursor-pointer bg-background shadow-sm hover:shadow-md border 
+              border-border-muted hover:border-border/60 rounded-md p-2 flex justify-center
+              items-center gap-4 hover:bg-background-highlight  text-md"
               onClick={handleGoogleLogin}
             >
               {/* Google */}
@@ -66,7 +67,7 @@ export default function Login() {
               Google
             </button>
             <button
-              className="cursor-pointer bg-background shadow-sm hover:shadow-md border  border-border-muted hover:border-border/90 rounded-md p-2 
+              className="cursor-pointer bg-background shadow-sm hover:shadow-md border  border-border-muted hover:border-border/90 rounded-md p-2   hover:bg-background-highlight 
               flex justify-center items-center gap-4  text-md"
               onClick={handleGithubLogin}
             >
