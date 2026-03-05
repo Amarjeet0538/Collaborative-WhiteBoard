@@ -15,9 +15,9 @@ export default function DarkModeToggle() {
       className=" cursor-pointer p-3 mr-5 bg-(--bg-light) transition-all rounded-full  hover:shadow-md"
     >
       {isDark ? (
-        <Moon className="text-secondary" />
+        <Sun className="text-secondary" />
       ) : (
-        <Sun className="text-primary" />
+        <Moon className="text-primary" />
       )}
     </button>
   );

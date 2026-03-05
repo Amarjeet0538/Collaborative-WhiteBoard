@@ -1,31 +1,30 @@
 import { Search, Plus, Bell } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
 import { User } from "lucide-react";
 import DarkModeToggle from "@/components/DarkModeToggle";
 import Card from "../components/Card";
+import Logo from "@/components/Logo";
+
 export default function Dashboard() {
   const { register, handleSubmit } = useForm();
 
-  const onSubmit = () => {};
+  const onSubmitJoiningCode = () => {};
 
   return (
-    <div className="flex flex-col min-h-screen p-5  bg-(--bg-dark) text-(--text)">
+    <div className="flex flex-col min-h-screen p-5 bg-background-muted  text-(--text)">
       {/*header*/}
-      <div className="flex justify-between p-4 rounded-lg bg-(--bg) shadow-sm">
-        <div className="font-heading text-4xl font-bold flex items-center">
-          Colloard<span className="text-primary">.</span>
-        </div>
+      <div className="flex justify-between p-4 rounded-lg bg-background shadow-sm">
+        <Logo />
 
         <div className="flex gap-3">
           {/* dark mode */}
           <DarkModeToggle />
 
-          <button className=" rounded-full cursor-pointer p-3 hover:bg-(--bg-light) transition-all hover:shadow-md">
+          <button className=" rounded-full text-foreground cursor-pointer p-3 transition-all hover:shadow-md">
             <Bell className="hover:text-primary" />
           </button>
 
-          <button className="border-none rounded-full cursor-pointer p-3  hover:bg-(--bg-light) transition-all hover:shadow-md">
+          <button className=" rounded-full text-foreground cursor-pointer p-3 transition-all hover:shadow-md">
             <User className="hover:text-primary" />
           </button>
         </div>
@@ -37,9 +36,9 @@ export default function Dashboard() {
         <div className="flex gap-5 w-1/2">
           {/*new*/}
           <div
-            className="flex flex-col gap-3 w-1/2 h-70 bg-(--bg) hover:bg-(--bg-light) justify-center items-center rounded-md
-            hover:bg-dark transition-all  border border-muted hover:border-border  cursor-pointer hover:text-primary shadow-sm
-          "
+            className="flex flex-col gap-3 w-1/2 h-70 bg-background hover:bg-background-highlight
+            justify-center items-center rounded-md transition-all border border-border-muted/60 
+            hover:border-border/70 cursor-pointer hover:text-primary shadow-sm text-foreground "
           >
             <Plus size={50} strokeWidth={2} />
             <span className="text-xl font-semibold"> New Whiteboard </span>
@@ -47,39 +46,43 @@ export default function Dashboard() {
 
           {/*join*/}
           <div
-            className="flex flex-col  w-1/2 h-70  bg-(--bg) hover:bg-(--bg-light)  justify-center items-center rounded-md
-            hover:bg-dark transition-all  border border-muted hover:border-border cursor-pointer  shadow-sm"
+            className="flex flex-col  w-1/2 h-70 bg-background hover:bg-background-highlight 
+            justify-center items-center rounded-md hover:bg-dark transition-all cursor-pointer  
+            border border-border-muted/60 hover:border-border/70 shadow-sm text-foreground"
           >
             <form
-              onSubmit={handleSubmit(onSubmit)}
+              onSubmit={handleSubmit(onSubmitJoiningCode)}
               className="flex flex-col gap-3 "
             >
               <input
                 {...register("joiningCode")}
                 type="text"
                 required
-                className="border rounded-md p-2 bg-(--bg-light) focus:ring-2 focus:ring-black focus:outline-none"
+                className="border border-border-muted/50 rounded-md p-3 bg-background focus:bg-background-highlight
+                text-lg ring-foreground-muted focus:ring-1 focus:ring-border focus:outline-none"
                 placeholder="Enter the code or Link"
               />
-              <button>Join Board</button>
+              <button className="bg-primary p-2 text-md rounded-md hover:bg-primary-hover text-background cursor-pointer">
+                Join Board
+              </button>
             </form>
           </div>
         </div>
         {/* search and recent*/}
         <div className="mt-8 w-3/4 flex flex-col gap-5">
-          <span className="text-3xl font-heading font-bold">
+          <span className="text-3xl font-heading text-foreground font-bold">
             My WhiteBoards
           </span>
           {/*search*/}
-          <form className="flex justify-between relative bg-(--bg) w-full p-5 rounded-lg">
+          <form className="flex justify-between relative bg-background w-full p-5 text-foreground rounded-lg shadow-sm">
             <div className="w-1/3">
               <Search className="absolute left-7 top-9" />
               <input
                 {...register("boardName")}
                 type="text"
-                className="border bg-(--bg) rounded-md pl-10 p-4 w-full 
-                ring-(--border-muted)
-                focus:ring-2 focus:ring-black focus:outline-none"
+                className="border rounded-md pl-10 p-3 w-full bg-background
+                text-lg border-border-muted focus:ring-1
+                focus:ring-border focus:outline-none"
                 placeholder="Search WhiteBoards..."
               />
             </div>
@@ -87,14 +90,14 @@ export default function Dashboard() {
               <input
                 {...register("date")}
                 type="date"
-                className="border rounded-md p-5 bg-(--bg) focus:ring-2
-                focus:ring-black focus:outline-none"
+                className="border rounded-md p-3 bg-background text-lg focus:ring-1 border-border-muted 
+                focus:ring-border focus:outline-none"
               />
 
               <select
                 {...register("filters")}
-                className="border rounded-md p-5 bg-(--bg) focus:ring-2
-                focus:ring-black focus:outline-none"
+                className="border rounded-md p-5 bg-(--bg) focus:ring-2 border-border-muted 
+                focus:ring-border focus:outline-none"
               >
                 <option value="recent">Recents</option>
                 <option value="a-z">Alphabetically (A-Z)</option>
@@ -104,10 +107,13 @@ export default function Dashboard() {
           </form>
 
           {/*recents*/}
-          <div className="mt-5 flex gap-2 ">
+          <div
+            className="mt-5 flex gap-4 overflow-x-auto pb-4 w-full snap-x snap-mandatory
+            [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          >
             <Card
               text={"Creating Nuclear Bomb"}
-              time="Last updated 2 min ago"
+              time={"Last updated 2 min ago"}
             />
             <Card text={"How to bomb Iran"} time={"Last updated 5 min ago"} />
             <Card
@@ -118,7 +124,7 @@ export default function Dashboard() {
             <Card text={"100 ways to die"} time={"Last updated 10 min ago"} />
             <Card
               text={"Creating Nuclear Bomb"}
-              time="Last updated 2 min ago"
+              time={"Last updated 2 min ago"}
             />
           </div>
         </div>
