@@ -1,13 +1,18 @@
-import { Search, Plus, Bell } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { Search, Plus, Bell, X } from "lucide-react";
+import { useForm, useWatch } from "react-hook-form";
 import { User } from "lucide-react";
 import DarkModeToggle from "@/components/DarkModeToggle";
 import Card from "../components/Card";
 import Logo from "@/components/Logo";
 
 export default function Dashboard() {
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit, setValue, control } = useForm();
+  const [startDate, endDate] = useWatch({
+    control,
+    name: ["startDate", "endDate"],
+  });
 
+  const hasDateFilter = startDate || endDate;
   const onSubmitJoiningCode = () => {};
 
   return (
@@ -74,9 +79,9 @@ export default function Dashboard() {
             My WhiteBoards
           </span>
           {/*search*/}
-          <form className="flex justify-between relative bg-background w-full p-5 text-foreground rounded-lg shadow-sm">
+          <form className="flex justify-between relative bg-background w-full p-3 text-foreground rounded-lg shadow-sm">
             <div className="w-1/3">
-              <Search className="absolute left-7 top-9" />
+              <Search size={20} className="absolute left-6 top-7" />
               <input
                 {...register("boardName")}
                 type="text"
@@ -87,16 +92,49 @@ export default function Dashboard() {
               />
             </div>
             <div className="flex gap-5">
-              <input
+              {/*  <input
                 {...register("date")}
                 type="date"
                 className="border rounded-md p-3 bg-background text-lg focus:ring-1 border-border-muted 
                 focus:ring-border focus:outline-none"
-              />
+              />*/}
+              <div className="flex items-center bg-background border border-border-muted rounded-md px-2 focus-within:ring-1 focus-within:border-border focus-within:ring-border transition-all">
+                {/* Start Date */}
+                <input
+                  {...register("startDate")}
+                  type="date"
+                  className="bg-transparent border-none p-2 text-foreground focus:outline-none cursor-pointer "
+                  title="Start Date"
+                />
 
+                <span className="text-foreground-muted px-1">to</span>
+
+                {/* End Date */}
+                <input
+                  {...register("endDate")}
+                  type="date"
+                  className="bg-transparent border-none p-2 text-foreground focus:outline-none cursor-pointer "
+                  title="End Date"
+                />
+
+                {/* "All Dates" Clear Button - Only shows if a date is picked */}
+                {hasDateFilter && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setValue("startDate", "");
+                      setValue("endDate", "");
+                    }}
+                    className="p-1.5 ml-1 text-foreground-muted hover:text-danger hover:bg-background-highlight rounded-md transition-colors"
+                    title="Clear dates (Show All)"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
               <select
                 {...register("filters")}
-                className="border rounded-md p-5 bg-(--bg) focus:ring-2 border-border-muted 
+                className="border rounded-md p-2 bg-background focus:ring-1 border-border-muted 
                 focus:ring-border focus:outline-none"
               >
                 <option value="recent">Recents</option>
@@ -108,13 +146,16 @@ export default function Dashboard() {
 
           {/*recents*/}
           <div
-            className="mt-5 flex gap-4 overflow-x-auto pb-4 w-full snap-x snap-mandatory
+            className="mt-5 grid grid-cols-4 gap-4 pb-4 w-full snap-x snap-mandatory
             [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
           >
             <Card
               text={"Creating Nuclear Bomb"}
               time={"Last updated 2 min ago"}
             />
+            <Card text={"How to bomb Iran"} time={"Last updated 5 min ago"} />
+            <Card text={"How to bomb Iran"} time={"Last updated 5 min ago"} />
+            <Card text={"How to bomb Iran"} time={"Last updated 5 min ago"} />
             <Card text={"How to bomb Iran"} time={"Last updated 5 min ago"} />
             <Card
               text={"Creating Nuclear Bomb"}

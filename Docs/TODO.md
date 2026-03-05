@@ -2,7 +2,7 @@
 - [ ] remove/replace supabase to backend
 - [ ] add forget password and show password feature
 - [ ] add dark mode by making the color pallete constants
-
+- [ ] add the filter calender range insted of value
 - [-] correct the dark mode button it is slightly off
 - [-] remove shadcn button
 - [ ] add notification use

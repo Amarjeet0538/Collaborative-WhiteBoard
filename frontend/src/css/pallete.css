@@ -68,7 +68,7 @@ body.dark {
   /* Brand Colors (with Hover states) */
   --primary: hsl(219 51% 32%);
   --primary-hover: hsl(219 51% 42%); /* +10% lightness */
-  --secondary: hsl(43 100% 15%);
+  --secondary: hsl(43 100% 40%);
   --secondary-hover: hsl(43 100% 25%); /* +10% lightness */
 
   /* Semantic Colors */
