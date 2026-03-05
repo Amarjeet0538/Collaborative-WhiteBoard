@@ -4,6 +4,7 @@ import { User } from "lucide-react";
 import DarkModeToggle from "@/components/DarkModeToggle";
 import Card from "../components/Card";
 import Logo from "@/components/Logo";
+import { Link } from "react-router-dom";
 
 export default function Dashboard() {
   const { register, handleSubmit, setValue, control } = useForm();
@@ -171,6 +172,10 @@ export default function Dashboard() {
         </div>
         {/*my boards and shared with me */}
         <div></div>
+
+        <div className="flex-1 text-foreground  min-h-0">
+          <Link to="/">Go to Landing page </Link>
+        </div>
       </div>
     </div>
   );

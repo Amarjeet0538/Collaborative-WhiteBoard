@@ -1,12 +1,13 @@
 import { useState } from "react";
 import LandingPage from "./pages/LandingPage";
-import Dashboard from "./pages/Dashboard";
 
 function App() {
-  const [session, setSession] = useState(true);
+  const [session, setSession] = useState(false);
 
   return (
-    <div className="font-body">{session ? <Dashboard /> : <LandingPage />}</div>
+    <div className="font-body">
+      <LandingPage />
+    </div>
   );
 }
 
