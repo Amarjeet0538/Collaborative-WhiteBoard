@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@boxicons/react':
+        specifier: ^1.0.3
+        version: 1.0.3(react@19.2.4)
       '@supabase/supabase-js':
         specifier: ^2.98.0
         version: 2.98.0
@@ -225,6 +228,11 @@ packages:
   '@babel/types@7.29.0':
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
+
+  '@boxicons/react@1.0.3':
+    resolution: {integrity: sha512-NASJNbk4X6Xi24CIa/Anx7KhMH1KPiBuaq0RJq3HJiFg65Ct9mhIB6j/a/Ciz/ZOTGaGzisWYmbU4jdKKK/YYA==}
+    peerDependencies:
+      react: '>=16.8.0'
 
   '@dotenvx/dotenvx@1.52.0':
     resolution: {integrity: sha512-CaQcc8JvtzQhUSm9877b6V4Tb7HCotkcyud9X2YwdqtQKwgljkMRwU96fVYKnzN3V0Hj74oP7Es+vZ0mS+Aa1w==}
@@ -3417,6 +3425,10 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
+
+  '@boxicons/react@1.0.3(react@19.2.4)':
+    dependencies:
+      react: 19.2.4
 
   '@dotenvx/dotenvx@1.52.0':
     dependencies:

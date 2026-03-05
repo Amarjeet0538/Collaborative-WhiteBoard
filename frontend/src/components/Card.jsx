@@ -6,7 +6,7 @@ export default function card({ text, time }) {
       justify-between items-left rounded-md bg-background hover:bg-background-highlight border border-border-muted/60 
             hover:border-border/40 text-foreground "
     >
-      <div className="w-full h-40 bg-secondary rounded-md"></div>
+      <div className="w-full h-40 bg-foreground/20 rounded-md"></div>
       <div className="flex justify-between">
         <span className="font-semibold text-lg">{text}</span>
         <EllipsisVertical />
