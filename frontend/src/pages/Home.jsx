@@ -4,10 +4,10 @@ import { User } from "lucide-react";
 import DarkModeToggle from "@/components/DarkModeToggle";
 import Card from "../components/Card";
 import Logo from "@/components/Logo";
-import { Link } from "react-router-dom";
-
+import { Link, useNavigate } from "react-router-dom";
 export default function Home() {
   const { register, handleSubmit, setValue, control } = useForm();
+  const navigate = useNavigate();
   const [startDate, endDate] = useWatch({
     control,
     name: ["startDate", "endDate"],
@@ -41,14 +41,15 @@ export default function Home() {
         {/*new and join */}
         <div className="flex gap-5 w-1/2">
           {/*new*/}
-          <div
+          <button
             className="flex flex-col gap-3 w-1/2 h-70 bg-background hover:bg-background-highlight
             justify-center items-center rounded-md transition-all border border-border-muted/60 
             hover:border-border/70 cursor-pointer hover:text-primary shadow-sm text-foreground "
+            onClick={() => navigate("/project")}
           >
             <Plus size={50} strokeWidth={2} />
             <span className="text-xl font-semibold"> New Whiteboard </span>
-          </div>
+          </button>
 
           {/*join*/}
           <div

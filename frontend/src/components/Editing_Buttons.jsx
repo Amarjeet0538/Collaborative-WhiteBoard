@@ -23,13 +23,14 @@ export default function Editing_Buttons({
   };
 
   return (
-    <div className="flex gap-2 absolute bottom-6 left-1/2 transform -translate-x-1/2">
+    <div className="flex gap-2 absolute bottom-5 left-1/2 transform -translate-x-1/2 text-foreground">
       {/* Zoom Button */}
-      <div className=" flex items-center gap-0 bg-white rounded-md">
+      <div
+        className="px-2 flex items-center justify-center cursor-pointer bg-background 
+        rounded-md border border-border-muted/50 hover:border-border-muted hover:bg-background-highlight"
+      >
         <button
-          variant="outline"
-          size="lg"
-          className="text-lg cursor-pointer border-none"
+          className="text-lg cursor-pointer border-none hover:bg-background "
           onClick={() => setZoom((z) => Math.min(z + 0.1, 5))}
           title="Zoom in"
         >
@@ -41,8 +42,6 @@ export default function Editing_Buttons({
         </div>
 
         <button
-          variant="outline"
-          size="lg"
           className="text-lg cursor-pointer border-none"
           onClick={() => setZoom((z) => Math.max(z - 0.1, 0.5))}
           title="Zoom out"
@@ -54,9 +53,7 @@ export default function Editing_Buttons({
       {/* Pen Button */}
       <div className="relative">
         <button
-          variant="outline"
-          size="lg"
-          className="text-lg cursor-pointer"
+          className=" p-2 flex items-center justify-center cursor-pointer bg-background w-10 h-10 rounded-md border border-border-muted/50 hover:border-border-muted hover:bg-background-highlight"
           onClick={() => togglePanel("pen", "pen")}
         >
           <PenLine />
@@ -78,9 +75,7 @@ export default function Editing_Buttons({
 
       {/* Hand Button */}
       <button
-        variant="outline"
-        size="lg"
-        className="text-lg cursor-pointer"
+        className=" p-2 flex items-center justify-center cursor-pointer bg-background w-10 h-10 rounded-md border border-border-muted/50 hover:border-border-muted hover:bg-background-highlight"
         onClick={() => {
           setTool("hand");
           setActivePanel(null);
@@ -92,9 +87,7 @@ export default function Editing_Buttons({
       {/* Eraser Button */}
       <div className="relative">
         <button
-          variant="outline"
-          size="lg"
-          className="text-lg cursor-pointer"
+          className=" p-2 flex items-center justify-center cursor-pointer bg-background w-10 h-10 rounded-md border border-border-muted/50 hover:border-border-muted hover:bg-background-highlight"
           onClick={() => togglePanel("eraser", "eraser")}
         >
           <Eraser />
