@@ -263,7 +263,7 @@ function Navbar({ dark, setDark }) {
           }}
         >
           <span style={{ fontFamily: "Syne", fontWeight: 700, fontSize: 18 }}>
-            Colloard<span>.</span>
+            Lienwand<span>.</span>
           </span>
         </a>
 
@@ -1444,7 +1444,7 @@ function AiSpotlight() {
     {
       title: "Shape Recognition",
       label: "AI-Powered",
-      desc: "Draw a rough circle or rectangle and Colloard's AI snaps it into a perfect shape. Supports circles, rectangles, triangles, lines, arrows, and stars with 90%+ accuracy.",
+      desc: "Draw a rough circle or rectangle and Lienwand's AI snaps it into a perfect shape. Supports circles, rectangles, triangles, lines, arrows, and stars with 90%+ accuracy.",
       mock: (
         <div
           style={{
@@ -1714,7 +1714,7 @@ function FAQ() {
   const [open, setOpen] = useState(null);
   const faqs = [
     {
-      q: "Do I need an account to use Colloard?",
+      q: "Do I need an account to use Lienwand?",
       a: "No account needed to view or explore a whiteboard. However, to collaborate — meaning to draw, edit, or make any changes — you need to be authenticated and authorized. This ensures only permitted team members can modify the board's data.",
     },
     {
@@ -1731,7 +1731,7 @@ function FAQ() {
     },
     {
       q: "Does it work on mobile and tablets?",
-      a: "Yes. Colloard is fully responsive and touch-optimized. It works great on iPads and Android tablets for sketching and annotation.",
+      a: "Yes. Lienwand is fully responsive and touch-optimized. It works great on iPads and Android tablets for sketching and annotation.",
     },
     {
       q: "Can I export my boards?",
@@ -1980,23 +1980,10 @@ function Footer() {
                 marginBottom: 14,
               }}
             >
-              <div
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 9,
-                  background: "var(--primary)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Icon d={icons.pen} size={14} stroke="white" />
-              </div>
               <span
                 style={{ fontFamily: "Syne", fontWeight: 700, fontSize: 17 }}
               >
-                Colloard
+                Lienwand
               </span>
             </div>
             <p
@@ -2065,7 +2052,7 @@ function Footer() {
           }}
         >
           <div style={{ color: "var(--foreground-muted)", fontSize: 13 }}>
-            © 2026 Colloard. All rights reserved.
+            © 2026 Lienwand. All rights reserved.
           </div>
           <div style={{ display: "flex", gap: 16 }}>
             {[icons.github].map((ic, i) => (

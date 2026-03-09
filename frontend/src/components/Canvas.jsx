@@ -16,6 +16,10 @@ export default function Canvas({
   const contextRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
 
+  const viewportTransform = { x: 0, y: 0, scale: 1 };
+  let previousX = 0,
+    previousY = 0;
+
   useEffect(() => {
     const canvas = canvasRef.current;
 
@@ -91,8 +95,10 @@ export default function Canvas({
   const cursorStyle =
     tool === "hand" ? "grab" : tool === "eraser" ? "cell" : "crosshair";
 
+  const updatePanning = () => {};
+
   return (
-    <div className="p-2 w-full h-full relative">
+    <div className="w-full h-full relative">
       <canvas
         id="canvas"
         onMouseDown={startDrawing}

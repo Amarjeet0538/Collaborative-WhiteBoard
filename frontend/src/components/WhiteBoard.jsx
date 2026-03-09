@@ -13,9 +13,11 @@ export default function Whiteboard() {
   const clearCanvasRef = useRef(null);
 
   return (
-    <div className="flex items-center flex-col bg-background-muted p-2">
-      <div className="flex gap-5 justify-between bg-background items-center">
-        <div className="text-foreground text-xl ">Project Name</div>
+    <div className="relative w-screen h-screen overflow-hidden">
+      <div className="text-foreground bg-background p-1 rounded-md border border-border-muted text-xl absolute top-3 left-3 ">
+        Project Name
+      </div>
+      <div className="absolute top-3 right-4 ">
         <DarkModeToggle />
       </div>
       <Canvas
@@ -27,6 +29,7 @@ export default function Whiteboard() {
         setZoom={setZoom}
         onClearCanvas={(fn) => (clearCanvasRef.current = fn)}
       />
+
       <Editing_Buttons
         setTool={setTool}
         color={color}

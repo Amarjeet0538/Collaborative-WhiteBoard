@@ -17,9 +17,9 @@ export default function Home() {
   const onSubmitJoiningCode = () => {};
 
   return (
-    <div className="flex flex-col min-h-screen p-5 bg-background-muted  text-(--text)">
+    <div className="flex flex-col min-h-screen p-3 bg-background-muted  text-(--text)">
       {/*header*/}
-      <div className="flex justify-between p-4 rounded-lg bg-background shadow-sm">
+      <div className="flex justify-between p-2 rounded-lg bg-background shadow-sm">
         <Logo />
 
         <div className="flex gap-3">
@@ -81,13 +81,13 @@ export default function Home() {
             My WhiteBoards
           </span>
           {/*search*/}
-          <form className="flex justify-between relative bg-background w-full p-3 text-foreground rounded-lg shadow-sm">
+          <form className="flex justify-between relative bg-background w-full p-2 text-foreground rounded-lg shadow-sm">
             <div className="w-1/3">
-              <Search size={20} className="absolute left-6 top-7" />
+              <Search size={20} className="absolute left-4 top-4" />
               <input
                 {...register("boardName")}
                 type="text"
-                className="border rounded-md pl-10 p-3 w-full bg-background
+                className="border rounded-md pl-10 p-1 w-full bg-background
                 text-lg border-border-muted focus:ring-1
                 focus:ring-border focus:outline-none"
                 placeholder="Search WhiteBoards..."

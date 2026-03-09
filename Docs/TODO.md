@@ -13,13 +13,21 @@
 - [ ] add owned boards and shared boards later -- https://dribbble.com/shots/26294998-Collaborative-Whiteboard-Dashboard-Clean-Minimal-UI
 - [-] replace dashboard with home
 - [ ] add data
+- [ ] make the whiteboard infinite and with changing background patterns
+- [ ] minimap for navigation
       mobbin for design
+
+https://www.goodnotes.com/
+
+https://github.com/TomHumphries/InfiniteCanvasWhiteboard/blob/master/index.html
 
 use this as ref -- https://dev.to/keyurparalkar/mastering-real-time-collaboration-building-figma-and-miro-inspired-features-with-supabase-57eh
 
 pan-and-zoon ref -- https://harrisonmilbradt.com/blog/canvas-panning-and-zooming
 
 landing page ref -- https://www.canva.com/online-whiteboard/
+
+https://www.instagram.com/reel/DVgsX7SAc8K/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==
 
 crdts
 webrtc
