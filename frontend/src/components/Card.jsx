@@ -1,19 +1,124 @@
-import { EllipsisVertical } from "lucide-react";
-export default function card({ text, time }) {
+import { EllipsisVertical, Trash2, Pencil, Check, X } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+
+export default function Card({ text, time, onClick, onDelete, onRename }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [newName, setNewName] = useState(text);
+  const menuRef = useRef(null);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Focus input when rename starts
+  useEffect(() => {
+    if (isRenaming) inputRef.current?.focus();
+  }, [isRenaming]);
+  // Sync newName when text prop changes
+  useEffect(() => {
+    setNewName(text);
+  }, [text]);
+  const handleRename = (e) => {
+    e.stopPropagation();
+    if (newName.trim() && newName !== text) {
+      onRename?.(newName.trim());
+    }
+    setIsRenaming(false);
+  };
+
+  const handleCancelRename = (e) => {
+    e.stopPropagation();
+    setNewName(text); // reset
+    setIsRenaming(false);
+  };
+
   return (
     <div
-      className=" p-4 flex flex-col gap-3
-      justify-between items-left rounded-md bg-background hover:bg-background-highlight border border-border-muted/60 
-            hover:border-border/40 text-foreground "
+      onClick={!isRenaming ? onClick : undefined}
+      className="cursor-pointer p-4 flex flex-col gap-3 justify-between
+      rounded-md bg-background hover:bg-background-highlight border border-border-muted/60
+      hover:border-border/40 text-foreground transition-all"
     >
-      <div className="w-full h-40 bg-foreground/20 rounded-md"></div>
-      <div className="flex justify-between">
-        <span className="font-semibold text-lg">{text}</span>
-        <EllipsisVertical />
-      </div>
-      <div className="flex flex-col text-md text-foreground/50 ">
-        <span>{time}</span>
-        <span>Peoples</span>
+      {/* Preview */}
+      <div className="w-full h-40 bg-foreground/10 rounded-md" />
+
+      {/* Footer */}
+      <div className="flex justify-between items-center">
+        <div className="flex flex-col flex-1 mr-2">
+          {/* Inline rename input */}
+          {isRenaming ? (
+            <div
+              className="flex items-center gap-1"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <input
+                ref={inputRef}
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleRename(e);
+                  if (e.key === "Escape") handleCancelRename(e);
+                }}
+                className="text-sm font-semibold bg-background border border-border-muted 
+                rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-border"
+              />
+            </div>
+          ) : (
+            <span className="font-semibold text-md">{text}</span>
+          )}
+          <span className="text-xs text-foreground/50">{time}</span>
+        </div>
+
+        {/* Menu */}
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsOpen((prev) => !prev);
+            }}
+            className="p-1 rounded-md hover:bg-foreground/10 transition-colors"
+          >
+            <EllipsisVertical size={18} />
+          </button>
+
+          {isOpen && (
+            <div
+              className="absolute right-0 bottom-full mb-1 w-36 bg-background border
+              border-border-muted rounded-md shadow-lg z-20 overflow-hidden"
+            >
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsOpen(false);
+                  setIsRenaming(true);
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm
+                hover:bg-background-highlight transition-colors"
+              >
+                <Pencil size={14} /> Rename
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsOpen(false);
+                  onDelete?.(e);
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500
+                hover:bg-red-500/10 transition-colors"
+              >
+                <Trash2 size={14} /> Delete
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

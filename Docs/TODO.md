@@ -15,7 +15,8 @@
 - [ ] add data
 - [ ] make the whiteboard infinite and with changing background patterns
 - [ ] minimap for navigation
-      mobbin for design
+- [-] adder user model in mongodb and login
+  mobbin for design
 
 https://www.goodnotes.com/
 

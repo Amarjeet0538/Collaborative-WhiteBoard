@@ -1,7 +1,4 @@
-import { useEffect } from "react";
-import { useRef } from "react";
-import { useState } from "react";
-import { useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 export default function Canvas({
   tool,
@@ -11,59 +8,82 @@ export default function Canvas({
   onClearCanvas,
   zoom,
   setZoom,
+  onStrokesChange,
+  loadStrokes,
 }) {
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
-
-  const viewportTransform = { x: 0, y: 0, scale: 1 };
-  let previousX = 0,
-    previousY = 0;
+  const strokesRef = useRef([]); // all saved strokes
+  const currentStroke = useRef(null); // stroke being drawn right now
 
   useEffect(() => {
     const canvas = canvasRef.current;
-
     const rect = canvas.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 2;
-
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
-
     const ctx = canvas.getContext("2d");
-
-    //pen;
     ctx.scale(dpr, dpr);
     ctx.lineJoin = "round";
     ctx.lineCap = "round";
-    ctx.strokeStyle = color;
-    ctx.lineWidth = penSize;
-
     contextRef.current = ctx;
   }, []);
 
-  useEffect(() => {
-    if (!contextRef.current) return;
-    contextRef.current.strokeStyle = color;
-    contextRef.current.lineWidth = penSize;
-  }, [color, penSize]);
+  // Redraw all strokes
+  const redraw = useCallback(() => {
+    const canvas = canvasRef.current;
+    const ctx = contextRef.current;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    strokesRef.current.forEach((stroke) => {
+      ctx.beginPath();
+      ctx.strokeStyle = stroke.color;
+      ctx.lineWidth = stroke.size;
+      ctx.globalCompositeOperation = stroke.composite;
+      stroke.points.forEach(([x, y], i) => {
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      ctx.closePath();
+    });
+    ctx.globalCompositeOperation = "source-over";
+  }, []);
 
-  // When mouse is pressed down
+  // Load strokes from backend
+  useEffect(() => {
+    if (loadStrokes && loadStrokes.length > 0) {
+      strokesRef.current = loadStrokes;
+      redraw();
+    }
+  }, [loadStrokes, redraw]);
+
   const startDrawing = ({ nativeEvent }) => {
     const { offsetX, offsetY } = nativeEvent;
     setIsDrawing(true);
+    currentStroke.current = {
+      points: [[offsetX, offsetY]],
+      color: tool === "eraser" ? "rgba(0,0,0,1)" : color,
+      size: tool === "eraser" ? eraserSize : penSize,
+      composite: tool === "eraser" ? "destination-out" : "source-over",
+    };
     contextRef.current.beginPath();
     contextRef.current.moveTo(offsetX, offsetY);
   };
 
-  // When mouse is releasedz
   const finishDrawing = () => {
+    if (!isDrawing || !currentStroke.current) return;
     setIsDrawing(false);
     contextRef.current.closePath();
+    strokesRef.current.push(currentStroke.current);
+    currentStroke.current = null;
+    // notify Whiteboard that strokes changed
+    if (onStrokesChange) onStrokesChange([...strokesRef.current]);
   };
 
-  // When mouse moves
   const draw = ({ nativeEvent }) => {
-    if (!isDrawing || tool === "hand") return;
+    if (!isDrawing || tool === "hand" || !currentStroke.current) return;
+    const { offsetX, offsetY } = nativeEvent;
+    currentStroke.current.points.push([offsetX, offsetY]);
 
     if (tool === "eraser") {
       contextRef.current.globalCompositeOperation = "destination-out";
@@ -73,8 +93,6 @@ export default function Canvas({
       contextRef.current.lineWidth = penSize;
       contextRef.current.strokeStyle = color;
     }
-
-    const { offsetX, offsetY } = nativeEvent;
     contextRef.current.lineTo(offsetX, offsetY);
     contextRef.current.stroke();
   };
@@ -82,11 +100,9 @@ export default function Canvas({
   const clearCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     contextRef.current.clearRect(0, 0, canvas.width, canvas.height);
-  }, []);
-
-  const handleWheel = (e) => {
-    e.preventDefault();
-  };
+    strokesRef.current = [];
+    if (onStrokesChange) onStrokesChange([]);
+  }, [onStrokesChange]);
 
   useEffect(() => {
     if (onClearCanvas) onClearCanvas(clearCanvas);
@@ -102,22 +118,20 @@ export default function Canvas({
         onMouseDown={startDrawing}
         onMouseUp={finishDrawing}
         onMouseMove={draw}
-        onWheel={handleWheel}
+        onWheel={(e) => e.preventDefault()}
         ref={canvasRef}
-        className="border-2 border-gray-300 rounded-lg w-full h-full "
+        className="w-full h-full"
         style={{
           cursor: cursorStyle,
           background: "#fafafa",
           backgroundImage: `
-          linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(0,0,0,0.04) 1px, transparent 1px),
-          radial-gradient(circle, rgba(0,0,0,0.08) 1px, transparent 1px)
-        `,
+            linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(0,0,0,0.04) 1px, transparent 1px),
+            radial-gradient(circle, rgba(0,0,0,0.08) 1px, transparent 1px)
+          `,
           backgroundSize: "24px 24px, 24px 24px, 24px 24px",
         }}
-      >
-        Your browser does not support the HTML5 canvas element.
-      </canvas>
+      />
     </div>
   );
 }

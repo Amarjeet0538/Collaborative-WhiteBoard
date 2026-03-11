@@ -6,7 +6,7 @@ import Logo from "@/components/Logo";
 import { Github } from "lucide-react";
 import { Google } from "@boxicons/react";
 import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/useAuth";
 
 export default function Login() {
   const { login } = useAuth();

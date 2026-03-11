@@ -6,9 +6,10 @@ import Card from "../components/Card";
 import Logo from "@/components/Logo";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/useAuth";
 import { useEffect } from "react";
 
+import { apiFetch } from "@/utils/api";
 export default function Home() {
   const { register, handleSubmit, setValue, control } = useForm();
   const { user, logout } = useAuth();
@@ -27,7 +28,60 @@ export default function Home() {
     navigate("/login");
   };
 
-  useEffect(() => {}, [user]);
+  // inside component, replace useState for whiteboards
+  const [whiteboards, setWhiteboards] = useState([]);
+  const [loadingBoards, setLoadingBoards] = useState(true);
+
+  // fetch on mount
+  useEffect(() => {
+    const fetchBoards = async () => {
+      try {
+        const data = await apiFetch("/whiteboards");
+        setWhiteboards(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoadingBoards(false);
+      }
+    };
+    fetchBoards();
+  }, []);
+
+  // create new whiteboard
+  const handleNewWhiteboard = async () => {
+    try {
+      const data = await apiFetch("/whiteboards", {
+        method: "POST",
+        body: JSON.stringify({ name: "Untitled" }),
+      });
+      navigate(`/whiteboard/${data._id}`);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteWhiteboard = async (id, e) => {
+    e.stopPropagation();
+    try {
+      await apiFetch(`/whiteboards/${id}`, { method: "DELETE" });
+      setWhiteboards((prev) => prev.filter((wb) => wb._id !== id));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+  const handleRenameWhiteboard = async (id, newName) => {
+    try {
+      await apiFetch(`/whiteboards/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({ name: newName }),
+      });
+      setWhiteboards((prev) =>
+        prev.map((wb) => (wb._id === id ? { ...wb, name: newName } : wb)),
+      );
+    } catch (err) {
+      console.error("Failed to rename", err);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen p-3 bg-background-muted  text-(--text)">
@@ -89,7 +143,7 @@ export default function Home() {
             className="flex flex-col gap-3 w-1/2 h-70 bg-background hover:bg-background-highlight
             justify-center items-center rounded-md transition-all border border-border-muted/60 
             hover:border-border/70 cursor-pointer hover:text-primary shadow-sm text-foreground "
-            onClick={() => navigate("/project")}
+            onClick={handleNewWhiteboard}
           >
             <Plus size={50} strokeWidth={2} />
             <span className="text-xl font-semibold"> New Whiteboard </span>
@@ -195,24 +249,24 @@ export default function Home() {
             className="mt-5 grid grid-cols-4 gap-4 pb-4 w-full snap-x snap-mandatory
             [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
           >
-            <Card
-              text={"Creating Nuclear Bomb"}
-              time={"Last updated 2 min ago"}
-            />
-            <Card text={"How to bomb Iran"} time={"Last updated 5 min ago"} />
-            <Card text={"How to bomb Iran"} time={"Last updated 5 min ago"} />
-            <Card text={"How to bomb Iran"} time={"Last updated 5 min ago"} />
-            <Card text={"How to bomb Iran"} time={"Last updated 5 min ago"} />
-            <Card
-              text={"Creating Nuclear Bomb"}
-              time="Last updated 2 min ago"
-            />
-            <Card text={"How to bomb Iran"} time={"Last updated 5 min ago"} />
-            <Card text={"100 ways to die"} time={"Last updated 10 min ago"} />
-            <Card
-              text={"Creating Nuclear Bomb"}
-              time={"Last updated 2 min ago"}
-            />
+            {loadingBoards ? (
+              <p className="text-foreground-muted">Loading...</p>
+            ) : whiteboards.length === 0 ? (
+              <p className="text-foreground-muted">No whiteboards yet!</p>
+            ) : (
+              whiteboards.map((wb) => (
+                <Card
+                  key={wb._id}
+                  text={wb.name}
+                  time={`Last updated ${new Date(wb.updatedAt).toLocaleDateString()}`}
+                  onClick={() => navigate(`/whiteboard/${wb._id}`)}
+                  onDelete={(e) => handleDeleteWhiteboard(wb._id, e)}
+                  onRename={(newName) =>
+                    handleRenameWhiteboard(wb._id, newName)
+                  }
+                />
+              ))
+            )}
           </div>
         </div>
         {/*my boards and shared with me */}

@@ -3,11 +3,16 @@ import App from "./App";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import ProjectPage from "./pages/ProjectPage";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const AppRouter = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
+    element: (
+      <ProtectedRoute>
+        <App />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/login",
@@ -15,12 +20,19 @@ const AppRouter = createBrowserRouter([
   },
   {
     path: "/home",
-    element: <Home />,
+    element: (
+      <ProtectedRoute>
+        <Home />
+      </ProtectedRoute>
+    ),
   },
   {
-    path: "/project",
-    element: <ProjectPage />,
+    path: "/whiteboard/:id", // ← add this
+    element: (
+      <ProtectedRoute>
+        <ProjectPage />
+      </ProtectedRoute>
+    ),
   },
 ]);
-
 export default AppRouter;
