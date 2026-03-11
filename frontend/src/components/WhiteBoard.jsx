@@ -14,10 +14,10 @@ export default function Whiteboard() {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden">
-      <div className="text-foreground bg-background p-1 rounded-md border border-border-muted text-xl absolute top-3 left-3 ">
-        Project Name
+      <div className="text-foreground bg-background p-1 z-10 rounded-md border border-border-muted text-xl absolute top-3 left-3 ">
+        Plan to reveal Epstien Files
       </div>
-      <div className="absolute top-3 right-4 ">
+      <div className="absolute top-3 right-4  z-10 ">
         <DarkModeToggle />
       </div>
       <Canvas

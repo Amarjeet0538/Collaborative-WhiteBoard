@@ -12,15 +12,49 @@ export default function Login() {
   const navigate = useNavigate();
   const [isSignUp, setIsSignUp] = useState(false);
 
-  const onSubmit = (data) => {
-    navigate("/");
+  const onSubmit = async (data) => {
+    try {
+      const endpoint = isSignUp ? "/api/auth/register" : "/api/auth/login";
+
+      const res = await fetch(`http://localhost:5000${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        alert(result.message); // we'll replace this with proper errors later
+        return;
+      }
+
+      localStorage.setItem("token", result.token);
+      localStorage.setItem("user", JSON.stringify(result.user));
+      navigate("/home");
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong");
+    }
   };
 
   const handleGoogleLogin = async () => {};
 
   const handleGithubLogin = async () => {};
 
-  const handleDemoLogin = async () => {};
+  const handleDemoLogin = async () => {
+    const res = await fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "demo@demo.com", password: "demo123" }),
+    });
+    const result = await res.json();
+    if (res.ok) {
+      localStorage.setItem("token", result.token);
+      localStorage.setItem("user", JSON.stringify(result.user));
+      navigate("/home");
+    }
+  };
 
   return (
     <div className="font-body grid grid-cols-2 h-screen">

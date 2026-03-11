@@ -7,6 +7,7 @@ import Logo from "@/components/Logo";
 import { Link, useNavigate } from "react-router-dom";
 export default function Home() {
   const { register, handleSubmit, setValue, control } = useForm();
+  const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const [startDate, endDate] = useWatch({
     control,

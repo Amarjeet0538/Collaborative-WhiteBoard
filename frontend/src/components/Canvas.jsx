@@ -95,8 +95,6 @@ export default function Canvas({
   const cursorStyle =
     tool === "hand" ? "grab" : tool === "eraser" ? "cell" : "crosshair";
 
-  const updatePanning = () => {};
-
   return (
     <div className="w-full h-full relative">
       <canvas
