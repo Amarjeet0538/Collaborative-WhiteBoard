@@ -6,8 +6,10 @@ import Logo from "@/components/Logo";
 import { Github } from "lucide-react";
 import { Google } from "@boxicons/react";
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Login() {
+  const { login } = useAuth();
   const { register, handleSubmit } = useForm();
   const navigate = useNavigate();
   const [isSignUp, setIsSignUp] = useState(false);
@@ -25,12 +27,11 @@ export default function Login() {
       const result = await res.json();
 
       if (!res.ok) {
-        alert(result.message); // we'll replace this with proper errors later
+        alert(result.message);
         return;
       }
 
-      localStorage.setItem("token", result.token);
-      localStorage.setItem("user", JSON.stringify(result.user));
+      login(result.user, result.token);
       navigate("/home");
     } catch (err) {
       console.error(err);
@@ -46,12 +47,11 @@ export default function Login() {
     const res = await fetch("http://localhost:5000/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: "demo@demo.com", password: "demo123" }),
+      body: JSON.stringify({ email: "demo@demo.com", password: "demo@123" }),
     });
     const result = await res.json();
     if (res.ok) {
-      localStorage.setItem("token", result.token);
-      localStorage.setItem("user", JSON.stringify(result.user));
+      login(result.user, result.token);
       navigate("/home");
     }
   };
