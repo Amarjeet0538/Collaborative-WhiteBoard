@@ -37,10 +37,12 @@ router.get("/:id", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const { name } = req.body;
+    const shareCode = await generateUniqueShareCode();
     const whiteboard = await Whiteboard.create({
       name: name || "Untitled",
       owner: req.user.id,
       strokes: [],
+      shareCode,
     });
     res.status(201).json(whiteboard);
   } catch (err) {
@@ -75,6 +77,66 @@ router.delete("/:id", async (req, res) => {
     res.json({ message: "Deleted" });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+router.get("/join/:code", async (req, res) => {
+  try {
+    const board = await Whiteboard.findOne({
+      shareCode: req.params.code,
+    }).select("-sharedWith -pendingRequests");
+    if (!board) res.status(404).json({ message: "Board not found" });
+    res.json(board);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.post("/:id/request-access", async (req, res) => {
+  try {
+    const board = await Whiteboard.findById(req.params.id);
+    if (!board) return res.status(404).json({ message: "Board not found" });
+
+    const userId = req.user._id;
+
+    const alreadyRequested = board.pendingRequests.some((r) =>
+      r.userId.equals(userId),
+    );
+    const alreadyShared = board.sharedWith.some((s) => s.userId.equals(userId));
+
+    if (alreadyRequested || alreadyShared)
+      return res
+        .status(400)
+        .json({ message: "Already requested or has access" });
+
+    board.pendingRequests.push({ userId });
+    await board.save();
+    res.json({ message: "Request sent" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+router.get("/:id/response-request", async (req, res) => {
+  try {
+    const { userId, approve } = req.body;
+    const board = await Whiteboard.findById(req.params.id);
+    if (!board) return res.status(404).json({ message: "Board not found" });
+    if (!board.owner.equals(req.user._id))
+      return res.status(403).json({ message: "Not the owner" });
+
+    board.pendingRequests = board.pendingRequests.filter(
+      (r) => !r.userId.equals(userId),
+    );
+
+    if (approve) {
+      board.sharedWith.push({ userId, role: "editor" });
+    }
+
+    await board.save();
+    res.json({ message: approve ? "Access granted" : "Request denied" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 

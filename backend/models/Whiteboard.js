@@ -23,6 +23,21 @@ const whiteboardSchema = new mongoose.Schema(
       required: true,
     },
     strokes: [strokeSchema],
+    shareCode: {
+      type: String,
+      unique: true,
+    },
+    sharedWith: [
+      {
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        role: { type: String, enum: ["viewer", "editor"], default: "viewer" },
+      },
+    ],
+    pendingRequests: [
+      {
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      },
+    ],
   },
   { timestamps: true },
 );

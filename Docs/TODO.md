@@ -18,6 +18,8 @@
 - [-] adder user model in mongodb and login
   mobbin for design
 
+- [ ] add toast for every api response in frontend
+
 https://www.goodnotes.com/
 
 https://github.com/TomHumphries/InfiniteCanvasWhiteboard/blob/master/index.html
