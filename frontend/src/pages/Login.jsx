@@ -55,6 +55,18 @@ export default function Login() {
       navigate("/home");
     }
   };
+  const handleDemoLogin2 = async () => {
+    const res = await fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "demo2@demo.com", password: "demo@123" }),
+    });
+    const result = await res.json();
+    if (res.ok) {
+      login(result.user, result.token);
+      navigate("/home");
+    }
+  };
 
   return (
     <div className="font-body grid grid-cols-2 h-screen">
@@ -186,13 +198,22 @@ export default function Login() {
             </button>
           </form>
 
-          <button
-            className="cursor-pointer bg-background hover:bg-background-muted shadow-sm  border  border-border-muted hover:border-border/60 rounded-md p-2 
+          <div className="flex gap-2">
+            <button
+              className="cursor-pointer bg-background hover:bg-background-muted shadow-sm  border  border-border-muted hover:border-border/60 rounded-md p-2 
               flex justify-center items-center gap-4  text-md w-full mt-4"
-            onClick={handleDemoLogin}
-          >
-            Use a Demo Account
-          </button>
+              onClick={handleDemoLogin}
+            >
+              Demo Account
+            </button>
+            <button
+              className="cursor-pointer bg-background hover:bg-background-muted shadow-sm  border  border-border-muted hover:border-border/60 rounded-md p-2 
+              flex justify-center items-center gap-4  text-md w-full mt-4"
+              onClick={handleDemoLogin2}
+            >
+              Demo Account 2
+            </button>
+          </div>
         </div>
 
         <div className="mt-4 text-sm text-foreground-muted">

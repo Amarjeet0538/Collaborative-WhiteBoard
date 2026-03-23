@@ -4,7 +4,7 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import ProjectPage from "./pages/ProjectPage";
 import ProtectedRoute from "./components/ProtectedRoute";
-
+import JoinBoard from "./pages/JoinBoard";
 const AppRouter = createBrowserRouter([
   {
     path: "/",
@@ -27,12 +27,16 @@ const AppRouter = createBrowserRouter([
     ),
   },
   {
-    path: "/whiteboard/:id", // ← add this
+    path: "/whiteboard/:id",
     element: (
       <ProtectedRoute>
         <ProjectPage />
       </ProtectedRoute>
     ),
+  },
+  {
+    path: "/join/:code",
+    element: <JoinBoard />,
   },
 ]);
 export default AppRouter;

@@ -10,6 +10,7 @@ export default function Canvas({
   setZoom,
   onStrokesChange,
   loadStrokes,
+  readOnly = false,
 }) {
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
@@ -115,14 +116,14 @@ export default function Canvas({
     <div className="w-full h-full relative">
       <canvas
         id="canvas"
-        onMouseDown={startDrawing}
-        onMouseUp={finishDrawing}
-        onMouseMove={draw}
+        onMouseDown={readOnly ? undefined : startDrawing}
+        onMouseUp={readOnly ? undefined : finishDrawing}
+        onMouseMove={readOnly ? undefined : draw}
         onWheel={(e) => e.preventDefault()}
         ref={canvasRef}
         className="w-full h-full"
         style={{
-          cursor: cursorStyle,
+          cursor: readOnly ? "default" : cursorStyle,
           background: "#fafafa",
           backgroundImage: `
             linear-gradient(to right, rgba(0,0,0,0.04) 1px, transparent 1px),

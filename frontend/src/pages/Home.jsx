@@ -21,14 +21,17 @@ export default function Home() {
   });
 
   const hasDateFilter = startDate || endDate;
-  const onSubmitJoiningCode = () => {};
+  const onSubmitJoiningCode = (data) => {
+    const input = data.joiningCode.trim();
+    const code = input.startsWith("http") ? input.split("/join/")[1] : input;
+    if (code) navigate(`/join/${code}`);
+  };
 
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
-  // inside component, replace useState for whiteboards
   const [whiteboards, setWhiteboards] = useState([]);
   const [loadingBoards, setLoadingBoards] = useState(true);
 

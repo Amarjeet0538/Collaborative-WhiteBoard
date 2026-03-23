@@ -22,7 +22,9 @@ export default function Whiteboard() {
   const [isRenamingBoard, setIsRenamingBoard] = useState(false);
   const [tempName, setTempName] = useState("");
   const nameInputRef = useRef(null);
-
+  const [shareCode, setShareCode] = useState("");
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [copied, setCopied] = useState(false);
   // Focus input when renaming starts
   useEffect(() => {
     if (isRenamingBoard) nameInputRef.current?.focus();
@@ -42,7 +44,18 @@ export default function Whiteboard() {
     }
     setIsRenamingBoard(false);
   };
-
+  useEffect(() => {
+    if (!id) return;
+    const interval = setInterval(async () => {
+      try {
+        const data = await apiFetch(`/whiteboards/${id}`);
+        setPendingRequests(data.pendingRequests || []);
+      } catch (err) {
+        console.error("Failed to retrieve pending requests ", err);
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [id]);
   // Load whiteboard on mount
   useEffect(() => {
     const fetchBoard = async () => {
@@ -50,6 +63,12 @@ export default function Whiteboard() {
         const data = await apiFetch(`/whiteboards/${id}`);
         setBoardName(data.name);
         setLoadStrokes(data.strokes || []);
+        setShareCode(data.shareCode || "");
+        setPendingRequests(data.pendingRequests || []);
+        console.log(
+          "pendingRequests raw:",
+          JSON.stringify(data.pendingRequests),
+        ); // ← add this
       } catch (err) {
         console.error("Failed to load whiteboard", err);
       }
@@ -78,12 +97,28 @@ export default function Whiteboard() {
     [id, boardName],
   );
 
+  const handleRespond = async (requestId, approve) => {
+    console.log("sending requestId:", requestId, "type:", typeof requestId);
+    try {
+      await apiFetch(`/whiteboards/${id}/respond-request`, {
+        method: "POST",
+        body: JSON.stringify({ requestId, approve }),
+      });
+      setPendingRequests((prev) =>
+        prev.filter((r) => r._id?.toString() !== requestId?.toString()),
+      );
+    } catch (err) {
+      console.error("Failed to respond", err);
+    }
+  };
+
   return (
     <div className="relative w-screen h-screen overflow-hidden">
       {/* Top left: board name */}
       <div
-        className="text-foreground bg-background p-1 z-10 rounded-md border 
-  border-border-muted absolute top-3 left-3 flex items-center gap-2"
+        className="z-10 absolute top-3 left-3 flex items-center gap-2 
+        px-2 py-1 rounded-md bg-background-highlight 
+    hover:bg-background text-foreground transition-all cursor-pointer"
       >
         {isRenamingBoard ? (
           <input
@@ -95,11 +130,11 @@ export default function Whiteboard() {
               if (e.key === "Escape") setIsRenamingBoard(false);
             }}
             onBlur={handleRenameBoard}
-            className="text-sm bg-transparent border-none focus:outline-none w-40"
+            className="text-xl bg-background-highlight border-none focus:outline-none w-40"
           />
         ) : (
           <span
-            className="text-sm cursor-text px-1"
+            className="text-xl cursor-text px-1"
             onDoubleClick={() => {
               setTempName(boardName);
               setIsRenamingBoard(true);
@@ -115,9 +150,54 @@ export default function Whiteboard() {
         )}
       </div>
 
-      {/* Top right: dark mode */}
-      <div className="absolute top-3 right-4 z-10">
+      {/* Top right: dark mode, share code */}
+      <div className="absolute top-3 right-4 z-10 flex gap-1 ">
+        {shareCode && (
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(
+                `${window.location.origin}/join/${shareCode}`,
+              );
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            }}
+            className="text-md px-2 py-1 rounded-md bg-background-highlight 
+    hover:bg-background text-foreground transition-all cursor-pointer"
+          >
+            {copied ? "✓ Copied!" : `Share: ${shareCode}`}
+          </button>
+        )}
         <DarkModeToggle />
+      </div>
+
+      <div>
+        {pendingRequests.length > 0 && (
+          <div className="absolute bottom-5 left-3 z-10 flex flex-col gap-2">
+            {pendingRequests.map((pendingReq) => (
+              <div
+                key={pendingReq._id}
+                className="flex items-center gap-3 bg-background border border-border-muted 
+        rounded-md px-3 py-2 text-sm text-foreground shadow-sm"
+              >
+                <span>User wants to edit</span>
+                <button
+                  onClick={() => handleRespond(pendingReq._id, true)}
+                  className="px-2 py-1 bg-primary text-background rounded-md 
+          hover:bg-primary-hover text-xs cursor-pointer"
+                >
+                  Approve
+                </button>
+                <button
+                  onClick={() => handleRespond(pendingReq._id, false)}
+                  className="px-2 py-1 bg-background-highlight text-foreground 
+          rounded-md hover:bg-red-500 hover:text-white text-xs cursor-pointer"
+                >
+                  Deny
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <Canvas

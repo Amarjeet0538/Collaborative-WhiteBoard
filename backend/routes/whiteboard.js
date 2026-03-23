@@ -2,7 +2,7 @@ import express from "express";
 import Whiteboard from "../models/Whiteboard.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { generateUniqueShareCode } from "../utils/generateShareCode.js";
-
+import mongoose from "mongoose";
 const router = express.Router();
 
 router.get("/join/:code", async (req, res) => {
@@ -97,8 +97,7 @@ router.post("/:id/request-access", async (req, res) => {
     const board = await Whiteboard.findById(req.params.id);
     if (!board) return res.status(404).json({ message: "Board not found" });
 
-    const userId = req.user._id;
-
+    const userId = new mongoose.Types.ObjectId(req.user.id);
     const alreadyRequested = board.pendingRequests.some((r) =>
       r.userId.equals(userId),
     );
@@ -117,20 +116,26 @@ router.post("/:id/request-access", async (req, res) => {
   }
 });
 
-router.post("/:id/response-request", async (req, res) => {
+router.post("/:id/respond-request", protect, async (req, res) => {
   try {
-    const { userId, approve } = req.body;
+    const { requestId, approve } = req.body; // ← was userId
     const board = await Whiteboard.findById(req.params.id);
     if (!board) return res.status(404).json({ message: "Board not found" });
-    if (!board.owner.equals(req.user._id))
+    if (!board.owner.equals(req.user.id))
       return res.status(403).json({ message: "Not the owner" });
 
-    board.pendingRequests = board.pendingRequests.filter(
-      (r) => !r.userId.equals(userId),
+    // Find the pending request to get the actual userId before removing it
+    const pendingReq = board.pendingRequests.find(
+      (r) => r._id.toString() === requestId.toString(),
     );
 
-    if (approve) {
-      board.sharedWith.push({ userId, role: "editor" });
+    // Remove from pending
+    board.pendingRequests = board.pendingRequests.filter(
+      (r) => r._id.toString() !== requestId.toString(),
+    );
+
+    if (approve && pendingReq) {
+      board.sharedWith.push({ userId: pendingReq.userId, role: "editor" });
     }
 
     await board.save();
