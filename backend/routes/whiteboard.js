@@ -1,9 +1,21 @@
 import express from "express";
 import Whiteboard from "../models/Whiteboard.js";
 import { protect } from "../middleware/authMiddleware.js";
+import { generateUniqueShareCode } from "../utils/generateShareCode.js";
 
 const router = express.Router();
 
+router.get("/join/:code", async (req, res) => {
+  try {
+    const board = await Whiteboard.findOne({
+      shareCode: req.params.code,
+    }).select("-sharedWith -pendingRequests");
+    if (!board) res.status(404).json({ message: "Board not found" });
+    res.json(board);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 // All routes below are protected
 router.use(protect);
 
@@ -24,7 +36,7 @@ router.get("/:id", async (req, res) => {
   try {
     const whiteboard = await Whiteboard.findOne({
       _id: req.params.id,
-      owner: req.user.id,
+      $or: [{ owner: req.user.id }, { "sharedWith.userId": req.user.id }],
     });
     if (!whiteboard) return res.status(404).json({ message: "Not found" });
     res.json(whiteboard);
@@ -80,18 +92,6 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-router.get("/join/:code", async (req, res) => {
-  try {
-    const board = await Whiteboard.findOne({
-      shareCode: req.params.code,
-    }).select("-sharedWith -pendingRequests");
-    if (!board) res.status(404).json({ message: "Board not found" });
-    res.json(board);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
 router.post("/:id/request-access", async (req, res) => {
   try {
     const board = await Whiteboard.findById(req.params.id);
@@ -117,7 +117,7 @@ router.post("/:id/request-access", async (req, res) => {
   }
 });
 
-router.get("/:id/response-request", async (req, res) => {
+router.post("/:id/response-request", async (req, res) => {
   try {
     const { userId, approve } = req.body;
     const board = await Whiteboard.findById(req.params.id);
