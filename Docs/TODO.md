@@ -17,7 +17,7 @@
 - [ ] minimap for navigation
 - [-] adder user model in mongodb and login
   mobbin for design
-
+- [ ] show the shared boards in the my whitboard section , add a already case for already in the shared list
 - [ ] add toast for every api response in frontend
 
 https://www.goodnotes.com/

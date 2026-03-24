@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/useAuth";
 import { apiFetch } from "@/utils/api";
@@ -10,7 +10,8 @@ export default function JoinBoard() {
   const { code } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-
+  const [toast, setToast] = useState("");
+  const pollRef = useRef(null);
   const [board, setBoard] = useState(null);
   const [error, setError] = useState("");
   const [requestStatus, setRequestStatus] = useState("idle"); // idle | sent | already
@@ -28,7 +29,30 @@ export default function JoinBoard() {
     };
     fetchBoard();
   }, [code]);
-
+  const startPolling = (boardId) => {
+    if (pollRef.current) return; // already polling
+    pollRef.current = setInterval(async () => {
+      try {
+        const data = await apiFetch(`/whiteboards/${boardId}`);
+        const approved = data.sharedWith?.some(
+          (s) =>
+            s.userId?.toString() === user._id?.toString() ||
+            s.userId?._id?.toString() === user._id?.toString(),
+        );
+        if (approved) {
+          clearInterval(pollRef.current);
+          pollRef.current = null;
+          setToast("✓ You've been approved! Redirecting...");
+          setTimeout(() => navigate(`/whiteboard/${boardId}`), 2000);
+        }
+      } catch {}
+    }, 5000);
+  };
+  useEffect(() => {
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, []);
   const handleRequestAccess = async () => {
     if (!user) {
       navigate(`/login?redirect=/join/${code}`);
@@ -39,12 +63,14 @@ export default function JoinBoard() {
         method: "POST",
       });
       setRequestStatus("sent");
+      startPolling(board._id);
     } catch (err) {
-      if (err.message?.includes("Already")) setRequestStatus("already");
-      else console.error(err);
+      if (err.message?.includes("Already")) {
+        setRequestStatus("already");
+        startPolling(board._id);
+      } else console.error(err);
     }
   };
-
   if (error)
     return (
       <div className="flex items-center justify-center h-screen bg-background text-foreground">
@@ -125,6 +151,16 @@ export default function JoinBoard() {
         loadStrokes={board.strokes || []}
         readOnly={true}
       />
+
+      {toast && (
+        <div
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 
+    bg-primary text-background px-6 py-3 rounded-md shadow-lg text-sm font-medium
+    animate-fade-in"
+        >
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

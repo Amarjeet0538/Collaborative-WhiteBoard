@@ -22,8 +22,10 @@ router.use(protect);
 // GET all whiteboards for logged-in user
 router.get("/", async (req, res) => {
   try {
-    const whiteboards = await Whiteboard.find({ owner: req.user.id })
-      .select("name createdAt updatedAt") // don't send strokes in list
+    const whiteboards = await Whiteboard.find({
+      $or: [{ owner: req.user.id }, { "sharedWith.userId": req.user.id }],
+    })
+      .select("name createdAt updatedAt owner shareCode")
       .sort({ updatedAt: -1 });
     res.json(whiteboards);
   } catch (err) {
@@ -98,10 +100,13 @@ router.post("/:id/request-access", async (req, res) => {
     if (!board) return res.status(404).json({ message: "Board not found" });
 
     const userId = new mongoose.Types.ObjectId(req.user.id);
-    const alreadyRequested = board.pendingRequests.some((r) =>
-      r.userId.equals(userId),
+
+    const alreadyRequested = board.pendingRequests.some(
+      (r) => r.userId?.equals(userId), // ← add ?.
     );
-    const alreadyShared = board.sharedWith.some((s) => s.userId.equals(userId));
+    const alreadyShared = board.sharedWith.some(
+      (s) => s.userId?.equals(userId), // ← add ?.
+    );
 
     if (alreadyRequested || alreadyShared)
       return res
