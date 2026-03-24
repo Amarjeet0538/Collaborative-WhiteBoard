@@ -4,6 +4,8 @@ import Editing_Buttons from "./Editing_Buttons";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { apiFetch } from "@/utils/api";
+import socket from "@/utils/socket";
+import { useAuth } from "@/context/useAuth";
 
 export default function Whiteboard() {
   const { id } = useParams();
@@ -25,6 +27,9 @@ export default function Whiteboard() {
   const [shareCode, setShareCode] = useState("");
   const [pendingRequests, setPendingRequests] = useState([]);
   const [copied, setCopied] = useState(false);
+  const { user } = useAuth();
+  const [cursors, setCursors] = useState({}); // { socketId: { username, color, x, y } }
+  const [presentUsers, setPresentUsers] = useState([]); // who's online
   // Focus input when renaming starts
   useEffect(() => {
     if (isRenamingBoard) nameInputRef.current?.focus();
@@ -75,10 +80,62 @@ export default function Whiteboard() {
     };
     if (id) fetchBoard();
   }, [id]);
+  useEffect(() => {
+    if (!id || !user) return;
 
+    socket.connect();
+    socket.emit("join-board", {
+      boardId: id,
+      userId: user.id,
+      username: user.name,
+    });
+
+    // Incoming stroke from another user
+    socket.on("stroke-update", ({ stroke }) => {
+      setLoadStrokes((prev) => [...prev, stroke]);
+    });
+
+    // Incoming cursor position
+    socket.on("cursor-move", ({ socketId, username, color, x, y }) => {
+      setCursors((prev) => ({
+        ...prev,
+        [socketId]: { username, color, x, y },
+      }));
+    });
+
+    // Someone left — remove their cursor
+    socket.on("cursor-leave", ({ socketId }) => {
+      setCursors((prev) => {
+        const updated = { ...prev };
+        delete updated[socketId];
+        return updated;
+      });
+    });
+
+    // Presence update
+    socket.on("presence-update", (users) => {
+      setPresentUsers(users);
+    });
+
+    return () => {
+      socket.emit("leave-board", { boardId: id });
+      socket.off("stroke-update");
+      socket.off("cursor-move");
+      socket.off("cursor-leave");
+      socket.off("presence-update");
+      socket.disconnect();
+    };
+  }, [id, user]);
   // Auto-save strokes with debounce (saves 1 second after last stroke)
   const handleStrokesChange = useCallback(
     (strokes) => {
+      // Emit only the latest stroke (last one added)
+      const latestStroke = strokes[strokes.length - 1];
+      if (latestStroke) {
+        socket.emit("stroke-update", { boardId: id, stroke: latestStroke });
+      }
+
+      // Auto-save as before
       if (saveTimeout.current) clearTimeout(saveTimeout.current);
       setSaving(true);
       saveTimeout.current = setTimeout(async () => {
@@ -151,7 +208,23 @@ export default function Whiteboard() {
       </div>
 
       {/* Top right: dark mode, share code */}
-      <div className="absolute top-3 right-4 z-10 flex gap-1 ">
+      <div className="absolute top-3 right-0 z-10 flex gap-1 ">
+        {presentUsers.length > 0 && (
+          <div
+            className="absolute top-13 right-0 -translate-x-1/2 z-10 flex items-center gap-2
+    bg-background border border-border-muted rounded-full px-3 py-1 shadow-sm"
+          >
+            {presentUsers.map((u, i) => (
+              <div key={i} className="flex items-center gap-1">
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: u.color }}
+                />
+                <span className="text-xs text-foreground">{u.username}</span>
+              </div>
+            ))}
+          </div>
+        )}
         {shareCode && (
           <button
             onClick={() => {
@@ -210,6 +283,10 @@ export default function Whiteboard() {
         onClearCanvas={(fn) => (clearCanvasRef.current = fn)}
         onStrokesChange={handleStrokesChange}
         loadStrokes={loadStrokes}
+        onCursorMove={(x, y) =>
+          socket.emit("cursor-move", { boardId: id, x, y })
+        }
+        cursors={cursors}
       />
 
       <Editing_Buttons

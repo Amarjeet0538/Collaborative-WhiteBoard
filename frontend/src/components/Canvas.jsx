@@ -11,6 +11,8 @@ export default function Canvas({
   onStrokesChange,
   loadStrokes,
   readOnly = false,
+  onCursorMove, // ← add
+  cursors = {},
 }) {
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
@@ -84,6 +86,7 @@ export default function Canvas({
   const draw = ({ nativeEvent }) => {
     if (!isDrawing || tool === "hand" || !currentStroke.current) return;
     const { offsetX, offsetY } = nativeEvent;
+    if (onCursorMove) onCursorMove(offsetX, offsetY);
     currentStroke.current.points.push([offsetX, offsetY]);
 
     if (tool === "eraser") {
@@ -133,6 +136,28 @@ export default function Canvas({
           backgroundSize: "24px 24px, 24px 24px, 24px 24px",
         }}
       />
+      {Object.entries(cursors).map(([socketId, cursor]) => (
+        <div
+          key={socketId}
+          className="absolute pointer-events-none z-20 flex items-center gap-1"
+          style={{
+            left: cursor.x,
+            top: cursor.y,
+            transform: "translate(0, -100%)",
+          }}
+        >
+          <div
+            className="w-2 h-2 rounded-full"
+            style={{ backgroundColor: cursor.color }}
+          />
+          <span
+            className="text-xs px-1 py-0.5 rounded text-white font-medium"
+            style={{ backgroundColor: cursor.color }}
+          >
+            {cursor.username}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
