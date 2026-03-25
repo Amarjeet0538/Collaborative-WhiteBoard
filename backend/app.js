@@ -15,9 +15,14 @@ const MONGO_URL = process.env.MONGO_URL;
 const app = express();
 const httpServer = createServer(app);
 
-const allowedOrigins = ["http://localhost:5173", process.env.CLIENT_URL].filter(
-	Boolean,
-);
+// const allowedOrigins = ["http://localhost:5173", process.env.CLIENT_URL].filter(
+// 	Boolean,
+// );
+
+const allowedOrigins = [
+	"http://localhost:5173",
+	"https://collaborative-white-board-iota.vercel.app",
+];
 
 const io = new Server(httpServer, {
 	cors: {
