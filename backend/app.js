@@ -1,6 +1,5 @@
 import express from "express";
 import mongoose from "mongoose";
-import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
 import whiteboardRoutes from "./routes/whiteboard.js";
@@ -9,6 +8,7 @@ import { Server } from "socket.io";
 import { initSocket } from "./socket/socketHandler.js";
 
 dotenv.config();
+
 const PORT = process.env.PORT || 5000;
 const MONGO_URL = process.env.MONGO_URL;
 
@@ -26,16 +26,30 @@ const io = new Server(httpServer, {
 	},
 });
 
-const corsOptions = {
-	origin: allowedOrigins,
-	credentials: true,
-};
+app.use((req, res, next) => {
+	const origin = req.headers.origin;
 
-app.options("/{*path}", cors(corsOptions));
+	if (allowedOrigins.includes(origin)) {
+		res.setHeader("Access-Control-Allow-Origin", origin);
+		res.setHeader("Access-Control-Allow-Credentials", "true");
+		res.setHeader(
+			"Access-Control-Allow-Methods",
+			"GET, POST, PUT, PATCH, DELETE, OPTIONS",
+		);
+		res.setHeader(
+			"Access-Control-Allow-Headers",
+			"Content-Type, Authorization",
+		);
+	}
 
-app.use(cors(corsOptions));
+	if (req.method === "OPTIONS") {
+		return res.sendStatus(204);
+	}
+
+	next();
+});
+
 app.use(express.json());
-
 app.use("/api/auth", authRoutes);
 app.use("/api/whiteboards", whiteboardRoutes);
 
