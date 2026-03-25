@@ -28,10 +28,8 @@ const io = new Server(httpServer, {
 
 app.use((req, res, next) => {
 	const origin = req.headers.origin;
-	console.log("Incoming origin:", JSON.stringify(origin));
-	console.log("Allowed origins:", allowedOrigins);
 
-	if (allowedOrigins.includes(origin)) {
+	if (origin && allowedOrigins.includes(origin)) {
 		res.setHeader("Access-Control-Allow-Origin", origin);
 		res.setHeader("Access-Control-Allow-Credentials", "true");
 		res.setHeader(
