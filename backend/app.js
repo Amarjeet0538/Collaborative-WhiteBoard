@@ -26,12 +26,14 @@ const io = new Server(httpServer, {
 	},
 });
 
-app.use(
-	cors({
-		origin: allowedOrigins,
-		credentials: true,
-	}),
-);
+const corsOptions = {
+	origin: allowedOrigins,
+	credentials: true,
+};
+
+app.options("*", cors(corsOptions));
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
