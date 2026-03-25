@@ -15,16 +15,20 @@ const MONGO_URL = process.env.MONGO_URL;
 const app = express();
 const httpServer = createServer(app);
 
+const allowedOrigins = ["http://localhost:5173", process.env.CLIENT_URL].filter(
+	Boolean,
+);
+
 const io = new Server(httpServer, {
 	cors: {
-		origin: "http://localhost:5173",
+		origin: allowedOrigins,
 		credentials: true,
 	},
 });
 
 app.use(
 	cors({
-		origin: "http://localhost:5173",
+		origin: allowedOrigins,
 		credentials: true,
 	}),
 );
@@ -41,6 +45,6 @@ mongoose
 		console.log("Connected to MongoDB");
 		httpServer.listen(PORT, () =>
 			console.log(`Server running on port ${PORT}`),
-		); 
+		);
 	})
 	.catch((err) => console.error("MongoDB connection error:", err));
