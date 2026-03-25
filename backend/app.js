@@ -9,22 +9,24 @@ import { Server } from "socket.io";
 import { initSocket } from "./socket/socketHandler.js";
 
 dotenv.config();
+const PORT = process.env.PORT || 5000;
+const MONGO_URL = process.env.MONGO_URL;
 
 const app = express();
 const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
-  cors: {
-    origin: "http://localhost:5173",
-    credentials: true,
-  },
+	cors: {
+		origin: "http://localhost:5173",
+		credentials: true,
+	},
 });
 
 app.use(
-  cors({
-    origin: "http://localhost:5173",
-    credentials: true,
-  }),
+	cors({
+		origin: "http://localhost:5173",
+		credentials: true,
+	}),
 );
 app.use(express.json());
 
@@ -34,11 +36,11 @@ app.use("/api/whiteboards", whiteboardRoutes);
 initSocket(io);
 
 mongoose
-  .connect(process.env.MONGO_URL)
-  .then(() => {
-    console.log("Connected to MongoDB");
-    httpServer.listen(process.env.PORT, () =>
-      console.log(`Server running on port ${process.env.PORT}`),
-    );
-  })
-  .catch((err) => console.error("MongoDB connection error:", err));
+	.connect(MONGO_URL)
+	.then(() => {
+		console.log("Connected to MongoDB");
+		httpServer.listen(PORT, () =>
+			console.log(`Server running on port ${PORT}`),
+		); 
+	})
+	.catch((err) => console.error("MongoDB connection error:", err));
