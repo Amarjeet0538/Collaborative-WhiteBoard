@@ -1,0 +1,58 @@
+import Logo from '../Logo';
+import DarkModeToggle from '../DarkModeToggle';
+import { User, Bell } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth.js';
+import { useState } from 'react';
+
+export default function Header() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  return (
+    <div className="flex justify-between p-2 rounded-lg bg-background shadow-sm">
+      <Logo />
+      <div className="flex gap-3">
+        <DarkModeToggle />
+        <button className="rounded-full text-foreground cursor-pointer p-3 transition-all hover:shadow-md">
+          <Bell className="hover:text-primary" />
+        </button>
+        {user ? (
+          <div className="flex items-center gap-3 relative group cursor-pointer">
+            <button
+              className="rounded-full text-foreground cursor-pointer p-3 transition-all hover:shadow-md"
+              onClick={() => setIsOpen(!isOpen)}
+            >
+              <User className="hover:text-primary" />
+            </button>
+            {isOpen && (
+              <div className="absolute top-full right-0 z-20 w-40 text-center p-5 border border-border-muted rounded-md bg-background text-foreground mt-2 shadow-lg">
+                <p className="cursor-pointer text-sm">{user.name}</p>
+                <hr className="my-2 border-t border-border" />
+                <button
+                  onClick={handleLogout}
+                  className="py-2 px-1 w-full hover:bg-red-500 hover:text-white rounded-md text-sm cursor-pointer"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <button
+            onClick={() => navigate('/login')}
+            className="border border-border-muted py-2 px-4 rounded-md bg-primary cursor-pointer text-background hover:bg-background hover:text-primary hover:border-primary transition-all"
+          >
+            Login
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}

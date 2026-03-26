@@ -1,13 +1,14 @@
-import { createBrowserRouter } from "react-router-dom";
-import App from "./App";
-import Login from "./pages/Login";
-import Home from "./pages/Home";
-import ProjectPage from "./pages/ProjectPage";
-import ProtectedRoute from "./components/ProtectedRoute";
-import JoinBoard from "./pages/JoinBoard";
+import { createBrowserRouter } from 'react-router-dom';
+import App from './App';
+import Login from './pages/Login';
+import Home from './pages/Home';
+import WhiteboardPage from './pages/WhiteboardPage';
+import ProtectedRoute from './components/ProtectedRoute';
+import JoinBoard from './pages/JoinBoard';
+
 const AppRouter = createBrowserRouter([
   {
-    path: "/",
+    path: '/',
     element: (
       <ProtectedRoute>
         <App />
@@ -15,11 +16,11 @@ const AppRouter = createBrowserRouter([
     ),
   },
   {
-    path: "/login",
+    path: '/login',
     element: <Login />,
   },
   {
-    path: "/home",
+    path: '/home',
     element: (
       <ProtectedRoute>
         <Home />
@@ -27,16 +28,17 @@ const AppRouter = createBrowserRouter([
     ),
   },
   {
-    path: "/whiteboard/:id",
+    path: '/whiteboard/:id',
     element: (
       <ProtectedRoute>
-        <ProjectPage />
+        <WhiteboardPage />
       </ProtectedRoute>
     ),
   },
   {
-    path: "/join/:code",
+    path: '/join/:code',
     element: <JoinBoard />,
   },
 ]);
+
 export default AppRouter;

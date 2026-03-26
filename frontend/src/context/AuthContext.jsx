@@ -1,22 +1,21 @@
-import { createContext, useState } from "react";
+import { createContext, useState } from 'react';
+import { storage } from '../utils/storage.js';
 
 export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem("user");
-    return storedUser ? JSON.parse(storedUser) : null;
+    return storage.getUser();
   });
 
   const login = (userData, token) => {
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(userData));
+    storage.setToken(token);
+    storage.setUser(userData);
     setUser(userData);
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    storage.clear();
     setUser(null);
   };
 
