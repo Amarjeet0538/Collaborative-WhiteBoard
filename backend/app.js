@@ -1,40 +1,31 @@
 import express from "express";
-import mongoose from "mongoose";
 import dotenv from "dotenv";
-import authRoutes from "./routes/auth.js";
-import whiteboardRoutes from "./routes/whiteboard.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import connectDB from "./config/db.js";
+import corsOptions from "./config/cors.js";
+import socketOptions from "./config/socket.js";
+import authRoutes from "./routes/auth.js";
+import whiteboardRoutes from "./routes/whiteboard.js";
 import { initSocket } from "./socket/socketHandler.js";
+import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
+import { ALLOWED_ORIGINS } from "./utils/constants.js";
 
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
-const MONGO_URL = process.env.MONGO_URL;
 
 const app = express();
 const httpServer = createServer(app);
 
-// const allowedOrigins = ["http://localhost:5173", process.env.CLIENT_URL].filter(
-// 	Boolean,
-// );
+const io = new Server(httpServer, socketOptions);
 
-const allowedOrigins = [
-	"http://localhost:5173",
-	"https://collaborative-white-board-iota.vercel.app",
-];
-
-const io = new Server(httpServer, {
-	cors: {
-		origin: allowedOrigins,
-		credentials: true,
-	},
-});
+app.use(express.json());
 
 app.use((req, res, next) => {
 	const origin = req.headers.origin;
 
-	if (origin && allowedOrigins.includes(origin)) {
+	if (origin && ALLOWED_ORIGINS.includes(origin)) {
 		res.setHeader("Access-Control-Allow-Origin", origin);
 		res.setHeader("Access-Control-Allow-Credentials", "true");
 		res.setHeader(
@@ -54,18 +45,16 @@ app.use((req, res, next) => {
 	next();
 });
 
-app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/whiteboards", whiteboardRoutes);
 
 initSocket(io);
 
-mongoose
-	.connect(MONGO_URL)
-	.then(() => {
-		console.log("Connected to MongoDB");
-		httpServer.listen(PORT, () =>
-			console.log(`Server running on port ${PORT}`),
-		);
-	})
-	.catch((err) => console.error("MongoDB connection error:", err));
+app.use(notFound);
+app.use(errorHandler);
+
+connectDB().then(() => {
+	httpServer.listen(PORT, () => {
+		console.log(`Server running on port ${PORT}`);
+	});
+});
