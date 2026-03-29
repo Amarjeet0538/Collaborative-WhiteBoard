@@ -18,8 +18,8 @@
 - [-] adder user model in mongodb and login
   mobbin for design
 - [ ] add toast for every api response in frontend
-
-https://www.goodnotes.com/
+- [-] Add the use of get started button , start drawing button , if not login then show landing page not login
+  https://www.goodnotes.com/
 
 https://github.com/TomHumphries/InfiniteCanvasWhiteboard/blob/master/index.html
 
@@ -35,3 +35,20 @@ crdts
 webrtc
 
 zg8M9QiML1HsLqc3
+
+- [ ] Notification System including Toast Popups
+- [ ] Make the website Responsive
+- [ ] UI/UX Enhancement
+- [ ] Forgot and Show Password
+- [ ] Add Button Feature/Name on Hovering it
+- [ ] Search Bar Functionality
+- [ ] Whiteboard Thumbnail
+- [ ] Whiteboard card make design good like add owner and shared peoples
+- [ ] Add Profile Pics to Users
+- [ ] Google and Github Integration for Login
+- [ ] Add Shimmer UI
+- [ ] Main Whiteboard Features :-
+      Pan and Zoom , Infinite Canvas
+      Featureful Toolbar
+      MiniMap for Navigation
+      WhiteBoard Background Pattern and Color Selector

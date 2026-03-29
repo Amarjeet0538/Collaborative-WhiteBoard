@@ -1,18 +1,18 @@
-import { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth.js';
-import { whiteboardApi } from '../api/whiteboard.api.js';
-import Canvas from '../components/whiteboard/Canvas.jsx';
+import { useEffect, useState, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth.js";
+import { whiteboardApi } from "../api/whiteboard.api.js";
+import Canvas from "../components/whiteboard/Canvas.jsx";
 
 export default function JoinBoard() {
   const { code } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [toast, setToast] = useState('');
+  const [toast, setToast] = useState("");
   const pollRef = useRef(null);
   const [board, setBoard] = useState(null);
-  const [error, setError] = useState('');
-  const [requestStatus, setRequestStatus] = useState('idle');
+  const [error, setError] = useState("");
+  const [requestStatus, setRequestStatus] = useState("idle");
 
   useEffect(() => {
     const fetchBoard = async () => {
@@ -20,7 +20,8 @@ export default function JoinBoard() {
         const data = await whiteboardApi.joinByCode(code);
         setBoard(data);
       } catch (err) {
-        setError('Board not found. Check your code or link.');
+        console.log(err);
+        setError("Board not found. Check your code or link.");
       }
     };
     fetchBoard();
@@ -34,12 +35,12 @@ export default function JoinBoard() {
         const approved = data.sharedWith?.some(
           (s) =>
             s.userId?.toString() === user._id?.toString() ||
-            s.userId?._id?.toString() === user._id?.toString()
+            s.userId?._id?.toString() === user._id?.toString(),
         );
         if (approved) {
           clearInterval(pollRef.current);
           pollRef.current = null;
-          setToast("✓ You've been approved! Redirecting...");
+          setToast("You've been approved! Redirecting...");
           setTimeout(() => navigate(`/whiteboard/${boardId}`), 2000);
         }
       } catch (err) {
@@ -61,11 +62,11 @@ export default function JoinBoard() {
     }
     try {
       await whiteboardApi.requestAccess(board._id);
-      setRequestStatus('sent');
+      setRequestStatus("sent");
       startPolling(board._id);
     } catch (err) {
-      if (err.message?.includes('Already')) {
-        setRequestStatus('already');
+      if (err.message?.includes("Already")) {
+        setRequestStatus("already");
         startPolling(board._id);
       } else {
         console.error(err);
@@ -79,7 +80,7 @@ export default function JoinBoard() {
         <div className="text-center gap-3 flex flex-col">
           <p className="text-xl font-semibold">{error}</p>
           <button
-            onClick={() => navigate('/home')}
+            onClick={() => navigate("/home")}
             className="text-sm text-primary underline"
           >
             Back to Home
@@ -107,20 +108,20 @@ export default function JoinBoard() {
       </div>
 
       <div className="absolute top-3 right-4 z-10">
-        {requestStatus === 'idle' && (
+        {requestStatus === "idle" && (
           <button
             onClick={handleRequestAccess}
             className="bg-primary text-background text-sm px-4 py-2 rounded-md hover:bg-primary-hover transition-all cursor-pointer"
           >
-            {user ? 'Request to Edit' : 'Login to Edit'}
+            {user ? "Request to Edit" : "Login to Edit"}
           </button>
         )}
-        {requestStatus === 'sent' && (
+        {requestStatus === "sent" && (
           <span className="text-sm bg-background border border-border-muted px-4 py-2 rounded-md text-foreground-muted">
-            ✓ Request sent — waiting for owner
+            Request sent — waiting for owner
           </span>
         )}
-        {requestStatus === 'already' && (
+        {requestStatus === "already" && (
           <span className="text-sm bg-background border border-border-muted px-4 py-2 rounded-md text-foreground-muted">
             Request already sent
           </span>
@@ -146,3 +147,4 @@ export default function JoinBoard() {
     </div>
   );
 }
+

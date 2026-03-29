@@ -1,18 +1,29 @@
-import Logo from '../Logo';
-import DarkModeToggle from '../DarkModeToggle';
-import { User, Bell } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth.js';
-import { useState } from 'react';
+import Logo from "../Logo";
+import DarkModeToggle from "../DarkModeToggle";
+import { User, Bell } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth.js";
+import { useRef, useState, useEffect } from "react";
 
 export default function Header() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
@@ -32,7 +43,10 @@ export default function Header() {
               <User className="hover:text-primary" />
             </button>
             {isOpen && (
-              <div className="absolute top-full right-0 z-20 w-40 text-center p-5 border border-border-muted rounded-md bg-background text-foreground mt-2 shadow-lg">
+              <div
+                className="absolute top-full right-0 z-20 w-40 text-center p-5 border border-border-muted rounded-md bg-background text-foreground mt-2 shadow-lg"
+                ref={menuRef}
+              >
                 <p className="cursor-pointer text-sm">{user.name}</p>
                 <hr className="my-2 border-t border-border" />
                 <button
@@ -46,7 +60,7 @@ export default function Header() {
           </div>
         ) : (
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => navigate("/login")}
             className="border border-border-muted py-2 px-4 rounded-md bg-primary cursor-pointer text-background hover:bg-background hover:text-primary hover:border-primary transition-all"
           >
             Login
@@ -56,3 +70,4 @@ export default function Header() {
     </div>
   );
 }
+

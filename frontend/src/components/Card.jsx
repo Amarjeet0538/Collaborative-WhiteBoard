@@ -1,4 +1,4 @@
-import { EllipsisVertical, Trash2, Pencil, Check, X } from "lucide-react";
+import { EllipsisVertical, Trash2, Pencil } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 export default function Card({ text, time, onClick, onDelete, onRename }) {
@@ -18,14 +18,14 @@ export default function Card({ text, time, onClick, onDelete, onRename }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Focus input when rename starts
   useEffect(() => {
     if (isRenaming) inputRef.current?.focus();
   }, [isRenaming]);
-  // Sync newName when text prop changes
+
   useEffect(() => {
     setNewName(text);
   }, [text]);
+
   const handleRename = (e) => {
     e.stopPropagation();
     if (newName.trim() && newName !== text) {
@@ -36,7 +36,7 @@ export default function Card({ text, time, onClick, onDelete, onRename }) {
 
   const handleCancelRename = (e) => {
     e.stopPropagation();
-    setNewName(text); // reset
+    setNewName(text);
     setIsRenaming(false);
   };
 

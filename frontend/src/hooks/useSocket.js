@@ -1,7 +1,7 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { io } from 'socket.io-client';
+import { useRef, useCallback } from "react";
+import { io } from "socket.io-client";
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const SOCKET_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export const useSocket = () => {
   const socketRef = useRef(null);
@@ -41,7 +41,7 @@ export const useSocket = () => {
   }, []);
 
   return {
-    socket: socketRef.current,
+    socket: () => socketRef.current,
     connect,
     disconnect,
     emit,
