@@ -1,17 +1,23 @@
 import { Plus } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { whiteboardApi } from "../api/whiteboard.api.js";
 import Header from "../components/layout/Header";
 import BoardList from "../components/home/BoardList";
 import BoardFilters from "../components/home/BoardFilters";
+import useToast from "../hooks/useToast.js";
 
 export default function Home() {
   const navigate = useNavigate();
+  const toast = useToast();
   const [whiteboards, setWhiteboards] = useState([]);
   const [loading, setLoading] = useState(true);
   const { handleSubmit, register } = useForm();
+
+  const [search, setSearch] = useState("");
+  const [dateFilter, setDateFilter] = useState({ startDate: "", endDate: "" });
+  const [sort, setSort] = useState("recent");
 
   useEffect(() => {
     const fetchBoards = async () => {
@@ -27,12 +33,43 @@ export default function Home() {
     fetchBoards();
   }, []);
 
+  const filteredBoards = useMemo(() => {
+    let result = [...whiteboards];
+
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      result = result.filter((wb) => wb.name.toLowerCase().includes(q));
+    }
+
+    if (dateFilter.startDate) {
+      const start = new Date(dateFilter.startDate);
+      result = result.filter((wb) => new Date(wb.updatedAt) >= start);
+    }
+    if (dateFilter.endDate) {
+      const end = new Date(dateFilter.endDate);
+      end.setHours(23, 59, 59, 999);
+      result = result.filter((wb) => new Date(wb.updatedAt) <= end);
+    }
+
+    if (sort === "a-z") {
+      result.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sort === "z-a") {
+      result.sort((a, b) => b.name.localeCompare(a.name));
+    } else {
+      result.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    }
+
+    return result;
+  }, [whiteboards, search, dateFilter, sort]);
+
   const handleNewWhiteboard = async () => {
     try {
       const data = await whiteboardApi.create("Untitled");
+      toast.success("Whiteboard created!");
       navigate(`/whiteboard/${data._id}`);
     } catch (err) {
       console.error(err);
+      toast.error("Failed to create whiteboard");
     }
   };
 
@@ -41,8 +78,10 @@ export default function Home() {
     try {
       await whiteboardApi.remove(id);
       setWhiteboards((prev) => prev.filter((wb) => wb._id !== id));
+      toast.success("Whiteboard deleted");
     } catch (err) {
       console.error(err);
+      toast.error("Failed to delete whiteboard");
     }
   };
 
@@ -52,15 +91,21 @@ export default function Home() {
       setWhiteboards((prev) =>
         prev.map((wb) => (wb._id === id ? { ...wb, name: newName } : wb)),
       );
+      toast.success("Renamed successfully");
     } catch (err) {
       console.error("Failed to rename:", err);
+      toast.error("Failed to rename whiteboard");
     }
   };
 
   const onSubmitJoinCode = (data) => {
     const input = data.joiningCode?.trim() || "";
     const code = input.startsWith("http") ? input.split("/join/")[1] : input;
-    if (code) navigate(`/join/${code}`);
+    if (code) {
+      navigate(`/join/${code}`);
+    } else {
+      toast.error("Please enter a valid code or link");
+    }
   };
 
   return (
@@ -76,7 +121,7 @@ export default function Home() {
             <Plus size={50} strokeWidth={2} />
             <span className="text-xl font-semibold">New Whiteboard</span>
           </button>
-          <div className="flex flex-col w-1/2 h-70 bg-background hover:bg-background-highlight justify-center items-center rounded-md hover:bg-dark transition-all cursor-pointer border border-border-muted/60 hover:border-border/70 shadow-sm text-foreground">
+          <div className="flex flex-col w-1/2 h-70 bg-background hover:bg-background-highlight justify-center items-center rounded-md transition-all cursor-pointer border border-border-muted/60 hover:border-border/70 shadow-sm text-foreground">
             <form
               onSubmit={handleSubmit(onSubmitJoinCode)}
               className="flex flex-col gap-3"
@@ -100,9 +145,13 @@ export default function Home() {
           <span className="text-3xl font-heading text-foreground font-bold">
             My WhiteBoards
           </span>
-          <BoardFilters />
+          <BoardFilters
+            onSearch={setSearch}
+            onDateFilter={setDateFilter}
+            onSort={setSort}
+          />
           <BoardList
-            boards={whiteboards}
+            boards={filteredBoards}
             loading={loading}
             onDelete={handleDeleteBoard}
             onRename={handleRenameBoard}
@@ -112,4 +161,3 @@ export default function Home() {
     </div>
   );
 }
-

@@ -3,12 +3,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
 import { whiteboardApi } from "../api/whiteboard.api.js";
 import Canvas from "../components/whiteboard/Canvas.jsx";
+import useToast from "../hooks/useToast.js";
 
 export default function JoinBoard() {
   const { code } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [toast, setToast] = useState("");
+  const toast = useToast();
   const pollRef = useRef(null);
   const [board, setBoard] = useState(null);
   const [error, setError] = useState("");
@@ -40,7 +41,7 @@ export default function JoinBoard() {
         if (approved) {
           clearInterval(pollRef.current);
           pollRef.current = null;
-          setToast("You've been approved! Redirecting...");
+          toast.success("You've been approved! Redirecting...");
           setTimeout(() => navigate(`/whiteboard/${boardId}`), 2000);
         }
       } catch (err) {
@@ -63,13 +64,16 @@ export default function JoinBoard() {
     try {
       await whiteboardApi.requestAccess(board._id);
       setRequestStatus("sent");
+      toast.success("Request sent! Waiting for owner approval...");
       startPolling(board._id);
     } catch (err) {
       if (err.message?.includes("Already")) {
         setRequestStatus("already");
+        toast.info("Request already sent");
         startPolling(board._id);
       } else {
         console.error(err);
+        toast.error("Failed to send request");
       }
     }
   };
@@ -139,11 +143,6 @@ export default function JoinBoard() {
         readOnly={true}
       />
 
-      {toast && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 bg-primary text-background px-6 py-3 rounded-md shadow-lg text-sm font-medium animate-fade-in">
-          {toast}
-        </div>
-      )}
     </div>
   );
 }

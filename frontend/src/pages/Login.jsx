@@ -8,11 +8,13 @@ import { Github } from 'lucide-react';
 import { Google } from '@boxicons/react';
 import { useAuth } from '../hooks/useAuth.js';
 import { authApi } from '../api/auth.api.js';
+import useToast from '../hooks/useToast.js';
 
 export default function Login() {
   const { login } = useAuth();
   const { register, handleSubmit } = useForm();
   const navigate = useNavigate();
+  const toast = useToast();
   const [isSignUp, setIsSignUp] = useState(false);
 
   const onSubmit = async (data) => {
@@ -22,10 +24,11 @@ export default function Login() {
         : await authApi.login(data.email, data.password);
 
       login(result.user, result.token);
+      toast.success(isSignUp ? 'Account created successfully!' : 'Welcome back!');
       navigate('/home');
     } catch (err) {
       console.error(err);
-      alert(err.message || 'Something went wrong');
+      toast.error(err.message || 'Something went wrong');
     }
   };
 
@@ -33,10 +36,11 @@ export default function Login() {
     try {
       const result = await authApi.login(email, password);
       login(result.user, result.token);
+      toast.success('Welcome back!');
       navigate('/home');
     } catch (err) {
       console.error(err);
-      alert(err.message || 'Demo login failed');
+      toast.error(err.message || 'Demo login failed');
     }
   };
 

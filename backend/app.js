@@ -7,6 +7,7 @@ import corsOptions from "./config/cors.js";
 import socketOptions from "./config/socket.js";
 import authRoutes from "./routes/auth.js";
 import whiteboardRoutes from "./routes/whiteboard.js";
+import notificationRoutes from "./routes/notification.js";
 import { initSocket } from "./socket/socketHandler.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 import { ALLOWED_ORIGINS } from "./utils/constants.js";
@@ -47,6 +48,7 @@ app.use((req, res, next) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/whiteboards", whiteboardRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 initSocket(io);
 

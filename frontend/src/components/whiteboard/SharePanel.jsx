@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
-import { whiteboardApi } from '../../api/whiteboard.api.js';
+import { useState, useEffect } from "react";
+import { whiteboardApi } from "../../api/whiteboard.api.js";
+import useToast from "../../hooks/useToast.js";
 
 export default function SharePanel({ boardId, pendingRequests, onRespond }) {
+  const toast = useToast();
   const [requests, setRequests] = useState(pendingRequests);
 
   useEffect(() => {
@@ -12,7 +14,7 @@ export default function SharePanel({ boardId, pendingRequests, onRespond }) {
         const data = await whiteboardApi.getOne(boardId);
         setRequests(data.pendingRequests || []);
       } catch (err) {
-        console.error('Failed to fetch pending requests:', err);
+        console.error("Failed to fetch pending requests:", err);
       }
     }, 5000);
 
@@ -27,10 +29,11 @@ export default function SharePanel({ boardId, pendingRequests, onRespond }) {
     try {
       await onRespond(requestId, approve);
       setRequests((prev) =>
-        prev.filter((r) => r._id?.toString() !== requestId?.toString())
+        prev.filter((r) => r._id?.toString() !== requestId?.toString()),
       );
     } catch (err) {
-      console.error('Failed to respond:', err);
+      console.error("Failed to respond:", err);
+      toast.error("Failed to respond to request");
     }
   };
 
@@ -61,3 +64,4 @@ export default function SharePanel({ boardId, pendingRequests, onRespond }) {
     </div>
   );
 }
+

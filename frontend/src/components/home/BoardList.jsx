@@ -1,5 +1,5 @@
-import Card from '../Card';
-import { useNavigate } from 'react-router-dom';
+import Card from "../Card";
+import { useNavigate } from "react-router-dom";
 
 export default function BoardList({ boards, loading, onDelete, onRename }) {
   const navigate = useNavigate();
@@ -21,6 +21,7 @@ export default function BoardList({ boards, loading, onDelete, onRename }) {
         <Card
           key={board._id}
           text={board.name}
+          thumbnail={board.thumbnail}
           time={`Last updated ${new Date(board.updatedAt).toLocaleDateString()}`}
           onClick={() => navigate(`/whiteboard/${board._id}`)}
           onDelete={(e) => onDelete(board._id, e)}
@@ -30,3 +31,4 @@ export default function BoardList({ boards, loading, onDelete, onRename }) {
     </div>
   );
 }
+

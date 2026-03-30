@@ -36,16 +36,18 @@ webrtc
 
 zg8M9QiML1HsLqc3
 
-- [ ] Notification System including Toast Popups
 - [ ] Make the website Responsive
-- [ ] UI/UX Enhancement
-- [ ] Forgot and Show Password
-- [ ] Add Button Feature/Name on Hovering it
-- [ ] Search Bar Functionality
-- [ ] Whiteboard Thumbnail
-- [ ] Whiteboard card make design good like add owner and shared peoples
+- [ ] Make the whiteboard to be used using TOuch
+- [-] Search Bar Functionality
+- [-] Whiteboard Thumbnail
+- [ ] Whiteboard card make design good like add owner and shared peoples , make the thumbnail size less
 - [ ] Add Profile Pics to Users
 - [ ] Google and Github Integration for Login
+- [ ] Add Button Feature/Name on Hovering it
+- [-] Notification System including Toast Popups
+- [ ] Edit the ErrorBoundary Page
+- [ ] UI/UX Enhancement
+- [ ] Forgot and Show Password
 - [ ] Add Shimmer UI
 - [ ] Main Whiteboard Features :-
       Pan and Zoom , Infinite Canvas

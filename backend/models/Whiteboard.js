@@ -38,6 +38,10 @@ const whiteboardSchema = new mongoose.Schema(
         userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
       },
     ],
+    thumbnail: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true },
 );

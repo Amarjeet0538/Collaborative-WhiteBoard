@@ -1,24 +1,36 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { CANVAS_COLORS } from '../../utils/constants.js';
+import {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
+import { CANVAS_COLORS } from "../../utils/constants.js";
 
-export default function Canvas({
-  tool,
-  color,
-  penSize,
-  eraserSize,
-  zoom,
-  setZoom,
-  onStrokesChange,
-  loadStrokes,
-  readOnly = false,
-  onCursorMove,
-  cursors = {},
-}) {
+const Canvas = forwardRef(function Canvas(
+  {
+    tool,
+    color,
+    penSize,
+    eraserSize,
+    zoom,
+    setZoom,
+    onStrokesChange,
+    loadStrokes,
+    readOnly = false,
+    onCursorMove,
+    cursors = {},
+  },
+  ref,
+) {
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const strokesRef = useRef([]);
   const currentStroke = useRef(null);
+
+  useImperativeHandle(ref, () => canvasRef.current, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -26,10 +38,10 @@ export default function Canvas({
     const dpr = window.devicePixelRatio || 2;
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     ctx.scale(dpr, dpr);
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
     contextRef.current = ctx;
   }, []);
 
@@ -48,7 +60,7 @@ export default function Canvas({
       ctx.stroke();
       ctx.closePath();
     });
-    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalCompositeOperation = "source-over";
   }, []);
 
   useEffect(() => {
@@ -63,9 +75,9 @@ export default function Canvas({
     setIsDrawing(true);
     currentStroke.current = {
       points: [[offsetX, offsetY]],
-      color: tool === 'eraser' ? 'rgba(0,0,0,1)' : color,
-      size: tool === 'eraser' ? eraserSize : penSize,
-      composite: tool === 'eraser' ? 'destination-out' : 'source-over',
+      color: tool === "eraser" ? "rgba(0,0,0,1)" : color,
+      size: tool === "eraser" ? eraserSize : penSize,
+      composite: tool === "eraser" ? "destination-out" : "source-over",
     };
     contextRef.current.beginPath();
     contextRef.current.moveTo(offsetX, offsetY);
@@ -81,16 +93,16 @@ export default function Canvas({
   };
 
   const draw = ({ nativeEvent }) => {
-    if (!isDrawing || tool === 'hand' || !currentStroke.current) return;
+    if (!isDrawing || tool === "hand" || !currentStroke.current) return;
     const { offsetX, offsetY } = nativeEvent;
     if (onCursorMove) onCursorMove(offsetX, offsetY);
     currentStroke.current.points.push([offsetX, offsetY]);
 
-    if (tool === 'eraser') {
-      contextRef.current.globalCompositeOperation = 'destination-out';
+    if (tool === "eraser") {
+      contextRef.current.globalCompositeOperation = "destination-out";
       contextRef.current.lineWidth = eraserSize;
     } else {
-      contextRef.current.globalCompositeOperation = 'source-over';
+      contextRef.current.globalCompositeOperation = "source-over";
       contextRef.current.lineWidth = penSize;
       contextRef.current.strokeStyle = color;
     }
@@ -106,7 +118,7 @@ export default function Canvas({
   }, [onStrokesChange]);
 
   const cursorStyle =
-    tool === 'hand' ? 'grab' : tool === 'eraser' ? 'cell' : 'crosshair';
+    tool === "hand" ? "grab" : tool === "eraser" ? "cell" : "crosshair";
 
   return (
     <div className="w-full h-full relative">
@@ -119,14 +131,14 @@ export default function Canvas({
         ref={canvasRef}
         className="w-full h-full"
         style={{
-          cursor: readOnly ? 'default' : cursorStyle,
+          cursor: readOnly ? "default" : cursorStyle,
           background: CANVAS_COLORS.BACKGROUND,
           backgroundImage: `
             linear-gradient(to right, ${CANVAS_COLORS.GRID_LINE} 1px, transparent 1px),
             linear-gradient(to bottom, ${CANVAS_COLORS.GRID_LINE} 1px, transparent 1px),
             radial-gradient(circle, ${CANVAS_COLORS.GRID_DOT} 1px, transparent 1px)
           `,
-          backgroundSize: '24px 24px, 24px 24px, 24px 24px',
+          backgroundSize: "24px 24px, 24px 24px, 24px 24px",
         }}
       />
       {Object.entries(cursors).map(([socketId, cursor]) => (
@@ -136,7 +148,7 @@ export default function Canvas({
           style={{
             left: cursor.x,
             top: cursor.y,
-            transform: 'translate(0, -100%)',
+            transform: "translate(0, -100%)",
           }}
         >
           <div
@@ -153,4 +165,7 @@ export default function Canvas({
       ))}
     </div>
   );
-}
+});
+
+export default Canvas;
+

@@ -2,21 +2,29 @@ import { Search, X } from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
 
 export default function BoardFilters({ onSearch, onDateFilter, onSort }) {
-  const { register, setValue, control } = useForm();
+  const { register, setValue, control } = useForm({
+    defaultValues: {
+      boardName: "",
+      startDate: "",
+      endDate: "",
+      filters: "recent",
+    },
+  });
+
   const [startDate, endDate] = useWatch({
     control,
     name: ["startDate", "endDate"],
   });
-
   const hasDateFilter = startDate || endDate;
 
   const clearDates = () => {
     setValue("startDate", "");
     setValue("endDate", "");
+    onDateFilter?.({ startDate: "", endDate: "" });
   };
 
   return (
-    <form className="flex justify-between relative bg-background w-full p-2 text-foreground rounded-lg shadow-sm gap-4">
+    <div className="flex justify-between relative bg-background w-full p-2 text-foreground rounded-lg shadow-sm gap-4">
       {/* Search Input */}
       <div className="w-1/3 relative">
         <Search
@@ -32,7 +40,7 @@ export default function BoardFilters({ onSearch, onDateFilter, onSort }) {
         />
       </div>
 
-      {/* Date Range */}
+      {/* Date Range + Sort */}
       <div className="flex gap-5 items-center">
         <div className="flex items-center bg-background border border-border-muted rounded-md px-2 focus-within:ring-1 focus-within:border-border focus-within:ring-border transition-all">
           <input
@@ -41,7 +49,10 @@ export default function BoardFilters({ onSearch, onDateFilter, onSort }) {
             className="bg-transparent border-none p-2 text-foreground focus:outline-none cursor-pointer"
             title="Start Date"
             onChange={(e) =>
-              onDateFilter?.({ startDate: e.target.value, endDate })
+              onDateFilter?.({
+                startDate: e.target.value,
+                endDate: endDate || "",
+              })
             }
           />
           <span className="text-foreground-muted px-1">to</span>
@@ -51,7 +62,10 @@ export default function BoardFilters({ onSearch, onDateFilter, onSort }) {
             className="bg-transparent border-none p-2 text-foreground focus:outline-none cursor-pointer"
             title="End Date"
             onChange={(e) =>
-              onDateFilter?.({ startDate, endDate: e.target.value })
+              onDateFilter?.({
+                startDate: startDate || "",
+                endDate: e.target.value,
+              })
             }
           />
           {hasDateFilter && (
@@ -66,7 +80,6 @@ export default function BoardFilters({ onSearch, onDateFilter, onSort }) {
           )}
         </div>
 
-        {/* Sort Select */}
         <select
           {...register("filters")}
           className="border rounded-md p-2.5 bg-background focus:ring-1 border-border-muted focus:ring-border focus:outline-none"
@@ -77,7 +90,6 @@ export default function BoardFilters({ onSearch, onDateFilter, onSort }) {
           <option value="z-a">Alphabetically (Z-A)</option>
         </select>
       </div>
-    </form>
+    </div>
   );
 }
-

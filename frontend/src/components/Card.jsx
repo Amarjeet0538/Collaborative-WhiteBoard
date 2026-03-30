@@ -1,7 +1,14 @@
 import { EllipsisVertical, Trash2, Pencil } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
-export default function Card({ text, time, onClick, onDelete, onRename }) {
+export default function Card({
+  text,
+  time,
+  thumbnail,
+  onClick,
+  onDelete,
+  onRename,
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [newName, setNewName] = useState(text);
@@ -48,7 +55,17 @@ export default function Card({ text, time, onClick, onDelete, onRename }) {
       hover:border-border/40 text-foreground transition-all"
     >
       {/* Preview */}
-      <div className="w-full h-40 bg-foreground/10 rounded-md" />
+      <div className="w-full h-40 bg-foreground/10 rounded-md">
+        {thumbnail ? (
+          <img
+            src={thumbnail}
+            alt={`${text} preview`}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-40 bg-foreground/10 rounded-md" />
+        )}
+      </div>
 
       {/* Footer */}
       <div className="flex justify-between items-center">

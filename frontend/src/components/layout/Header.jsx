@@ -1,9 +1,10 @@
 import Logo from "../Logo";
 import DarkModeToggle from "../DarkModeToggle";
-import { User, Bell } from "lucide-react";
+import { User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth.js";
 import { useRef, useState, useEffect } from "react";
+import NotificationBell from "../notifications/NotificationBell.jsx";
 
 export default function Header() {
   const { user, logout } = useAuth();
@@ -31,9 +32,7 @@ export default function Header() {
       <Logo />
       <div className="flex gap-3">
         <DarkModeToggle />
-        <button className="rounded-full text-foreground cursor-pointer p-3 transition-all hover:shadow-md">
-          <Bell className="hover:text-primary" />
-        </button>
+        <NotificationBell />
         {user ? (
           <div className="flex items-center gap-3 relative group cursor-pointer">
             <button
