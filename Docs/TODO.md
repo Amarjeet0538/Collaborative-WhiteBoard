@@ -5,7 +5,7 @@
 - [-] add the filter calender range insted of value
 - [-] correct the dark mode button it is slightly off
 - [-] remove shadcn button
-- [ ] add notification use
+- [-] add notification use
 - [ ] add on hover name of icon
 - [ ] reduce the size of header and search in home page
 - [-] merge signin and signup

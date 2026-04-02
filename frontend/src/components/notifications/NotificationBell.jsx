@@ -27,9 +27,9 @@ export default function NotificationBell() {
     <div className="relative">
       <button
         onClick={toggleDropdown}
-        className="relative rounded-full text-foreground cursor-pointer p-3 transition-all hover:shadow-md hover:bg-background-highlight"
+        className="relative rounded-full text-foreground cursor-pointer p-3 transition-all hover:shadow-md "
       >
-        <Bell className="hover:text-primary" size={20} />
+        <Bell className="hover:text-primary" />
         {unreadCount > 0 && (
           <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-background" />
         )}

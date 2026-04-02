@@ -52,7 +52,7 @@ export default function Card({
       onClick={!isRenaming ? onClick : undefined}
       className="cursor-pointer p-4 flex flex-col gap-3 justify-between
       rounded-md bg-background hover:bg-background-highlight border border-border-muted/60
-      hover:border-border/40 text-foreground transition-all"
+      hover:border-border/40 text-foreground transition-all "
     >
       {/* Preview */}
       <div className="w-full h-40 bg-foreground/10 rounded-md">
@@ -60,7 +60,7 @@ export default function Card({
           <img
             src={thumbnail}
             alt={`${text} preview`}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-all rounded-md"
           />
         ) : (
           <div className="w-full h-40 bg-foreground/10 rounded-md" />

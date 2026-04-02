@@ -1,6 +1,11 @@
 import { Check, X, Trash2 } from "lucide-react";
 
-export default function NotificationItem({ notification, onAction, onDelete, onMarkRead }) {
+export default function NotificationItem({
+  notification,
+  onAction,
+  onDelete,
+  onMarkRead,
+}) {
   const { _id, sender, board, type, message, isRead, createdAt } = notification;
 
   const isRequestType = type === "request_received";
