@@ -1,6 +1,6 @@
-import { createContext, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { ToastContainer } from "@/components/ui/Toast";
-export const ToastContext = createContext(null);
+import { ToastContext } from "./AllContexts";
 let idCounter = 0;
 
 export function ToastProvider({ children }) {

@@ -1,10 +1,8 @@
-import { createContext } from 'react';
-import { io } from 'socket.io-client';
-import { storage } from '../utils/storage.js';
+import { io } from "socket.io-client";
+import { storage } from "../utils/storage.js";
+import { SocketContext } from "./AllContexts.jsx";
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
-export const SocketContext = createContext(null);
+const SOCKET_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export const SocketProvider = ({ children }) => {
   const getSocket = () => {
@@ -21,3 +19,4 @@ export const SocketProvider = ({ children }) => {
     </SocketContext.Provider>
   );
 };
+

@@ -1,7 +1,6 @@
-import { createContext, useState } from 'react';
-import { storage } from '../utils/storage.js';
-
-export const AuthContext = createContext(null);
+import { useState } from "react";
+import { storage } from "../utils/storage.js";
+import { AuthContext } from "./AllContexts.jsx";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {

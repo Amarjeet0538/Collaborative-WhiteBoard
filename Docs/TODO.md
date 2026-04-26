@@ -7,9 +7,9 @@
 - [-] remove shadcn button
 - [-] add notification use
 - [ ] add on hover name of icon
-- [ ] reduce the size of header and search in home page
+- [-] reduce the size of header and search in home page
 - [-] merge signin and signup
-- [-] add a global state for dark/light mode
+- [ ] add a global state for dark/light mode
 - [ ] add owned boards and shared boards later -- https://dribbble.com/shots/26294998-Collaborative-Whiteboard-Dashboard-Clean-Minimal-UI
 - [-] replace dashboard with home
 - [-] add data
@@ -38,16 +38,23 @@ zg8M9QiML1HsLqc3
 
 - [ ] Make the website Responsive
 - [ ] Make the whiteboard to be used using TOuch
-- [-] Search Bar Functionality
-- [-] Whiteboard Thumbnail
+- [ ] Search Bar Functionality
+- [ ] Whiteboard Thumbnail to imagekit insted of database
+- [ ] add notification attribute to the users database model
 - [ ] Whiteboard card make design good like add owner and shared peoples , make the thumbnail size less
 - [ ] Add Profile Pics to Users
 - [ ] Google and Github Integration for Login
 - [ ] Add Button Feature/Name on Hovering it
 - [-] Notification System including Toast Popups
+- [ ] Correct the toast usage and name on hover icons
+- [ ] My app is redering 2 times on start / Welcome back popup 2 times
 - [ ] Edit the ErrorBoundary Page
 - [ ] UI/UX Enhancement
+- [ ] min size of grids
+- [ ] use username insted of user in sharepanel
+- [ ] use usedebounce in debounce save in usewhiteboard page
 - [ ] Forgot and Show Password
+- [ ] Add a global state for dark/light mode
 - [ ] Add Shimmer UI
 - [ ] Main Whiteboard Features :-
       Pan and Zoom , Infinite Canvas

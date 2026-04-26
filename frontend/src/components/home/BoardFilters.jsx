@@ -24,7 +24,7 @@ export default function BoardFilters({ onSearch, onDateFilter, onSort }) {
   };
 
   return (
-    <div className="flex justify-between relative bg-background w-full p-2 text-foreground rounded-lg shadow-sm gap-4">
+    <div className="flex justify-between relative bg-background border-2 border-background-highlight w-full p-3 text-foreground rounded-lg shadow-sm gap-4">
       {/* Search Input */}
       <div className="w-1/3 relative">
         <Search

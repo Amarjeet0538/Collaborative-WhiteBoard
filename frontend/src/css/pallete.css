@@ -1,6 +1,6 @@
 :root {
   /* Base Canvas & Text */
-  --background: hsl(300 0% 92%);
+  --background: hsl(300 0% 93%);
   --foreground: hsl(330 0% 4%);
 
   /* Muted/Highlight Canvas & Text */
@@ -42,12 +42,12 @@
 
 body.dark {
   /* Base Canvas & Text */
-  --background: hsl(330 0% 6%);
+  --background: hsl(0 0% 6%);
   --foreground: hsl(0 0% 93%);
 
   /* Muted/Highlight Canvas & Text */
-  --background-muted: hsl(336 0% 1%);
-  --background-highlight: hsl(0 0% 7%);
+  --background-muted: hsl(0 0% 3%);
+  --background-highlight: hsl(0 0% 8%);
   --foreground-highlighted: hsl(330 0% 100%);
   --foreground-muted: hsl(300 0% 69%);
 
