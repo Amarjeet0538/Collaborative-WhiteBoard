@@ -44,24 +44,43 @@ export default function SharePanel({ boardId, pendingRequests, onRespond }) {
       {requests.map((req) => (
         <div
           key={req._id}
-          className="flex items-center gap-3 bg-background border border-border-muted rounded-md px-3 py-2 text-sm text-foreground shadow-sm"
+          className="flex items-center gap-3 bg-background border border-border-muted rounded-md px-3 py-2 text-sm text-foreground shadow-lg animate-toast-slide-in"
         >
-          <span>User wants to edit</span>
-          <button
-            onClick={() => handleRespond(req._id, true)}
-            className="px-2 py-1 bg-primary text-background rounded-md hover:bg-primary-hover text-xs cursor-pointer"
-          >
-            Approve
-          </button>
-          <button
-            onClick={() => handleRespond(req._id, false)}
-            className="px-2 py-1 bg-background-highlight text-foreground rounded-md hover:bg-red-500 hover:text-white text-xs cursor-pointer"
-          >
-            Deny
-          </button>
+          {/* User Avatar */}
+          <div className="w-6 h-6 rounded-full bg-background-muted overflow-hidden shrink-0 border border-border-muted">
+            <img
+              src={
+                req.userId?.profilePicture ||
+                `https://api.dicebear.com/7.x/initials/svg?seed=${req.userId?.name}`
+              }
+              alt=""
+              className="w-full h-full object-cover"
+            />
+          </div>
+
+          {/* Name and Text */}
+          <span className="font-medium whitespace-nowrap">
+            <span className="text-primary-hover">{req.userId?.name}</span> wants
+            to edit
+          </span>
+
+          {/* Actions */}
+          <div className="flex gap-1.5 ml-2">
+            <button
+              onClick={() => handleRespond(req._id, true)}
+              className="px-2.5 py-1 bg-success text-white rounded-md hover:opacity-90 text-xs font-semibold cursor-pointer transition-all"
+            >
+              Approve
+            </button>
+            <button
+              onClick={() => handleRespond(req._id, false)}
+              className="px-2.5 py-1 bg-background-highlight text-foreground-muted rounded-md hover:bg-danger hover:text-white text-xs font-semibold cursor-pointer transition-all"
+            >
+              Deny
+            </button>
+          </div>
         </div>
       ))}
     </div>
   );
 }
-
