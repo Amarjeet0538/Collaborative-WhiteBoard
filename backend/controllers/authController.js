@@ -1,14 +1,14 @@
-import User from '../models/User.js';
-import { hashPassword, comparePassword } from '../services/passwordService.js';
-import { generateToken } from '../services/tokenService.js';
-import catchAsync from '../utils/catchAsync.js';
+import User from "../models/User.js";
+import { hashPassword, comparePassword } from "../services/passwordService.js";
+import { generateToken } from "../services/tokenService.js";
+import catchAsync from "../utils/catchAsync.js";
 
 export const register = catchAsync(async (req, res) => {
   const { name, email, password } = req.body;
 
   const existingUser = await User.findOne({ email });
   if (existingUser) {
-    return res.status(400).json({ message: 'Email already in use' });
+    return res.status(400).json({ message: "Email already in use" });
   }
 
   const hashedPassword = await hashPassword(password);
@@ -25,14 +25,14 @@ export const register = catchAsync(async (req, res) => {
 export const login = catchAsync(async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }).select("+password");
   if (!user) {
-    return res.status(401).json({ message: 'Invalid email or password' });
+    return res.status(401).json({ message: "Invalid email or password" });
   }
 
   const isMatch = await comparePassword(password, user.password);
   if (!isMatch) {
-    return res.status(401).json({ message: 'Invalid email or password' });
+    return res.status(401).json({ message: "Invalid email or password" });
   }
 
   const token = generateToken(user._id);
@@ -44,6 +44,6 @@ export const login = catchAsync(async (req, res) => {
 });
 
 export const getMe = catchAsync(async (req, res) => {
-  const user = await User.findById(req.user.id).select('-password');
+  const user = await User.findById(req.user.id).select("-password");
   res.json(user);
 });

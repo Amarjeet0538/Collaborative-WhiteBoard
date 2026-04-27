@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import DarkModeToggle from "../DarkModeToggle";
-
+import useToast from "@/hooks/useToast";
 export default function BoardHeader({
   boardName,
   onRename,
@@ -11,9 +11,8 @@ export default function BoardHeader({
 }) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [tempName, setTempName] = useState("");
-  const [copied, setCopied] = useState(false);
   const inputRef = useRef(null);
-
+  const toast = useToast();
   useEffect(() => {
     if (isRenaming) inputRef.current?.focus();
   }, [isRenaming]);
@@ -29,9 +28,8 @@ export default function BoardHeader({
     navigator.clipboard.writeText(
       `${window.location.origin}/join/${shareCode}`,
     );
-    setCopied(true);
+    toast.success("Code copied to clipboard");
     onCopyShareCode?.();
-    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -87,7 +85,7 @@ export default function BoardHeader({
             onClick={handleCopy}
             className="text-md px-2 py-1 rounded-sm bg-background-highlight hover:bg-background text-foreground transition-all cursor-pointer"
           >
-            {copied ? " Copied!" : `Share: ${shareCode}`}
+            {`Share: ${shareCode}`}
           </button>
         )}
         <DarkModeToggle />

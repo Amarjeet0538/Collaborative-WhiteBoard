@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from "react";
 export default function Card({
   text,
   time,
+  sharedWith,
+  owner,
   thumbnail,
   onClick,
   onDelete,
@@ -50,9 +52,9 @@ export default function Card({
   return (
     <div
       onClick={!isRenaming ? onClick : undefined}
-      className="cursor-pointer p-4 flex flex-col gap-3 justify-between
+      className="cursor-pointer p-4 flex flex-col gap-3 justify-between max-h-73
       rounded-md bg-background hover:bg-background-highlight border border-border-muted/60
-      hover:border-border/40 text-foreground transition-all "
+      hover:border-border/40 text-foreground transition-all shadow-xs "
     >
       {/* Preview */}
       <div className="w-full h-40 bg-foreground/10 rounded-md">
@@ -92,6 +94,42 @@ export default function Card({
             <span className="font-semibold text-md">{text}</span>
           )}
           <span className="text-xs text-foreground/50">{time}</span>
+
+          <div className="text-xs text-foreground/50 ">{owner.name}</div>
+          <div className="flex justify-between items-center">
+            <div className="flex -space-x-2 mt-2 ">
+              {/* Show the Owner first */}
+              <div
+                className="h-6 w-6 rounded-full border-2 border-primary/30 overflow-hidden"
+                title={`Owner: ${owner.name}`}
+              >
+                <img
+                  src={
+                    owner.profilePicture ||
+                    `https://api.dicebear.com/7.x/initials/svg?seed=${owner.name}`
+                  }
+                  alt={owner.name}
+                />
+              </div>
+
+              {/* Show Shared Users */}
+              {(sharedWith || []).slice(0, 3).map((item) => (
+                <div
+                  key={item.userId?._id}
+                  className="h-6 w-6 rounded-full border border-secondary/80 bg-background-muted overflow-hidden"
+                  title={item.userId?.name}
+                >
+                  <img
+                    src={
+                      item.userId?.profilePicture ||
+                      `https://api.dicebear.com/7.x/initials/svg?seed=${item.userId?.name}`
+                    }
+                    alt="shared user"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Menu */}

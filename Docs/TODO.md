@@ -38,7 +38,7 @@ zg8M9QiML1HsLqc3
 
 - [ ] Make the website Responsive
 - [ ] Make the whiteboard to be used using TOuch
-- [ ] Search Bar Functionality
+- [-] Search Bar Functionality
 - [ ] Whiteboard Thumbnail to imagekit insted of database
 - [ ] add notification attribute to the users database model
 - [ ] Whiteboard card make design good like add owner and shared peoples , make the thumbnail size less
@@ -61,3 +61,5 @@ zg8M9QiML1HsLqc3
       Featureful Toolbar
       MiniMap for Navigation
       WhiteBoard Background Pattern and Color Selector
+
+      uer add whiteboard in db , avatar pic , notification

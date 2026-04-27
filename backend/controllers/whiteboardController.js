@@ -24,7 +24,9 @@ export const getAll = catchAsync(async (req, res) => {
   const whiteboards = await Whiteboard.find({
     $or: [{ owner: req.user.id }, { "sharedWith.userId": req.user.id }],
   })
-    .select("name createdAt updatedAt owner shareCode thumbnail")
+    .populate("owner", "name profilePicture")
+    .populate("sharedWith.userId", "name, profilePicture")
+    .select("name createdAt updatedAt owner sharedWith shareCode thumbnail")
     .sort({ updatedAt: -1 });
 
   res.json(whiteboards);
@@ -35,10 +37,7 @@ export const patchThumbnail = catchAsync(async (req, res) => {
 
   const board = await Whiteboard.findOne({
     _id: req.params.id,
-    $or: [
-      { owner: req.user.id },
-      { "sharedWith.userId": req.user.id }, // fix: was "collaborators.user"
-    ],
+    $or: [{ owner: req.user.id }, { "sharedWith.userId": req.user.id }],
   });
 
   if (!board) throw ApiError.notFound("Board not found");
@@ -72,7 +71,9 @@ export const create = catchAsync(async (req, res) => {
     strokes: [],
     shareCode,
   });
-
+  await User.findByIdAndUpdate(req.user.id, {
+    $push: { ownedBoards: whiteboard._id },
+  });
   res.status(201).json(whiteboard);
 });
 
@@ -132,7 +133,8 @@ export const requestAccess = catchAsync(async (req, res) => {
     throw ApiError.badRequest("Already requested or has access");
   }
 
-  const lastPendingReq = board.pendingRequests[board.pendingRequests.length - 1];
+  const lastPendingReq =
+    board.pendingRequests[board.pendingRequests.length - 1];
 
   board.pendingRequests.push({ userId });
   await board.save();
@@ -181,8 +183,10 @@ export const respondToRequest = catchAsync(async (req, res) => {
 
   if (approve) {
     board.sharedWith.push({ userId: pendingReq.userId, role: "editor" });
+    await User.findByIdAndUpdate(pendingReq.userId, {
+      $push: { sharedBoards: board._id },
+    });
   }
-
   await board.save();
 
   const requester = await User.findById(pendingReq.userId).select("name");

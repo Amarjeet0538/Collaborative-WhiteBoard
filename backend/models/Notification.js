@@ -40,7 +40,7 @@ const notificationSchema = new mongoose.Schema(
       role: { type: String, default: "viewer" },
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 notificationSchema.index({ recipient: 1, createdAt: -1 });

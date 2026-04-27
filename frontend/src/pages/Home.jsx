@@ -65,7 +65,6 @@ export default function Home() {
   const handleNewWhiteboard = async () => {
     try {
       const data = await whiteboardApi.create("Untitled");
-      toast.success("Whiteboard created!");
       navigate(`/whiteboard/${data._id}`);
     } catch (err) {
       console.error(err);
@@ -78,7 +77,7 @@ export default function Home() {
     try {
       await whiteboardApi.remove(id);
       setWhiteboards((prev) => prev.filter((wb) => wb._id !== id));
-      toast.success("Whiteboard deleted");
+      toast.error("Whiteboard deleted");
     } catch (err) {
       console.error(err);
       toast.error("Failed to delete whiteboard");
@@ -91,7 +90,6 @@ export default function Home() {
       setWhiteboards((prev) =>
         prev.map((wb) => (wb._id === id ? { ...wb, name: newName } : wb)),
       );
-      toast.success("Renamed successfully");
     } catch (err) {
       console.error("Failed to rename:", err);
       toast.error("Failed to rename whiteboard");
@@ -104,7 +102,7 @@ export default function Home() {
     if (code) {
       navigate(`/join/${code}`);
     } else {
-      toast.error("Please enter a valid code or link");
+      toast.error("Please enter a valid code ");
     }
   };
 

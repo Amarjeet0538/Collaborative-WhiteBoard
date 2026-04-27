@@ -32,7 +32,7 @@ export function ToastContainer({ toasts, onRemove }) {
     <div
       aria-live="polite"
       aria-atomic="false"
-      className="fixed top-16 left-1/2 -translate-x-1/2 z-9999 flex flex-col gap-3 pointer-events-none"
+      className="fixed bottom-5 right-5 z-9999 flex flex-col gap-3 pointer-events-none"
     >
       {toasts.map((t) => (
         <ToastItem key={t.id} {...t} onRemove={onRemove} />
@@ -70,6 +70,7 @@ function ToastItem({ id, type, message, duration, onRemove }) {
             : "opacity-0 translate-x-4 scale-95"
         }
       `}
+      onClick={dismiss}
     >
       {/* Message */}
       <span className="flex-1 text-sm leading-snug break-words font-medium text-foreground">

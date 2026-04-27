@@ -127,7 +127,6 @@ export default function WhiteboardPage() {
     setBoardName(newName);
     try {
       await whiteboardApi.update(id, { name: newName });
-      toast.success("Board renamed successfully");
     } catch (err) {
       console.error("Failed to rename:", err);
       toast.error("Failed to rename board");
