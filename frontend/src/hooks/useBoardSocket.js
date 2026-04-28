@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { whiteboardApi } from "../api/whiteboard.api.js";
 import { useSocket } from "./useSocket.js";
 import useToast from "./useToast.js";

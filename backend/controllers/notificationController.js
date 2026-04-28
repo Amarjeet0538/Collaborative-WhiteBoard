@@ -7,7 +7,7 @@ export const getNotifications = catchAsync(async (req, res) => {
   const { includeRead } = req.query;
   const notifications = await notificationService.getAllNotificationsForUser(
     req.user.id,
-    50
+    50,
   );
 
   res.json(notifications);
@@ -39,17 +39,18 @@ export const handleNotificationAction = catchAsync(async (req, res) => {
   const { id } = req.params;
   const { action } = req.body;
 
-  const notification = await notificationService.getAllNotificationsForUser(
+  const notification = await notificationService.getNotificationById(
+    id,
     req.user.id,
-    1
-  ).then((notifs) => notifs.find((n) => n._id.toString() === id));
-
+  );
   if (!notification) {
     throw ApiError.notFound("Notification not found");
   }
 
   if (notification.type !== "request_received") {
-    throw ApiError.badRequest("Action not available for this notification type");
+    throw ApiError.badRequest(
+      "Action not available for this notification type",
+    );
   }
 
   const approve = action === "accept";

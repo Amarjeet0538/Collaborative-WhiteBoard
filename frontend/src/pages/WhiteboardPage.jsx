@@ -12,6 +12,7 @@ import Toolbar from "../components/whiteboard/Toolbar";
 import BoardHeader from "../components/whiteboard/BoardHeader";
 import SharePanel from "../components/whiteboard/SharePanel";
 import DarkModeToggle from "../components/DarkModeToggle";
+import Minimap from "../components/whiteboard/Minimap";
 
 export default function WhiteboardPage() {
   const { id } = useParams();
@@ -138,7 +139,7 @@ export default function WhiteboardPage() {
         cursors={cursors}
         camera={camera}
       />
-
+      <Minimap strokes={strokes} camera={camera} />
       <Toolbar
         tool={tool}
         setTool={setTool}

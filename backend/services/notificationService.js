@@ -18,8 +18,16 @@ export const createNotification = async ({
     actionData,
   });
 };
-
-export const getNotificationsForUser = async (userId, { limit = 50, includeRead = false } = {}) => {
+export const getNotificationById = async (notificationId, userId) => {
+  return await Notification.findOne({
+    _id: new mongoose.Types.ObjectId(notificationId),
+    recipient: new mongoose.Types.ObjectId(userId),
+  }).populate("board", "name");
+};
+export const getNotificationsForUser = async (
+  userId,
+  { limit = 50, includeRead = false } = {},
+) => {
   const query = { recipient: new mongoose.Types.ObjectId(userId) };
 
   if (!includeRead) {
@@ -34,7 +42,9 @@ export const getNotificationsForUser = async (userId, { limit = 50, includeRead 
 };
 
 export const getAllNotificationsForUser = async (userId, limit = 50) => {
-  return await Notification.find({ recipient: new mongoose.Types.ObjectId(userId) })
+  return await Notification.find({
+    recipient: new mongoose.Types.ObjectId(userId),
+  })
     .populate("sender", "name email")
     .populate("board", "name")
     .sort({ createdAt: -1 })
@@ -45,7 +55,7 @@ export const markAsRead = async (notificationId, userId) => {
   const notification = await Notification.findOneAndUpdate(
     { _id: notificationId, recipient: new mongoose.Types.ObjectId(userId) },
     { isRead: true },
-    { new: true }
+    { new: true },
   );
 
   if (!notification) {
@@ -58,7 +68,7 @@ export const markAsRead = async (notificationId, userId) => {
 export const markAllAsRead = async (userId) => {
   const result = await Notification.updateMany(
     { recipient: new mongoose.Types.ObjectId(userId), isRead: false },
-    { isRead: true }
+    { isRead: true },
   );
 
   return result;

@@ -122,6 +122,11 @@ export const requestAccess = catchAsync(async (req, res) => {
     throw ApiError.notFound("Board not found");
   }
 
+  // 1. Prevent owner from requesting access to their own board
+  if (board.owner.toString() === req.user.id) {
+    throw ApiError.badRequest("You are the owner of this board");
+  }
+
   const userId = new mongoose.Types.ObjectId(req.user.id);
 
   const alreadyRequested = board.pendingRequests.some((r) =>
@@ -129,19 +134,23 @@ export const requestAccess = catchAsync(async (req, res) => {
   );
   const alreadyShared = board.sharedWith.some((s) => s.userId?.equals(userId));
 
+  // If you see a 400 Bad Request in your network tab, it is triggering here
+  // because you already have a pending request saved from a previous attempt!
   if (alreadyRequested || alreadyShared) {
     throw ApiError.badRequest("Already requested or has access");
   }
 
-  const lastPendingReq =
-    board.pendingRequests[board.pendingRequests.length - 1];
-
+  // 2. Add the request FIRST
   board.pendingRequests.push({ userId });
   await board.save();
 
-  const sender = await User.findById(req.user.id).select("name");
-  const owner = await User.findById(board.owner).select("name");
+  // 3. NOW grab the newly created request (which is safely the last item)
+  const newlyCreatedRequest =
+    board.pendingRequests[board.pendingRequests.length - 1];
 
+  const sender = await User.findById(req.user.id).select("name");
+
+  // 4. Create the notification safely
   await notificationService.createNotification({
     recipient: board.owner,
     sender: req.user.id,
@@ -149,13 +158,12 @@ export const requestAccess = catchAsync(async (req, res) => {
     type: "request_received",
     message: `${sender.name} has requested access to your board "${board.name}"`,
     actionData: {
-      requestId: lastPendingReq._id,
+      requestId: newlyCreatedRequest._id,
     },
   });
 
   res.json({ message: "Request sent successfully" });
 });
-
 export const respondToRequest = catchAsync(async (req, res) => {
   const { id } = req.params;
   const { requestId, approve } = req.body;
