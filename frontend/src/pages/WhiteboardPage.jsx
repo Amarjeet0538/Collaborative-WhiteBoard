@@ -1,22 +1,25 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { whiteboardApi } from "../api/whiteboard.api.js";
 import { useAuth } from "../hooks/useAuth.js";
 import { useWhiteboard } from "../hooks/useWhiteboard.js";
+import { useBoardSocket } from "../hooks/useBoardSocket.js";
+import useToast from "../hooks/useToast.js";
+import { useCamera } from "../hooks/useCamera.js";
+// Components
 import Canvas from "../components/whiteboard/Canvas";
 import Toolbar from "../components/whiteboard/Toolbar";
 import BoardHeader from "../components/whiteboard/BoardHeader";
 import SharePanel from "../components/whiteboard/SharePanel";
 import DarkModeToggle from "../components/DarkModeToggle";
-import { useSocket } from "../hooks/useSocket.js";
-import useToast from "../hooks/useToast.js";
 
 export default function WhiteboardPage() {
   const { id } = useParams();
   const { user } = useAuth();
-  const { connect, disconnect, emit } = useSocket();
   const toast = useToast();
-
+  const canvasRef = useRef(null);
+  const [saving, setSaving] = useState(false);
+  // 1. Board State (Drawing)
   const {
     strokes,
     setStrokes,
@@ -28,76 +31,37 @@ export default function WhiteboardPage() {
     setPenSize,
     eraserSize,
     setEraserSize,
-    zoom,
-    setZoom,
     debouncedSave,
     saveThumbnail,
   } = useWhiteboard(id);
 
-  const [boardName, setBoardName] = useState("Untitled");
-  const [saving, setSaving] = useState(false);
-  const [shareCode, setShareCode] = useState("");
-  const [pendingRequests, setPendingRequests] = useState([]);
-  const [cursors, setCursors] = useState({});
-  const [presentUsers, setPresentUsers] = useState([]);
+  const {
+    camera,
+    handleWheel,
+    isSpacePressed,
+    isPanning,
+    startPan,
+    pan,
+    stopPan,
+    zoomIn,
+    zoomOut,
+  } = useCamera(tool);
 
-  const canvasRef = useRef(null);
-  const clearCanvasRef = useRef(null);
+  // 2. Networking Logic (Socket & Fetching)
+  const {
+    boardName,
+    setBoardName,
+    shareCode,
+    pendingRequests,
+    setPendingRequests,
+    cursors,
+    presentUsers,
+    emit,
+  } = useBoardSocket(id, user, setStrokes);
 
-  useEffect(() => {
-    const fetchBoard = async () => {
-      try {
-        const data = await whiteboardApi.getOne(id);
-        setBoardName(data.name);
-        setStrokes(data.strokes || []);
-        setShareCode(data.shareCode || "");
-        setPendingRequests(data.pendingRequests || []);
-      } catch (err) {
-        toast.error("Failed to load whiteboard");
-        console.error("Failed to load whiteboard:", err);
-      }
-    };
-    if (id) fetchBoard();
-  }, [id]);
+  const isDrawMode = !isSpacePressed && tool !== "hand";
 
-  useEffect(() => {
-    if (!id || !user) return;
-    const socket = connect();
-
-    socket.emit("join-board", {
-      boardId: id,
-      userId: user.id,
-      username: user.name,
-    });
-    socket.on("stroke-update", ({ stroke }) =>
-      setStrokes((prev) => [...prev, stroke]),
-    );
-    socket.on("cursor-move", ({ socketId, username, color, x, y }) => {
-      setCursors((prev) => ({
-        ...prev,
-        [socketId]: { username, color, x, y },
-      }));
-    });
-    socket.on("cursor-leave", ({ socketId }) => {
-      setCursors((prev) => {
-        const u = { ...prev };
-        delete u[socketId];
-        return u;
-      });
-    });
-    socket.on("presence-update", (users) => setPresentUsers(users));
-
-    return () => {
-      socket.emit("leave-board", { boardId: id });
-      socket.off("stroke-update");
-      socket.off("cursor-move");
-      socket.off("cursor-leave");
-      socket.off("presence-update");
-      disconnect();
-    };
-  }, [id, user, connect, disconnect]);
-
-  // Auto-save strokes + thumbnail
+  // 3. Handlers
   const handleStrokesChange = useCallback(
     (newStrokes) => {
       const latestStroke = newStrokes[newStrokes.length - 1];
@@ -111,70 +75,70 @@ export default function WhiteboardPage() {
             strokes: strokesToSave,
             name: boardName,
           });
-          await saveThumbnail(canvasRef.current);
+          const canvasElement = canvasRef.current?.getCanvas();
+          if (canvasElement) await saveThumbnail(canvasElement);
         } catch (err) {
-          console.error("Failed to save:", err);
+          console.error("Save error details:", err); // Look at your browser console for this!
           toast.error("Failed to save changes");
         } finally {
           setSaving(false);
         }
       });
     },
-    [id, boardName, emit, debouncedSave, saveThumbnail],
+    [id, boardName, emit, debouncedSave, saveThumbnail, toast],
   );
-
-  const handleRenameBoard = async (newName) => {
-    setBoardName(newName);
-    try {
-      await whiteboardApi.update(id, { name: newName });
-    } catch (err) {
-      console.error("Failed to rename:", err);
-      toast.error("Failed to rename board");
-    }
-  };
 
   const handleRespond = async (requestId, approve) => {
     try {
       await whiteboardApi.respondToRequest(id, requestId, approve);
-      setPendingRequests((prev) =>
-        prev.filter((r) => r._id?.toString() !== requestId?.toString()),
-      );
-      toast.success(approve ? "Request approved" : "Request denied");
+      setPendingRequests((prev) => prev.filter((r) => r._id !== requestId));
+      toast.success(approve ? "Approved" : "Denied");
     } catch (err) {
-      console.error("Failed to respond:", err);
-      toast.error("Failed to respond to request");
+      console.error("Save error details:", err); // Look at your browser console for this!
+      toast.error("Action failed");
     }
   };
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden">
+    <div
+      className="relative w-screen h-screen overflow-hidden"
+      onWheel={handleWheel}
+      onMouseDownCapture={startPan}
+      onMouseMoveCapture={pan}
+      onMouseUpCapture={stopPan}
+      onMouseLeave={stopPan}
+    >
       <BoardHeader
         boardName={boardName}
-        onRename={handleRenameBoard}
+        onRename={setBoardName}
         saving={saving}
         shareCode={shareCode}
         presentUsers={presentUsers}
       />
+
       <DarkModeToggle className="absolute top-3 right-0" />
+
       <SharePanel
         boardId={id}
         pendingRequests={pendingRequests}
         onRespond={handleRespond}
       />
+
       <Canvas
         ref={canvasRef}
         tool={tool}
+        overrideCursor={isSpacePressed || isPanning ? "grab" : null}
+        readOnly={!isDrawMode}
         color={color}
         penSize={penSize}
         eraserSize={eraserSize}
-        zoom={zoom}
-        setZoom={setZoom}
         loadStrokes={strokes}
         onStrokesChange={handleStrokesChange}
         onCursorMove={(x, y) => emit("cursor-move", { boardId: id, x, y })}
         cursors={cursors}
-        onClearCanvas={(fn) => (clearCanvasRef.current = fn)}
+        camera={camera}
       />
+
       <Toolbar
         tool={tool}
         setTool={setTool}
@@ -184,9 +148,10 @@ export default function WhiteboardPage() {
         setPenSize={setPenSize}
         eraserSize={eraserSize}
         setEraserSize={setEraserSize}
-        zoom={zoom}
-        setZoom={setZoom}
-        clearCanvas={() => clearCanvasRef.current?.()}
+        scale={camera.scale}
+        zoomIn={zoomIn}
+        zoomOut={zoomOut}
+        clearCanvas={() => canvasRef.current?.clear()}
       />
     </div>
   );

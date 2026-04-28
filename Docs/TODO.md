@@ -49,7 +49,7 @@ zg8M9QiML1HsLqc3
 - [ ] Correct the toast usage and name on hover icons
 - [-] My app is redering 2 times on start / Welcome back popup 2 times
 - [ ] Edit the ErrorBoundary Page
-- [ ] UI/UX Enhancement
+- [ ] UI/UX Enhancement -- back prop , mmobbin, repovive
 - [-] min size of grids
 - [-] use username insted of user in sharepanel
 - [ ] use usedebounce in debounce save in usewhiteboard page
@@ -59,7 +59,14 @@ zg8M9QiML1HsLqc3
 - [ ] Main Whiteboard Features :-
       Pan and Zoom , Infinite Canvas
       Featureful Toolbar
+      Clear button not working
+      undo redo
+      erase fulll line at once
       MiniMap for Navigation
       WhiteBoard Background Pattern and Color Selector
 
       uer add whiteboard in db , avatar pic , notification
+
+Right now, you redraw everything on every frame. For giant boards, we usually split it into:
+A Background Canvas: For finished strokes (only redraws when something changes).
+A Drawing Canvas: For the current line being drawn (updates every mouse move).

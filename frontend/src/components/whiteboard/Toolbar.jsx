@@ -1,8 +1,7 @@
-import { useState } from 'react';
-import { PenLine, Hand, Eraser, ZoomIn, ZoomOut } from 'lucide-react';
-import PenTool from '../ToolDetails/PenTool';
-import EraserTool from '../ToolDetails/EraserTool';
-import { ZOOM } from '../../utils/constants.js';
+import { useState } from "react";
+import { PenLine, Hand, Eraser, ZoomIn, ZoomOut } from "lucide-react";
+import PenTool from "../ToolDetails/PenTool";
+import EraserTool from "../ToolDetails/EraserTool";
 
 export default function Toolbar({
   tool,
@@ -13,8 +12,9 @@ export default function Toolbar({
   setPenSize,
   eraserSize,
   setEraserSize,
-  zoom,
-  setZoom,
+  scale,
+  zoomIn,
+  zoomOut,
   clearCanvas,
 }) {
   const [activePanel, setActivePanel] = useState(null);
@@ -24,25 +24,22 @@ export default function Toolbar({
     setActivePanel((prev) => (prev === panelName ? null : panelName));
   };
 
-  const zoomIn = () => setZoom((z) => Math.min(z + ZOOM.STEP, ZOOM.MAX));
-  const zoomOut = () => setZoom((z) => Math.max(z - ZOOM.STEP, ZOOM.MIN));
-
   return (
     <div className="flex gap-2 absolute bottom-5 left-1/2 transform -translate-x-1/2 text-foreground">
       {/* Zoom Controls */}
-      <div className="px-2 flex items-center justify-center cursor-pointer bg-background rounded-md border border-border-muted/50 hover:border-border-muted hover:bg-background-highlight">
+      <div className="px-2 flex items-center justify-center bg-background rounded-md border border-border-muted/50">
         <button
-          className="text-lg cursor-pointer border-none hover:bg-background p-0"
+          className="text-lg cursor-pointer border-none hover:bg-background-highlight p-2 rounded-md"
           onClick={zoomIn}
           title="Zoom in"
         >
           <ZoomIn size={20} />
         </button>
-        <div className="relative px-4 py-2 rounded-lg text-md z-10">
-          {(zoom * 100).toFixed(0)}%
+        <div className="relative px-2 py-2 rounded-lg text-md z-10 w-14 text-center font-medium">
+          {(scale * 100).toFixed(0)}%
         </div>
         <button
-          className="text-lg cursor-pointer border-none hover:bg-background p-0"
+          className="text-lg cursor-pointer border-none hover:bg-background-highlight p-2 rounded-md"
           onClick={zoomOut}
           title="Zoom out"
         >
@@ -53,16 +50,15 @@ export default function Toolbar({
       {/* Pen Tool */}
       <div className="relative">
         <button
-          className="p-2 flex items-center justify-center cursor-pointer bg-background w-10 h-10 rounded-md border border-border-muted/50 hover:border-border-muted hover:bg-background-highlight"
-          onClick={() => handleToolClick('pen', 'pen')}
+          className={`p-2 flex items-center justify-center cursor-pointer bg-background w-10 h-10 rounded-md border border-border-muted/50 hover:border-border-muted hover:bg-background-highlight ${
+            tool === "pen" ? "bg-background-highlight border-border-muted" : ""
+          }`}
+          onClick={() => handleToolClick("pen", "pen")}
         >
           <PenLine />
         </button>
-        {activePanel === 'pen' && (
-          <div
-            className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50"
-            onClick={(e) => e.stopPropagation()}
-          >
+        {activePanel === "pen" && (
+          <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50">
             <PenTool
               color={color}
               setColor={setColor}
@@ -75,11 +71,10 @@ export default function Toolbar({
 
       {/* Hand Tool */}
       <button
-        className="p-2 flex items-center justify-center cursor-pointer bg-background w-10 h-10 rounded-md border border-border-muted/50 hover:border-border-muted hover:bg-background-highlight"
-        onClick={() => {
-          setTool('hand');
-          setActivePanel(null);
-        }}
+        className={`p-2 flex items-center justify-center cursor-pointer bg-background w-10 h-10 rounded-md border border-border-muted/50 hover:border-border-muted hover:bg-background-highlight ${
+          tool === "hand" ? "bg-background-highlight border-border-muted" : ""
+        }`}
+        onClick={() => handleToolClick(null, "hand")}
       >
         <Hand />
       </button>
@@ -87,16 +82,17 @@ export default function Toolbar({
       {/* Eraser Tool */}
       <div className="relative">
         <button
-          className="p-2 flex items-center justify-center cursor-pointer bg-background w-10 h-10 rounded-md border border-border-muted/50 hover:border-border-muted hover:bg-background-highlight"
-          onClick={() => handleToolClick('eraser', 'eraser')}
+          className={`p-2 flex items-center justify-center cursor-pointer bg-background w-10 h-10 rounded-md border border-border-muted/50 hover:border-border-muted hover:bg-background-highlight ${
+            tool === "eraser"
+              ? "bg-background-highlight border-border-muted"
+              : ""
+          }`}
+          onClick={() => handleToolClick("eraser", "eraser")}
         >
           <Eraser />
         </button>
-        {activePanel === 'eraser' && (
-          <div
-            className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50"
-            onClick={(e) => e.stopPropagation()}
-          >
+        {activePanel === "eraser" && (
+          <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-50">
             <EraserTool
               eraserSize={eraserSize}
               setEraserSize={setEraserSize}
