@@ -11,7 +11,7 @@ export const COLORS = [
 
 export const ALLOWED_ORIGINS = [
 	"http://localhost:5173",
-	"https://collaborative-white-board-iota.vercel.app",
+	"https://lienwand.vercel.app",
 ];
 
 export const JWT_EXPIRY = "7d";
