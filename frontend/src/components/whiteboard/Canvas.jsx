@@ -27,7 +27,7 @@ const Canvas = forwardRef((props, ref) => {
 
   const gridSize = 24 * camera.scale;
   return (
-    <div className="w-full h-full relative">
+    <div className="fixed inset-0 w-screen h-screen">
       <canvas
         ref={canvasRef}
         onMouseDown={readOnly ? undefined : startDrawing}
@@ -37,11 +37,11 @@ const Canvas = forwardRef((props, ref) => {
         className="w-full h-full"
         style={{
           cursor: readOnly ? "default" : cursorStyle,
-          background: CANVAS_COLORS.BACKGROUND,
+          background: CANVAS_COLORS[4],
           backgroundSize: `${gridSize}px ${gridSize}px`,
           backgroundPosition: `${camera.x}px ${camera.y}px`,
-          backgroundImage: `linear-gradient(to right, ${CANVAS_COLORS.GRID_LINE} 1px, transparent 1px), 
-                            linear-gradient(to bottom, ${CANVAS_COLORS.GRID_LINE} 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(to right, ${CANVAS_COLORS[0]} 1px, transparent 1px), 
+                            linear-gradient(to bottom, ${CANVAS_COLORS[0]} 1px, transparent 1px)`,
         }}
       />
       {/* Remote Cursors Overlay */}

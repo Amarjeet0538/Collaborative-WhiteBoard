@@ -10,11 +10,11 @@
 - [-] reduce the size of header and search in home page
 - [-] merge signin and signup
 - [ ] add a global state for dark/light mode
-- [ ] add owned boards and shared boards later -- https://dribbble.com/shots/26294998-Collaborative-Whiteboard-Dashboard-Clean-Minimal-UI
+- [-] add owned boards and shared boards later -- https://dribbble.com/shots/26294998-Collaborative-Whiteboard-Dashboard-Clean-Minimal-UI
 - [-] replace dashboard with home
 - [-] add data
 - [ ] make the whiteboard infinite and with changing background patterns
-- [ ] minimap for navigation
+- [-] minimap for navigation
 - [-] adder user model in mongodb and login
   mobbin for design
 - [ ] add toast for every api response in frontend
@@ -56,13 +56,13 @@ zg8M9QiML1HsLqc3
 - [ ] Forgot and Show Password
 - [ ] Add a global state for dark/light mode
 - [ ] Add Shimmer UI
-- [ ] Main Whiteboard Features :-
-      Pan and Zoom , Infinite Canvas
-      Featureful Toolbar
-      Clear button not working
+- [ ] Add Home Button in Whiteboard
+- [ ] Add thumbnail , profile photo to cloud
+- [ ] Add a settings app for profile picture , name edit , etc
+- [ ] Main Whiteboard Features :- - Pan and Zoom , Infinite Canvas
+      Featureful Toolbar - Clear button not working
       undo redo
-      erase fulll line at once
-      MiniMap for Navigation
+      erase fulll line at once - MiniMap for Navigation
       WhiteBoard Background Pattern and Color Selector
 
       uer add whiteboard in db , avatar pic , notification

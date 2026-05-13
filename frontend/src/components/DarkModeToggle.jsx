@@ -12,7 +12,7 @@ export default function DarkModeToggle() {
   return (
     <button
       onClick={toggleDarkMode}
-      className=" cursor-pointer p-3 mr-5 bg-(--bg-light) transition-all rounded-full  hover:shadow-md"
+      className=" cursor-pointer p-2 mr-5 bg-background hover:bg-background-highlight transition-all rounded-full  hover:shadow-md"
     >
       {isDark ? (
         <Sun className="text-secondary" />
