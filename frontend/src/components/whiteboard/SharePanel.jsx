@@ -1,14 +1,20 @@
 import { useState, useEffect } from "react";
 import { whiteboardApi } from "../../api/whiteboard.api.js";
 import useToast from "../../hooks/useToast.js";
+import { Check, X } from "lucide-react";
 
 export default function SharePanel({ boardId, pendingRequests, onRespond }) {
   const toast = useToast();
   const [requests, setRequests] = useState(pendingRequests);
 
+  // Sync from parent
+  useEffect(() => {
+    setRequests(pendingRequests);
+  }, [pendingRequests]);
+
+  // Periodic refresh
   useEffect(() => {
     if (!boardId) return;
-
     const interval = setInterval(async () => {
       try {
         const data = await whiteboardApi.getOne(boardId);
@@ -17,13 +23,8 @@ export default function SharePanel({ boardId, pendingRequests, onRespond }) {
         console.error("Failed to fetch pending requests:", err);
       }
     }, 5000);
-
     return () => clearInterval(interval);
   }, [boardId]);
-
-  useEffect(() => {
-    setRequests(pendingRequests);
-  }, [pendingRequests]);
 
   const handleRespond = async (requestId, approve) => {
     try {
@@ -40,14 +41,18 @@ export default function SharePanel({ boardId, pendingRequests, onRespond }) {
   if (requests.length === 0) return null;
 
   return (
-    <div className="absolute bottom-5 left-3 z-10 flex flex-col gap-2">
+    /* Anchored top-left, below the header bar — never overlaps toolbar */
+    <div className="absolute top-16 left-3 z-10 flex flex-col gap-2 max-w-[300px]">
       {requests.map((req) => (
         <div
           key={req._id}
-          className="flex items-center gap-3 bg-background border border-border-muted rounded-md px-3 py-2 text-sm text-foreground shadow-lg animate-toast-slide-in"
+          className="flex items-center gap-3
+            bg-background border border-border/50
+            rounded-2xl px-3 py-2.5 shadow-lg
+            animate-in slide-in-from-left-3 fade-in duration-200"
         >
-          {/* User Avatar */}
-          <div className="w-6 h-6 rounded-full bg-background-muted overflow-hidden shrink-0 border border-border-muted">
+          {/* Avatar */}
+          <div className="w-8 h-8 rounded-full overflow-hidden border border-border/40 flex-shrink-0 bg-background-highlight">
             <img
               src={
                 req.userId?.profilePicture ||
@@ -58,25 +63,35 @@ export default function SharePanel({ boardId, pendingRequests, onRespond }) {
             />
           </div>
 
-          {/* Name and Text */}
-          <span className="font-medium whitespace-nowrap">
-            <span className="text-primary-hover">{req.userId?.name}</span> wants
-            to edit
-          </span>
+          {/* Text */}
+          <div className="flex flex-col min-w-0">
+            <span className="text-sm font-semibold text-foreground truncate leading-tight">
+              {req.userId?.name}
+            </span>
+            <span className="text-xs text-foreground/50 leading-tight">
+              wants to edit
+            </span>
+          </div>
 
           {/* Actions */}
-          <div className="flex gap-1.5 ml-2">
+          <div className="flex gap-1.5 ml-auto flex-shrink-0">
             <button
               onClick={() => handleRespond(req._id, true)}
-              className="px-2.5 py-1 bg-success text-white rounded-md hover:opacity-90 text-xs font-semibold cursor-pointer transition-all"
+              title="Approve"
+              className="w-8 h-8 flex items-center justify-center rounded-xl
+                bg-green-500/10 hover:bg-green-500 text-green-600 hover:text-white
+                transition-all active:scale-90 cursor-pointer"
             >
-              Approve
+              <Check size={14} strokeWidth={2.5} />
             </button>
             <button
               onClick={() => handleRespond(req._id, false)}
-              className="px-2.5 py-1 bg-background-highlight text-foreground-muted rounded-md hover:bg-danger hover:text-white text-xs font-semibold cursor-pointer transition-all"
+              title="Deny"
+              className="w-8 h-8 flex items-center justify-center rounded-xl
+                bg-background-highlight hover:bg-red-500 text-foreground/60 hover:text-white
+                transition-all active:scale-90 cursor-pointer"
             >
-              Deny
+              <X size={14} strokeWidth={2.5} />
             </button>
           </div>
         </div>

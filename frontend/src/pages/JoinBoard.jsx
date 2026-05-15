@@ -142,8 +142,6 @@ export default function JoinBoard() {
         loadStrokes={board.strokes || []}
         readOnly={true}
       />
-
     </div>
   );
 }
-

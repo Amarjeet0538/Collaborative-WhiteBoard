@@ -11,7 +11,6 @@ import Canvas from "../components/whiteboard/Canvas";
 import Toolbar from "../components/whiteboard/Toolbar";
 import BoardHeader from "../components/whiteboard/BoardHeader";
 import SharePanel from "../components/whiteboard/SharePanel";
-import DarkModeToggle from "../components/DarkModeToggle";
 import Minimap from "../components/whiteboard/Minimap";
 
 export default function WhiteboardPage() {
@@ -20,7 +19,8 @@ export default function WhiteboardPage() {
   const toast = useToast();
   const canvasRef = useRef(null);
   const [saving, setSaving] = useState(false);
-  // 1. Board State (Drawing)
+
+  // 1. Board state (drawing)
   const {
     strokes,
     setStrokes,
@@ -48,7 +48,7 @@ export default function WhiteboardPage() {
     zoomOut,
   } = useCamera(tool);
 
-  // 2. Networking Logic (Socket & Fetching)
+  // 2. Networking (socket + fetching)
   const {
     boardName,
     setBoardName,
@@ -79,7 +79,7 @@ export default function WhiteboardPage() {
           const canvasElement = canvasRef.current?.getCanvas();
           if (canvasElement) await saveThumbnail(canvasElement);
         } catch (err) {
-          console.error("Save error details:", err); // Look at your browser console for this!
+          console.error("Save error:", err);
           toast.error("Failed to save changes");
         } finally {
           setSaving(false);
@@ -95,7 +95,7 @@ export default function WhiteboardPage() {
       setPendingRequests((prev) => prev.filter((r) => r._id !== requestId));
       toast.success(approve ? "Approved" : "Denied");
     } catch (err) {
-      console.error("Save error details:", err); // Look at your browser console for this!
+      console.error("Respond error:", err);
       toast.error("Action failed");
     }
   };
@@ -109,6 +109,7 @@ export default function WhiteboardPage() {
       onMouseUpCapture={stopPan}
       onMouseLeave={stopPan}
     >
+      {/* Header (includes DarkModeToggle internally) */}
       <BoardHeader
         boardName={boardName}
         onRename={setBoardName}
@@ -117,14 +118,14 @@ export default function WhiteboardPage() {
         presentUsers={presentUsers}
       />
 
-      <DarkModeToggle className="absolute top-3 right-0" />
-
+      {/* Access-request notifications — anchored below header, top-left */}
       <SharePanel
         boardId={id}
         pendingRequests={pendingRequests}
         onRespond={handleRespond}
       />
 
+      {/* Drawing canvas */}
       <Canvas
         ref={canvasRef}
         tool={tool}
@@ -139,7 +140,10 @@ export default function WhiteboardPage() {
         cursors={cursors}
         camera={camera}
       />
-      <Minimap strokes={strokes} camera={camera} />
+
+      {/* Minimap — bottom right      <Minimap strokes={strokes} camera={camera} />  */}
+
+      {/* Unified toolbar — bottom centre */}
       <Toolbar
         tool={tool}
         setTool={setTool}

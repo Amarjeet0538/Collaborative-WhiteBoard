@@ -36,16 +36,17 @@ export default function Header() {
         {user ? (
           <div className="flex items-center gap-3 relative group cursor-pointer">
             <button
-              className="rounded-full text-foreground cursor-pointer p-3 transition-all hover:shadow-md"
+              className={`w-10 h-10 flex items-center justify-center cursor-pointer
+        bg-background hover:bg-background-highlight
+        border border-border/40 hover:border-border
+        text-foreground transition-all rounded-2xl shadow-sm
+        active:scale-95 `}
               onClick={() => setIsOpen(!isOpen)}
             >
-              <User className="hover:text-primary" />
+              <User className="hover:text-primary" size={17} />
             </button>
             {isOpen && (
-              <div
-                className="absolute top-full right-0 z-20 w-40 text-center p-5 border border-border-muted rounded-md bg-background text-foreground mt-2 shadow-lg"
-                ref={menuRef}
-              >
+              <div className="absolute top-full right-0 z-20 w-40 text-center p-5 border border-border-muted rounded-md bg-background text-foreground mt-2 shadow-lg">
                 <p className="cursor-pointer text-sm">{user.name}</p>
                 <hr className="my-2 border-t border-border" />
                 <button
@@ -69,4 +70,3 @@ export default function Header() {
     </div>
   );
 }
-

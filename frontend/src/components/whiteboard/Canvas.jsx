@@ -37,11 +37,11 @@ const Canvas = forwardRef((props, ref) => {
         className="w-full h-full"
         style={{
           cursor: readOnly ? "default" : cursorStyle,
-          background: CANVAS_COLORS[4],
+          background: CANVAS_COLORS[1],
           backgroundSize: `${gridSize}px ${gridSize}px`,
           backgroundPosition: `${camera.x}px ${camera.y}px`,
-          backgroundImage: `linear-gradient(to right, ${CANVAS_COLORS[0]} 1px, transparent 1px), 
-                            linear-gradient(to bottom, ${CANVAS_COLORS[0]} 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(to right, ${CANVAS_COLORS[4]} 1px, transparent 1px), 
+                            linear-gradient(to bottom, ${CANVAS_COLORS[4]} 1px, transparent 1px)`,
         }}
       />
       {/* Remote Cursors Overlay */}
