@@ -47,7 +47,13 @@ export default function Header() {
             </button>
             {isOpen && (
               <div className="absolute top-full right-0 z-20 w-40 text-center p-5 border border-border-muted rounded-md bg-background text-foreground mt-2 shadow-lg">
-                <p className="cursor-pointer text-sm">{user.name}</p>
+                <button
+                  onClick={() => navigate("/settings")}
+                  className="text-sm text-foreground cursor-pointer"
+                >
+                  {user.name}
+                </button>
+
                 <hr className="my-2 border-t border-border" />
                 <button
                   onClick={handleLogout}

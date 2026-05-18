@@ -115,7 +115,7 @@ export default function JoinBoard() {
         {requestStatus === "idle" && (
           <button
             onClick={handleRequestAccess}
-            className="bg-primary text-background text-sm px-4 py-2 rounded-md hover:bg-primary-hover transition-all cursor-pointer"
+            className="bg-background text-foreground text-d text-sm px-4 py-2 rounded-md hover:bg-primary-hover transition-all cursor-pointer"
           >
             {user ? "Request to Edit" : "Login to Edit"}
           </button>

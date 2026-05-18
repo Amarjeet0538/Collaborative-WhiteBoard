@@ -24,5 +24,5 @@ export const ZOOM = {
   DEFAULT: 1,
 };
 
-export const PEN_SIZES = [2, 5, 10, 15, 20];
+export const PEN_SIZES = [25, 30, 40, 45, 80];
 export const ERASER_SIZES = [10, 20, 30, 40, 50];

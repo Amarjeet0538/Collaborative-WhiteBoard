@@ -1,14 +1,8 @@
-import { useState } from "react";
 import { Moon } from "lucide-react";
 import { Sun } from "lucide-react";
-
+import { useTheme } from "@/context/ThemeContext";
 export default function DarkModeToggle({ className = "" }) {
-  const [isDark, setIsDark] = useState(false);
-
-  const toggleDarkMode = () => {
-    setIsDark(!isDark);
-    document.body.classList.toggle("dark");
-  };
+  const { isDark, toggleDarkMode } = useTheme();
 
   return (
     <button

@@ -90,7 +90,7 @@ export default function Toolbar({
       <div
         className="flex items-center gap-0.5 px-2 py-1.5
         bg-background border border-border/40
-        rounded-2xl shadow-lg backdrop-blur-md"
+        rounded-2xl shadow-lg backdrop-blur-md  text-foreground "
       >
         {/* Undo / Redo */}
         <ToolBtn onClick={undo} title="Undo (Ctrl+Z)">
@@ -149,7 +149,8 @@ export default function Toolbar({
           <>
             <Divider />
             <div
-              className="w-5 h-5 rounded-full ring-2 ring-offset-2 ring-offset-background ring-border/40 cursor-pointer flex-shrink-0 mx-1"
+              className="w-5 h-5 rounded-full ring-2 ring-offset-2 ring-offset-foreground 
+ring-border/40 cursor-pointer flex-shrink-0 mx-1"
               style={{ backgroundColor: color }}
               onClick={() => handleToolClick("pen", "pen")}
               title="Pen colour"

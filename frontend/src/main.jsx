@@ -7,17 +7,20 @@ import { AuthProvider } from "./context/AuthContext.jsx";
 import { SocketProvider } from "./context/SocketContext.jsx";
 import { ToastProvider } from "./context/ToastContext";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { ThemeProvider } from "./context/ThemeContext";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <AuthProvider>
-      <SocketProvider>
-        <ErrorBoundary>
-          <ToastProvider>
-            <RouterProvider router={AppRouter} />
-          </ToastProvider>
-        </ErrorBoundary>
-      </SocketProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <SocketProvider>
+          <ErrorBoundary>
+            <ToastProvider>
+              <RouterProvider router={AppRouter} />
+            </ToastProvider>
+          </ErrorBoundary>
+        </SocketProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </StrictMode>,
 );

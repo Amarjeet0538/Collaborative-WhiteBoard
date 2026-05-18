@@ -1,5 +1,22 @@
 import { Check, X, Trash2 } from "lucide-react";
 
+const timeAgo = (date) => {
+  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+};
+
+const TYPE_CONFIG = {
+  request_received: { dot: "bg-blue-400" },
+  request_approved: { dot: "bg-green-400" },
+  request_denied: { dot: "bg-red-400" },
+  added_to_board: { dot: "bg-violet-400" },
+};
+
 export default function NotificationItem({
   notification,
   onAction,
@@ -7,106 +24,97 @@ export default function NotificationItem({
   onMarkRead,
 }) {
   const { _id, sender, board, type, message, isRead, createdAt } = notification;
-
   const isRequestType = type === "request_received";
-  const isUnread = !isRead;
-
-  const timeAgo = (date) => {
-    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
-    if (seconds < 60) return "just now";
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
-  };
-
-  const getTypeStyles = () => {
-    switch (type) {
-      case "request_received":
-        return { bg: "bg-blue-500/10", icon: "bg-blue-500" };
-      case "request_approved":
-        return { bg: "bg-green-500/10", icon: "bg-green-500" };
-      case "request_denied":
-        return { bg: "bg-red-500/10", icon: "bg-red-500" };
-      case "added_to_board":
-        return { bg: "bg-purple-500/10", icon: "bg-purple-500" };
-      default:
-        return { bg: "bg-gray-500/10", icon: "bg-gray-500" };
-    }
-  };
-
-  const styles = getTypeStyles();
+  const config = TYPE_CONFIG[type] ?? { dot: "bg-foreground/20" };
 
   return (
     <div
-      className={`p-3 border-b border-border-muted last:border-0 transition-colors ${
-        isUnread ? "bg-background-highlight" : "bg-background"
-      } hover:bg-background-highlight`}
       onClick={() => !isRead && onMarkRead(_id)}
+      className={`group flex gap-3 px-4 py-3 cursor-pointer transition-colors
+        border-b border-border/30 last:border-0
+        ${isRead ? "bg-background" : "bg-background-highlight"}
+        hover:bg-background-highlight`}
     >
-      <div className="flex gap-3">
-        {/* Avatar */}
+      {/* Avatar */}
+      <div className="relative flex-shrink-0 mt-0.5">
         <div
-          className={`w-10 h-10 rounded-full flex items-center justify-center text-background font-semibold text-sm flex-shrink-0 ${styles.icon}`}
+          className="w-8 h-8 rounded-xl bg-primary/10 text-primary
+          flex items-center justify-center text-xs font-bold select-none"
         >
-          {sender?.name?.charAt(0)?.toUpperCase() || "?"}
+          {sender?.name?.charAt(0)?.toUpperCase() ?? "?"}
         </div>
+        {/* Type dot */}
+        <span
+          className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full
+          ring-2 ring-background ${config.dot}`}
+        />
+      </div>
 
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm text-foreground leading-relaxed">{message}</p>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-xs text-foreground-muted">
-              {timeAgo(createdAt)}
-            </span>
-            {board && (
-              <>
-                <span className="text-xs text-foreground-muted">•</span>
-                <span className="text-xs text-foreground-muted truncate">
-                  {board.name}
-                </span>
-              </>
-            )}
-          </div>
+      {/* Body */}
+      <div className="flex-1 min-w-0 flex flex-col gap-1">
+        <p className="text-sm text-foreground leading-snug">{message}</p>
 
-          {/* Action Buttons */}
-          {isRequestType && (
-            <div className="flex gap-2 mt-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAction(_id, "accept", board?._id);
-                }}
-                className="flex items-center gap-1 px-3 py-1.5 bg-primary text-background text-xs rounded-md hover:bg-primary-hover transition-colors cursor-pointer"
-              >
-                <Check size={14} /> Accept
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAction(_id, "reject", board?._id);
-                }}
-                className="flex items-center gap-1 px-3 py-1.5 bg-background border border-border-muted text-foreground text-xs rounded-md hover:bg-red-500 hover:text-white hover:border-red-500 transition-colors cursor-pointer"
-              >
-                <X size={14} /> Reject
-              </button>
-            </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] text-foreground/40">
+            {timeAgo(createdAt)}
+          </span>
+          {board && (
+            <>
+              <span className="text-foreground/20 text-[11px]">·</span>
+              <span className="text-[11px] text-foreground/40 truncate max-w-[120px]">
+                {board.name}
+              </span>
+            </>
+          )}
+          {!isRead && (
+            <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
           )}
         </div>
 
-        {/* Delete Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(_id);
-          }}
-          className="p-1 text-foreground-muted hover:text-red-500 transition-colors cursor-pointer flex-shrink-0"
-        >
-          <Trash2 size={16} />
-        </button>
+        {/* Accept / Reject actions */}
+        {isRequestType && (
+          <div className="flex gap-2 mt-1.5">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAction(_id, "accept", board?._id);
+              }}
+              className="flex items-center gap-1.5 h-7 px-3 rounded-lg
+                bg-primary text-background text-xs font-semibold
+                hover:opacity-90 active:scale-95 transition-all cursor-pointer"
+            >
+              <Check size={12} strokeWidth={2.5} /> Accept
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAction(_id, "reject", board?._id);
+              }}
+              className="flex items-center gap-1.5 h-7 px-3 rounded-lg
+                bg-background-highlight border border-border/50
+                text-foreground/60 text-xs font-semibold
+                hover:bg-red-500 hover:text-white hover:border-red-500
+                active:scale-95 transition-all cursor-pointer"
+            >
+              <X size={12} strokeWidth={2.5} /> Reject
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* Delete */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(_id);
+        }}
+        className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg
+          text-foreground/20 hover:text-red-500 hover:bg-red-500/10
+          opacity-0 group-hover:opacity-100
+          transition-all active:scale-90 cursor-pointer mt-0.5"
+      >
+        <Trash2 size={14} />
+      </button>
     </div>
   );
 }

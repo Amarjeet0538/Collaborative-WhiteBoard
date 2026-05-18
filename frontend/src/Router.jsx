@@ -5,6 +5,7 @@ import Home from "./pages/Home";
 import WhiteboardPage from "./pages/WhiteboardPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import JoinBoard from "./pages/JoinBoard";
+import AccountSettings from "./pages/AccountSettings";
 
 const AppRouter = createBrowserRouter([
   {
@@ -34,6 +35,10 @@ const AppRouter = createBrowserRouter([
   {
     path: "/join/:code",
     element: <JoinBoard />,
+  },
+  {
+    path: "/settings",
+    element: <AccountSettings />,
   },
 ]);
 

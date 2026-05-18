@@ -3,6 +3,7 @@ import DarkModeToggle from "../DarkModeToggle";
 import useToast from "@/hooks/useToast";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Link2, Check, Users } from "lucide-react";
+import SharePanel from "./SharePanel";
 
 export default function BoardHeader({
   boardName,
@@ -11,6 +12,9 @@ export default function BoardHeader({
   shareCode,
   presentUsers,
   onCopyShareCode,
+  id,
+  pendingRequests,
+  handleRespond,
 }) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [tempName, setTempName] = useState("");
@@ -100,12 +104,12 @@ export default function BoardHeader({
       </div>
 
       {/* ── Top-right: Share + Dark mode ── */}
-      <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
-        <div className="relative" ref={menuRef}>
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-2 ">
+        <div className="relative " ref={menuRef}>
           <button
             onClick={() => setIsMenuOpen((prev) => !prev)}
             className="flex items-center gap-2 h-10 px-4 rounded-2xl
-              bg-background text-foreground               hover:opacity-90 active:scale-95
+              bg-background text-foreground     border border-border/40            hover:opacity-90 active:scale-95
               transition-all shadow-sm text-sm font-medium"
           >
             <span className="relative flex h-2 w-2">
@@ -183,6 +187,19 @@ export default function BoardHeader({
                     </p>
                   )}
                 </div>
+              </div>
+
+              <div className="h-px bg-border/50 mx-3" />
+              <div className="p-3 flex flex-col gap-2">
+                {" "}
+                <p className="text-[10px] font-semibold text-foreground/40 uppercase tracking-widest px-1">
+                  Requests{" "}
+                </p>
+                <SharePanel
+                  boardId={id}
+                  pendingRequests={pendingRequests}
+                  onRespond={handleRespond}
+                />
               </div>
             </div>
           )}

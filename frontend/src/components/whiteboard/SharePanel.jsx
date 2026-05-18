@@ -42,12 +42,12 @@ export default function SharePanel({ boardId, pendingRequests, onRespond }) {
 
   return (
     /* Anchored top-left, below the header bar — never overlaps toolbar */
-    <div className="absolute top-16 left-3 z-10 flex flex-col gap-2 max-w-[300px]">
+    <div>
       {requests.map((req) => (
         <div
           key={req._id}
           className="flex items-center gap-3
-            bg-background border border-border/50
+            bg-background border border-border/20
             rounded-2xl px-3 py-2.5 shadow-lg
             animate-in slide-in-from-left-3 fade-in duration-200"
         >

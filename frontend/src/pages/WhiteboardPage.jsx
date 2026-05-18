@@ -10,7 +10,6 @@ import { useCamera } from "../hooks/useCamera.js";
 import Canvas from "../components/whiteboard/Canvas";
 import Toolbar from "../components/whiteboard/Toolbar";
 import BoardHeader from "../components/whiteboard/BoardHeader";
-import SharePanel from "../components/whiteboard/SharePanel";
 import Minimap from "../components/whiteboard/Minimap";
 
 export default function WhiteboardPage() {
@@ -109,17 +108,12 @@ export default function WhiteboardPage() {
       onMouseUpCapture={stopPan}
       onMouseLeave={stopPan}
     >
-      {/* Header (includes DarkModeToggle internally) */}
       <BoardHeader
         boardName={boardName}
         onRename={setBoardName}
         saving={saving}
         shareCode={shareCode}
         presentUsers={presentUsers}
-      />
-
-      {/* Access-request notifications — anchored below header, top-left */}
-      <SharePanel
         boardId={id}
         pendingRequests={pendingRequests}
         onRespond={handleRespond}

@@ -1,7 +1,7 @@
 import { forwardRef, useImperativeHandle } from "react";
 import { useCanvas } from "../../hooks/useCanvas";
 import { CANVAS_COLORS } from "../../utils/constants.js";
-
+import { useTheme } from "@/context/ThemeContext";
 const Canvas = forwardRef((props, ref) => {
   const {
     tool,
@@ -10,9 +10,11 @@ const Canvas = forwardRef((props, ref) => {
     camera = { x: 0, y: 0, scale: 1 },
     overrideCursor,
   } = props;
+  const { isDark } = useTheme();
+  const backgroundColor = isDark ? CANVAS_COLORS[0] : CANVAS_COLORS[1];
+
   const { canvasRef, startDrawing, draw, finishDrawing, clearCanvas } =
     useCanvas(props);
-
   useImperativeHandle(ref, () => ({
     clear: clearCanvas,
     getCanvas: () => canvasRef.current,
@@ -37,7 +39,7 @@ const Canvas = forwardRef((props, ref) => {
         className="w-full h-full"
         style={{
           cursor: readOnly ? "default" : cursorStyle,
-          background: CANVAS_COLORS[1],
+          background: backgroundColor,
           backgroundSize: `${gridSize}px ${gridSize}px`,
           backgroundPosition: `${camera.x}px ${camera.y}px`,
           backgroundImage: `linear-gradient(to right, ${CANVAS_COLORS[4]} 1px, transparent 1px), 

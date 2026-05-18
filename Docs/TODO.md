@@ -13,11 +13,11 @@
 - [-] add owned boards and shared boards later -- https://dribbble.com/shots/26294998-Collaborative-Whiteboard-Dashboard-Clean-Minimal-UI
 - [-] replace dashboard with home
 - [-] add data
-- [ ] make the whiteboard infinite and with changing background patterns
+- [-] make the whiteboard infinite and with changing background patterns
 - [-] minimap for navigation
 - [-] adder user model in mongodb and login
   mobbin for design
-- [ ] add toast for every api response in frontend
+- [-] add toast for every api response in frontend
 - [-] Add the use of get started button , start drawing button , if not login then show landing page not login
   https://www.goodnotes.com/
 
@@ -41,24 +41,24 @@ zg8M9QiML1HsLqc3
 - [-] Search Bar Functionality
 - [ ] Whiteboard Thumbnail to imagekit insted of database
 - [ ] add notification attribute to the users database model
-- [ ] Whiteboard card make design good like add owner and shared peoples , make the thumbnail size less
+- [-] Whiteboard card make design good like add owner and shared peoples , make the thumbnail size less
 - [-] Add Profile Pics to Users
 - [ ] Google and Github Integration for Login
-- [ ] Add Button Feature/Name on Hovering it
+- [-] Add Button Feature/Name on Hovering it
 - [-] Notification System including Toast Popups
-- [ ] Correct the toast usage and name on hover icons
+- [-] Correct the toast usage and name on hover icons
 - [-] My app is redering 2 times on start / Welcome back popup 2 times
-- [ ] Edit the ErrorBoundary Page
-- [ ] UI/UX Enhancement -- back prop , mmobbin, repovive
+- [-- Edit the ErrorBoundary Page
+- [-] UI/UX Enhancement -- back prop , mmobbin, repovive
 - [-] min size of grids
 - [-] use username insted of user in sharepanel
-- [ ] use usedebounce in debounce save in usewhiteboard page
+- [-] use usedebounce in debounce save in usewhiteboard page
 - [ ] Forgot and Show Password
 - [ ] Add a global state for dark/light mode
-- [ ] Add Shimmer UI
-- [ ] Add Home Button in Whiteboard
+- [-] Add Shimmer UI
+- [-] Add Home Button in Whiteboard
 - [ ] Add thumbnail , profile photo to cloud
-- [ ] Add a settings app for profile picture , name edit , etc
+- [-] Add a settings app for profile picture , name edit , etc
 - [ ] Main Whiteboard Features :- - Pan and Zoom , Infinite Canvas
       Featureful Toolbar - Clear button not working
       undo redo
