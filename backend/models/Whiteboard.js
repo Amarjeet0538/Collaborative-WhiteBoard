@@ -2,10 +2,31 @@ import mongoose from "mongoose";
 
 const strokeSchema = new mongoose.Schema(
   {
-    points: [[Number]],
-    color: String,
-    size: Number,
-    composite: String,
+    id: {
+      type: String,
+      required: true,
+    },
+    points: {
+      type: [[Number]],
+      required: true,
+    },
+    color: {
+      type: String,
+      required: true,
+    },
+    size: {
+      type: Number,
+      required: true,
+    },
+    tool: {
+      type: String,
+      enum: ["pen"],
+      default: "pen",
+    },
+    createdAt: {
+      type: Number,
+      required: true,
+    },
   },
   { _id: false },
 );

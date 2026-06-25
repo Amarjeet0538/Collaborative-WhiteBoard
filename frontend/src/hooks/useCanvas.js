@@ -46,7 +46,9 @@ export const useCanvas = (props) => {
       ctx.beginPath();
       ctx.strokeStyle = stroke.color;
       ctx.lineWidth = stroke.size;
-      ctx.globalCompositeOperation = stroke.composite;
+      ctx.globalCompositeOperation = "source-over";
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
       stroke.points.forEach(([x, y], i) => {
         i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
       });
@@ -85,11 +87,18 @@ export const useCanvas = (props) => {
     const { x, y } = getMouseCoordinates(e);
     setIsDrawing(true);
 
+    if (tool === "eraser") {
+      handleEraser(x, y);
+      return;
+    }
+
     currentStroke.current = {
+      id: crypto.randomUUID(),
       points: [[x, y]],
-      color: tool === "eraser" ? "rgba(0,0,0,1)" : color,
-      size: tool === "eraser" ? eraserSize : penSize,
-      composite: tool === "eraser" ? "destination-out" : "source-over",
+      color: color,
+      size: penSize,
+      tool: "pen",
+      createdAt: Date.now(),
     };
 
     redraw();
