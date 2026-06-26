@@ -48,6 +48,8 @@ export default function Toolbar({
   zoomIn,
   zoomOut,
   clearCanvas,
+  undo,
+  redo,
 }) {
   const [activePanel, setActivePanel] = useState(null);
 
@@ -55,9 +57,6 @@ export default function Toolbar({
     setTool(toolName);
     setActivePanel((prev) => (prev === panelName ? null : panelName));
   };
-
-  const undo = () => {};
-  const redo = () => {};
 
   return (
     /* Single unified pill, centred at the bottom */

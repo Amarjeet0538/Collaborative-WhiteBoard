@@ -42,8 +42,6 @@ const Canvas = forwardRef((props, ref) => {
           background: backgroundColor,
           backgroundSize: `${gridSize}px ${gridSize}px`,
           backgroundPosition: `${camera.x}px ${camera.y}px`,
-          backgroundImage: `linear-gradient(to right, ${CANVAS_COLORS[4]} 1px, transparent 1px), 
-                            linear-gradient(to bottom, ${CANVAS_COLORS[4]} 1px, transparent 1px)`,
         }}
       />
       {/* Remote Cursors Overlay */}

@@ -70,3 +70,7 @@ zg8M9QiML1HsLqc3
 Right now, you redraw everything on every frame. For giant boards, we usually split it into:
 A Background Canvas: For finished strokes (only redraws when something changes).
 A Drawing Canvas: For the current line being drawn (updates every mouse move).
+
+make account settings good
+correct eraser
+and undo redo

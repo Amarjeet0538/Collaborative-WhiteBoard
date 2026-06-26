@@ -1,5 +1,16 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 
+const getDistanceToSegment = (p, v, w) => {
+  const l2 = (v[0] - w[0]) ** 2 + (v[1] - w[1]) ** 2;
+  if (l2 === 0) return Math.hypot(p[0] - v[0], p[1] - v[1]);
+  let t = ((p[0] - v[0]) * (w[0] - v[0]) + (p[1] - v[1]) * (w[1] - v[1])) / l2;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(
+    p[0] - (v[0] + t * (w[0] - v[0])),
+    p[1] - (v[1] + t * (w[1] - v[1])),
+  );
+};
+
 export const useCanvas = (props) => {
   const {
     tool,
@@ -11,7 +22,7 @@ export const useCanvas = (props) => {
     onCursorMove,
     camera = { x: 0, y: 0, scale: 1 },
   } = props;
-
+  const erasedDuringDrag = useRef(false);
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
   const strokesRef = useRef([]);
@@ -35,7 +46,6 @@ export const useCanvas = (props) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const dpr = window.devicePixelRatio || 2;
-
     ctx.save();
     ctx.scale(dpr, dpr);
     ctx.translate(camera.x, camera.y);
@@ -56,13 +66,49 @@ export const useCanvas = (props) => {
     };
 
     strokesRef.current.forEach(renderStroke);
-
-    if (currentStroke.current) {
-      renderStroke(currentStroke.current);
-    }
+    if (currentStroke.current) renderStroke(currentStroke.current);
 
     ctx.restore();
   }, [camera]);
+
+  const handleEraser = useCallback(
+    (x, y) => {
+      const hitRadius = eraserSize / 2 / camera.scale;
+      let erasedSomething = false;
+
+      const remaining = strokesRef.current.filter((stroke) => {
+        if (stroke.points.length === 1) {
+          const dist = Math.hypot(
+            stroke.points[0][0] - x,
+            stroke.points[0][1] - y,
+          );
+          if (dist <= hitRadius + stroke.size / 2) {
+            erasedSomething = true;
+            return false;
+          }
+        }
+        for (let i = 0; i < stroke.points.length - 1; i++) {
+          const dist = getDistanceToSegment(
+            [x, y],
+            stroke.points[i],
+            stroke.points[i + 1],
+          );
+          if (dist <= hitRadius + stroke.size / 2) {
+            erasedSomething = true;
+            return false;
+          }
+        }
+        return true;
+      });
+
+      if (erasedSomething) {
+        strokesRef.current = remaining;
+        erasedDuringDrag.current = true; // ← flag it, don't report yet
+        redraw();
+      }
+    },
+    [eraserSize, camera.scale, redraw],
+  ); // ← removed onStrokesChange
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -78,7 +124,7 @@ export const useCanvas = (props) => {
 
   useEffect(() => {
     if (loadStrokes) {
-      strokesRef.current = loadStrokes;
+      strokesRef.current = [...loadStrokes];
       redraw();
     }
   }, [loadStrokes, redraw]);
@@ -89,7 +135,7 @@ export const useCanvas = (props) => {
 
     if (tool === "eraser") {
       handleEraser(x, y);
-      return;
+      return; // no currentStroke for eraser
     }
 
     currentStroke.current = {
@@ -100,42 +146,54 @@ export const useCanvas = (props) => {
       tool: "pen",
       createdAt: Date.now(),
     };
-
     redraw();
   };
 
   const draw = (e) => {
-    if (!isDrawing || tool === "hand" || !currentStroke.current) return;
-
+    if (!isDrawing || tool === "hand") return;
     const { x, y } = getMouseCoordinates(e);
     const { offsetX, offsetY } = e.nativeEvent;
-
     if (onCursorMove) onCursorMove(offsetX, offsetY);
 
-    currentStroke.current.points.push([x, y]);
-    redraw();
+    if (tool === "eraser") {
+      handleEraser(x, y);
+      return;
+    }
+
+    if (currentStroke.current) {
+      currentStroke.current.points.push([x, y]);
+      redraw();
+    }
   };
 
   const finishDrawing = () => {
-    if (!isDrawing || !currentStroke.current) return;
+    if (!isDrawing) return;
     setIsDrawing(false);
 
-    strokesRef.current.push(currentStroke.current);
-    if (onStrokesChange) onStrokesChange([...strokesRef.current]);
+    if (tool === "eraser") {
+      // Only push history once — after the whole erase gesture is done
+      if (erasedDuringDrag.current) {
+        if (onStrokesChange) onStrokesChange([...strokesRef.current]);
+        erasedDuringDrag.current = false;
+      }
+      return;
+    }
 
-    currentStroke.current = null;
-    redraw();
+    if (currentStroke.current) {
+      strokesRef.current.push(currentStroke.current);
+      if (onStrokesChange) onStrokesChange([...strokesRef.current]);
+      currentStroke.current = null;
+      redraw();
+    }
   };
 
   const clearCanvas = useCallback(() => {
-    const canvas = canvasRef.current;
     const ctx = contextRef.current;
+    const canvas = canvasRef.current;
     if (!ctx || !canvas) return;
-
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     strokesRef.current = [];
-
     if (onStrokesChange) onStrokesChange([]);
   }, [onStrokesChange]);
 

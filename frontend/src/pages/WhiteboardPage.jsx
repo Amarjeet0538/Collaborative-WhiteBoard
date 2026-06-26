@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { whiteboardApi } from "../api/whiteboard.api.js";
 import { useAuth } from "../hooks/useAuth.js";
@@ -6,6 +6,7 @@ import { useWhiteboard } from "../hooks/useWhiteboard.js";
 import { useBoardSocket } from "../hooks/useBoardSocket.js";
 import useToast from "../hooks/useToast.js";
 import { useCamera } from "../hooks/useCamera.js";
+import { useHistory } from "../hooks/useHistory";
 // Components
 import Canvas from "../components/whiteboard/Canvas";
 import Toolbar from "../components/whiteboard/Toolbar";
@@ -59,15 +60,44 @@ export default function WhiteboardPage() {
     emit,
   } = useBoardSocket(id, user, setStrokes);
 
+  const { pushToHistory, undo, redo, canUndo, canRedo } = useHistory(
+    strokes,
+    setStrokes,
+    emit,
+  );
   const isDrawMode = !isSpacePressed && tool !== "hand";
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === "z") {
+          e.shiftKey ? redo() : undo();
+        }
+        if (e.key === "y") redo();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [undo, redo]);
 
   // 3. Handlers
   const handleStrokesChange = useCallback(
     (newStrokes) => {
-      const latestStroke = newStrokes[newStrokes.length - 1];
-      if (latestStroke)
-        emit("stroke-update", { boardId: id, stroke: latestStroke });
+      // 1. Push to undo/redo history FIRST (before setStrokes happens inside it)
+      pushToHistory(strokes, newStrokes);
 
+      // 2. Sync to other users — distinguish add vs erase
+      if (newStrokes.length > strokes.length) {
+        // A pen stroke was added
+        const latestStroke = newStrokes[newStrokes.length - 1];
+        if (latestStroke)
+          emit("stroke-update", { boardId: id, stroke: latestStroke });
+      } else {
+        // A stroke was erased — send the full array
+        emit("board-sync", { boardId: id, strokes: newStrokes });
+      }
+
+      // 3. Save to DB (your existing logic, unchanged)
       setSaving(true);
       debouncedSave(newStrokes, async (strokesToSave) => {
         try {
@@ -85,7 +115,17 @@ export default function WhiteboardPage() {
         }
       });
     },
-    [id, boardName, emit, debouncedSave, saveThumbnail, toast],
+    [
+      id,
+      boardName,
+      strokes,
+      pushToHistory,
+      emit,
+      debouncedSave,
+      saveThumbnail,
+      toast,
+    ],
+    //                ^^^^^^  ^^^^^^^^^^^^^^ ← add these two
   );
 
   const handleRespond = async (requestId, approve) => {
@@ -151,6 +191,8 @@ export default function WhiteboardPage() {
         zoomIn={zoomIn}
         zoomOut={zoomOut}
         clearCanvas={() => canvasRef.current?.clear()}
+        undo={undo}
+        redo={redo}
       />
     </div>
   );

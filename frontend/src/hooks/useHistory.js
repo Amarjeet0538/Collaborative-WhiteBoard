@@ -1,43 +1,50 @@
 import { useState, useCallback } from "react";
 
-export const useHistory = (initialState) => {
-  const [index, setIndex] = useState(0);
-  const [history, setHistory] = useState([initialState]);
+export const useHistory = (strokes, setStrokes, emit) => {
+  const [history, setHistory] = useState({ past: [], future: [] });
 
-  const setState = useCallback(
-    (newState, overwrite = false) => {
-      const currentState = history[index];
-
-      // Don't save if nothing changed
-      if (JSON.stringify(newState) === JSON.stringify(currentState)) return;
-
-      if (overwrite) {
-        const historyCopy = [...history];
-        historyCopy[index] = newState;
-        setHistory(historyCopy);
-      } else {
-        const updatedState = [...history.slice(0, index + 1), newState];
-        setHistory(updatedState);
-        setIndex(updatedState.length - 1);
-      }
+  const pushToHistory = useCallback(
+    (prevStrokes, newStrokes) => {
+      setHistory((h) => ({
+        past: [...h.past, prevStrokes],
+        future: [],
+      }));
+      setStrokes(newStrokes);
     },
-    [history, index],
+    [setStrokes],
   );
 
   const undo = useCallback(() => {
-    if (index > 0) setIndex((prev) => prev - 1);
-  }, [index]);
+    setHistory((h) => {
+      if (h.past.length === 0) return h;
+      const previousState = h.past[h.past.length - 1];
+      setStrokes(previousState);
+      if (emit) emit("board-sync", previousState);
+      return {
+        past: h.past.slice(0, -1),
+        future: [strokes, ...h.future],
+      };
+    });
+  }, [strokes, setStrokes, emit]);
 
   const redo = useCallback(() => {
-    if (index < history.length - 1) setIndex((prev) => prev + 1);
-  }, [index]);
+    setHistory((h) => {
+      if (h.future.length === 0) return h;
+      const nextState = h.future[0];
+      setStrokes(nextState);
+      if (emit) emit("board-sync", nextState);
+      return {
+        past: [...h.past, strokes],
+        future: h.future.slice(1),
+      };
+    });
+  }, [strokes, setStrokes, emit]);
 
   return {
-    state: history[index],
-    setState,
+    pushToHistory,
     undo,
     redo,
-    canUndo: index > 0,
-    canRedo: index < history.length - 1,
+    canUndo: history.past.length > 0,
+    canRedo: history.future.length > 0,
   };
 };
