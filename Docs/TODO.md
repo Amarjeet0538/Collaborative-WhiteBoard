@@ -72,5 +72,4 @@ A Background Canvas: For finished strokes (only redraws when something changes).
 A Drawing Canvas: For the current line being drawn (updates every mouse move).
 
 make account settings good
-correct eraser
-and undo redo
+show eraser and pen boundary

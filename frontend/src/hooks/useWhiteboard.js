@@ -26,14 +26,21 @@ export const useWhiteboard = (boardId, initialStrokes = []) => {
 
   const captureThumbnail = useCallback((canvas) => {
     if (!canvas) return null;
+
+    const TARGET_W = 320;
+    const TARGET_H = 180;
+
     const offscreen = document.createElement("canvas");
-    offscreen.width = 400;
-    offscreen.height = 225;
+    offscreen.width = TARGET_W;
+    offscreen.height = TARGET_H;
+
     const ctx = offscreen.getContext("2d");
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, offscreen.width, offscreen.height);
-    ctx.drawImage(canvas, 0, 0, offscreen.width, offscreen.height);
-    return offscreen.toDataURL("image/jpeg", 0.5);
+    ctx.fillRect(0, 0, TARGET_W, TARGET_H);
+    ctx.drawImage(canvas, 0, 0, TARGET_W, TARGET_H);
+
+    // 0.3 quality — thumbnails are tiny previews, no need for higher fidelity
+    return offscreen.toDataURL("image/jpeg", 0.3);
   }, []);
 
   const saveThumbnail = useCallback(

@@ -35,15 +35,18 @@ export const getAll = catchAsync(async (req, res) => {
 export const patchThumbnail = catchAsync(async (req, res) => {
   const { thumbnail } = req.body;
 
-  const board = await Whiteboard.findOne({
-    _id: req.params.id,
-    $or: [{ owner: req.user.id }, { "sharedWith.userId": req.user.id }],
-  });
+  if (!thumbnail) throw ApiError.badRequest("No thumbnail provided");
+
+  const board = await Whiteboard.findOneAndUpdate(
+    {
+      _id: req.params.id,
+      $or: [{ owner: req.user.id }, { "sharedWith.userId": req.user.id }],
+    },
+    { $set: { thumbnail } },
+    { new: true, select: "_id thumbnail" }, // only return what we need
+  );
 
   if (!board) throw ApiError.notFound("Board not found");
-
-  board.thumbnail = thumbnail;
-  await board.save();
 
   res.json({ success: true });
 });
