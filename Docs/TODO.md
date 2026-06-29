@@ -48,7 +48,7 @@ zg8M9QiML1HsLqc3
 - [-] Notification System including Toast Popups
 - [-] Correct the toast usage and name on hover icons
 - [-] My app is redering 2 times on start / Welcome back popup 2 times
-- [-- Edit the ErrorBoundary Page
+- [-] Edit the ErrorBoundary Page
 - [-] UI/UX Enhancement -- back prop , mmobbin, repovive
 - [-] min size of grids
 - [-] use username insted of user in sharepanel
@@ -59,12 +59,13 @@ zg8M9QiML1HsLqc3
 - [-] Add Home Button in Whiteboard
 - [ ] Add thumbnail , profile photo to cloud
 - [-] Add a settings app for profile picture , name edit , etc
-- [ ] Main Whiteboard Features :- - Pan and Zoom , Infinite Canvas
-      Featureful Toolbar - Clear button not working
-      undo redo
-      erase fulll line at once - MiniMap for Navigation
-      WhiteBoard Background Pattern and Color Selector
-
+- [-] Main Whiteboard Features :- - Pan and Zoom , Infinite Canvas
+  Featureful Toolbar - Clear button not working
+  undo redo
+  erase fulll line at once - MiniMap for Navigation
+- [ ] WhiteBoard Background Pattern and Color Selector
+- [ ] Shapes button
+- [ ] make the pen selector and eraser selector to the right slider and the shapes too
       uer add whiteboard in db , avatar pic , notification
 
 Right now, you redraw everything on every frame. For giant boards, we usually split it into:
@@ -72,4 +73,5 @@ A Background Canvas: For finished strokes (only redraws when something changes).
 A Drawing Canvas: For the current line being drawn (updates every mouse move).
 
 make account settings good
-show eraser and pen boundary
+
+- [-]show eraser and pen boundary

@@ -1,9 +1,6 @@
+// frontend/src/hooks/useCanvas.js
 import { useEffect, useRef, useState, useCallback } from "react";
-import { recognizeShape, buildShapeStroke } from "../lib/shapeSnapper.js";
-
-// ── Constants ──────────────────────────────────────────────────────────────
-const HOLD_DURATION_MS = 1000; // how long to hold before snapping
-const HOLD_MOVE_THRESHOLD = 8; // px of world-space movement that cancels hold
+import { recognizeAndSnap } from "../utils/shapeRecognizer.js";
 
 const getDistanceToSegment = (p, v, w) => {
   const l2 = (v[0] - w[0]) ** 2 + (v[1] - w[1]) ** 2;
@@ -25,7 +22,6 @@ export const useCanvas = (props) => {
     onStrokesChange,
     loadStrokes,
     onCursorMove,
-    onShapeSnapped, // optional: callback({ shape, score }) for UI toast
     camera = { x: 0, y: 0, scale: 1 },
   } = props;
 
@@ -36,12 +32,15 @@ export const useCanvas = (props) => {
   const currentStroke = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
 
-  // ── Hold-to-snap refs ────────────────────────────────────────────────────
-  const holdTimerRef = useRef(null); // setTimeout handle
-  const holdStartPos = useRef(null); // {x, y} world coords at pen-down
-  const snapFiredRef = useRef(false); // true after snap fires (blocks finishDrawing)
+  // Hold to Snap Timing References
+  const holdTimerRef = useRef(null);
+  const lastTrackedMousePos = useRef({ x: 0, y: 0 });
+  const hasSnappedRef = useRef(false);
 
-  // ── Coordinate helpers ───────────────────────────────────────────────────
+  // Maximum allowed movement radius (in workspace units) before resetting the 2s timer
+  const STABILITY_THRESHOLD = 10;
+  const HOLD_DELAY = 1000; // 2 seconds
+
   const getMouseCoordinates = (e) => {
     const { offsetX, offsetY } = e.nativeEvent;
     return {
@@ -50,26 +49,6 @@ export const useCanvas = (props) => {
     };
   };
 
-  // Same logic but from a Touch object (for pointer/touch events)
-  const getTouchCoordinates = (touch, canvas) => {
-    const rect = canvas.getBoundingClientRect();
-    const offsetX = touch.clientX - rect.left;
-    const offsetY = touch.clientY - rect.top;
-    return {
-      x: (offsetX - camera.x) / camera.scale,
-      y: (offsetY - camera.y) / camera.scale,
-    };
-  };
-
-  // ── Cancel the hold timer (call whenever movement detected or pen lifts) ─
-  const cancelHold = useCallback(() => {
-    if (holdTimerRef.current) {
-      clearTimeout(holdTimerRef.current);
-      holdTimerRef.current = null;
-    }
-  }, []);
-
-  // ── Redraw ───────────────────────────────────────────────────────────────
   const redraw = useCallback(() => {
     const ctx = contextRef.current;
     const canvas = canvasRef.current;
@@ -104,7 +83,6 @@ export const useCanvas = (props) => {
     ctx.restore();
   }, [camera]);
 
-  // ── Eraser ────────────────────────────────────────────────────────────────
   const handleEraser = useCallback(
     (x, y) => {
       const hitRadius = eraserSize / 2 / camera.scale;
@@ -144,7 +122,20 @@ export const useCanvas = (props) => {
     [eraserSize, camera.scale, redraw],
   );
 
-  // ── Canvas init ───────────────────────────────────────────────────────────
+  // Execution algorithm when hold window clears successfully
+  const triggerShapeSnap = useCallback(() => {
+    if (
+      currentStroke.current &&
+      currentStroke.current.points.length > 0 &&
+      !hasSnappedRef.current
+    ) {
+      const snappedPoints = recognizeAndSnap(currentStroke.current.points);
+      currentStroke.current.points = snappedPoints;
+      hasSnappedRef.current = true;
+      redraw();
+    }
+  }, [redraw]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -164,59 +155,9 @@ export const useCanvas = (props) => {
     }
   }, [loadStrokes, redraw]);
 
-  // ── Shape snap ────────────────────────────────────────────────────────────
-  /**
-   * Called after HOLD_DURATION_MS with no movement.
-   * Runs $1 on the current stroke and replaces it with a perfect shape.
-   */
-  const triggerShapeSnap = useCallback(() => {
-    if (!currentStroke.current) return;
-
-    console.log(" SNAP FIRED", currentStroke.current?.points?.length, "points");
-    snapFiredRef.current = true;
-    holdTimerRef.current = null;
-
-    const stroke = currentStroke.current;
-    const { shape, score } = recognizeShape(stroke.points);
-    // Stop accepting new points into this stroke
-    console.log(
-      "🎯 Recognized:",
-      shape,
-      "| Score:",
-      (score * 100).toFixed(1) + "%",
-    );
-    console.log(
-      "📍 Points count:",
-      stroke.points.length,
-      "| First:",
-      stroke.points[0],
-      "| Last:",
-      stroke.points[stroke.points.length - 1],
-    );
-    currentStroke.current = null;
-
-    const CONFIDENCE_THRESHOLD = 0.55;
-
-    if (shape !== "unknown" && score >= CONFIDENCE_THRESHOLD) {
-      const snapped = buildShapeStroke(shape, stroke);
-      strokesRef.current.push(snapped);
-      if (onStrokesChange) onStrokesChange([...strokesRef.current]);
-      if (onShapeSnapped) onShapeSnapped({ shape, score });
-    } else {
-      // Low confidence → commit the raw stroke as-is
-      strokesRef.current.push(stroke);
-      if (onStrokesChange) onStrokesChange([...strokesRef.current]);
-    }
-
-    redraw();
-  }, [onStrokesChange, onShapeSnapped, redraw]);
-
-  // ── Drawing handlers ──────────────────────────────────────────────────────
   const startDrawing = (e) => {
-    if (e.button !== undefined && e.button !== 0) return;
+    if (e.button !== 0) return;
     const { x, y } = getMouseCoordinates(e);
-
-    snapFiredRef.current = false;
     setIsDrawing(true);
 
     if (tool === "eraser") {
@@ -224,6 +165,7 @@ export const useCanvas = (props) => {
       return;
     }
 
+    hasSnappedRef.current = false;
     currentStroke.current = {
       id: crypto.randomUUID(),
       points: [[x, y]],
@@ -233,10 +175,10 @@ export const useCanvas = (props) => {
       createdAt: Date.now(),
     };
 
-    // Start the hold timer
-    holdStartPos.current = { x, y };
-    console.log("⏱ Hold timer started");
-    holdTimerRef.current = setTimeout(triggerShapeSnap, HOLD_DURATION_MS);
+    // Set positions and kick off the timer setup
+    lastTrackedMousePos.current = { x, y };
+    clearTimeout(holdTimerRef.current);
+    holdTimerRef.current = setTimeout(triggerShapeSnap, HOLD_DELAY);
 
     redraw();
   };
@@ -252,36 +194,34 @@ export const useCanvas = (props) => {
       return;
     }
 
-    // If snap already fired mid-stroke, ignore further movement
-    if (snapFiredRef.current) return;
-
     if (currentStroke.current) {
-      // Check if the pen moved too far from hold start → cancel hold
-      if (holdStartPos.current) {
-        const dx = x - holdStartPos.current.x;
-        const dy = y - holdStartPos.current.y;
-        if (Math.hypot(dx, dy) > HOLD_MOVE_THRESHOLD) {
-          cancelHold();
-          holdStartPos.current = null; // don't check again this stroke
+      currentStroke.current.points.push([x, y]);
+
+      // Dynamic holding tracking loop
+      if (!hasSnappedRef.current) {
+        const driftDistance = Math.hypot(
+          x - lastTrackedMousePos.current.x,
+          y - lastTrackedMousePos.current.y,
+        );
+
+        // Reset timer window if user moves the cursor beyond the minor tremor threshold
+        if (driftDistance > STABILITY_THRESHOLD) {
+          lastTrackedMousePos.current = { x, y };
+          clearTimeout(holdTimerRef.current);
+          holdTimerRef.current = setTimeout(triggerShapeSnap, HOLD_DELAY);
         }
       }
 
-      currentStroke.current.points.push([x, y]);
       redraw();
     }
   };
 
   const finishDrawing = () => {
     if (!isDrawing) return;
-
-    cancelHold(); // always clean up the timer
     setIsDrawing(false);
 
-    // If snap already fired, nothing left to do
-    if (snapFiredRef.current) {
-      snapFiredRef.current = false;
-      return;
-    }
+    // Clean up active loop flags to protect future interactions
+    clearTimeout(holdTimerRef.current);
 
     if (tool === "eraser") {
       if (erasedDuringDrag.current) {
@@ -295,13 +235,12 @@ export const useCanvas = (props) => {
       strokesRef.current.push(currentStroke.current);
       if (onStrokesChange) onStrokesChange([...strokesRef.current]);
       currentStroke.current = null;
+      hasSnappedRef.current = false;
       redraw();
     }
   };
 
-  // ── Clear ─────────────────────────────────────────────────────────────────
   const clearCanvas = useCallback(() => {
-    cancelHold();
     const ctx = contextRef.current;
     const canvas = canvasRef.current;
     if (!ctx || !canvas) return;
@@ -309,7 +248,7 @@ export const useCanvas = (props) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     strokesRef.current = [];
     if (onStrokesChange) onStrokesChange([]);
-  }, [onStrokesChange, cancelHold]);
+  }, [onStrokesChange]);
 
   return { canvasRef, startDrawing, draw, finishDrawing, clearCanvas };
 };
