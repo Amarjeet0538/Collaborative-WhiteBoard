@@ -52,6 +52,7 @@ const Canvas = forwardRef((props, ref) => {
     overrideCursor,
     penSize = 5,
     eraserSize = 20,
+    onCanvasPointerDown,
   } = props;
 
   const { isDark } = useTheme();
@@ -79,8 +80,16 @@ const Canvas = forwardRef((props, ref) => {
     getCanvas: () => canvasRef.current,
   }));
 
-  // ── Mouse handlers ────────────────────────────────────────────────────────
-  const handleMouseMove = (e) => {
+  // ── Pointer handlers (mouse, touch, pen — unified) ──────────────────────
+  const handlePointerDown = (e) => {
+    // Fire unconditionally — even in read-only/hand/pan mode — so any
+    // canvas tap closes the open tool side-panel (Pen/Eraser/Shapes).
+    onCanvasPointerDown?.();
+    if (readOnly) return;
+    startDrawing(e);
+  };
+
+  const handlePointerMove = (e) => {
     if (customCursorRef.current) {
       customCursorRef.current.style.left = `${e.nativeEvent.offsetX}px`;
       customCursorRef.current.style.top = `${e.nativeEvent.offsetY}px`;
@@ -88,86 +97,49 @@ const Canvas = forwardRef((props, ref) => {
     if (!readOnly && draw) draw(e);
   };
 
-  const handleMouseOut = (e) => {
+  const handlePointerUp = (e) => {
+    if (readOnly) return;
+    finishDrawing(e);
+  };
+
+  const handlePointerLeaveOrCancel = (e) => {
     if (customCursorRef.current) customCursorRef.current.style.opacity = "0";
     finishDrawing(e);
   };
 
-  const handleMouseEnter = () => {
-    if (customCursorRef.current) customCursorRef.current.style.opacity = "1";
-  };
-
-  // ── Touch / Pointer handlers (iPad support) ───────────────────────────────
-  // We synthesise a fake nativeEvent so the existing coordinate math works
-  // unchanged — useCanvas reads e.nativeEvent.offsetX / offsetY.
-
-  const makeFakeEvent = (touch, canvas) => {
-    const rect = canvas.getBoundingClientRect();
-    return {
-      button: 0,
-      nativeEvent: {
-        offsetX: touch.clientX - rect.left,
-        offsetY: touch.clientY - rect.top,
-      },
-    };
-  };
-
-  const handleTouchStart = (e) => {
-    if (readOnly) return;
-    e.preventDefault(); // stop scroll / zoom hijack
-    const touch = e.touches[0];
-    const fake = makeFakeEvent(touch, canvasRef.current);
-    startDrawing(fake);
-  };
-
-  const handleTouchMove = (e) => {
-    if (readOnly) return;
-    e.preventDefault();
-    const touch = e.touches[0];
-    const fake = makeFakeEvent(touch, canvasRef.current);
-
-    // Keep custom cursor in sync on touch
+  const handlePointerEnter = (e) => {
+    // Hide the visual cursor ring for touch — a finger already covers it
     if (customCursorRef.current) {
-      const rect = canvasRef.current.getBoundingClientRect();
-      customCursorRef.current.style.left = `${touch.clientX - rect.left}px`;
-      customCursorRef.current.style.top = `${touch.clientY - rect.top}px`;
+      customCursorRef.current.style.opacity =
+        e.pointerType === "touch" ? "0" : "1";
     }
-
-    draw(fake);
-  };
-
-  const handleTouchEnd = () => {
-    finishDrawing();
-  };
-
-  // ── Styles ────────────────────────────────────────────────────────────────
+  }; // ── Styles ────────────────────────────────────────────────────────────────
   const showCustomCursor = (tool === "pen" || tool === "eraser") && !readOnly;
   const isPen = tool === "pen";
   const activeSize = (isPen ? penSize : eraserSize) * camera.scale;
+
   const cursorStyle = overrideCursor
     ? overrideCursor
     : showCustomCursor
       ? "none"
       : tool === "hand"
         ? "grab"
-        : "default";
+        : tool === "shape"
+          ? "crosshair"
+          : "default";
+
   const gridSize = 24 * camera.scale;
 
   return (
     <div className="fixed inset-0 w-screen h-screen">
       <canvas
         ref={canvasRef}
-        // Mouse
-        onMouseDown={readOnly ? undefined : startDrawing}
-        onMouseMove={handleMouseMove}
-        onMouseUp={readOnly ? undefined : finishDrawing}
-        onMouseOut={handleMouseOut}
-        onMouseEnter={handleMouseEnter}
-        // Touch (iPad / stylus)
-        onTouchStart={readOnly ? undefined : handleTouchStart}
-        onTouchMove={readOnly ? undefined : handleTouchMove}
-        onTouchEnd={readOnly ? undefined : handleTouchEnd}
-        onTouchCancel={readOnly ? undefined : handleTouchEnd}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerLeaveOrCancel}
+        onPointerLeave={handlePointerLeaveOrCancel}
+        onPointerEnter={handlePointerEnter}
         className="w-full h-full touch-none" // touch-none stops browser scroll interference
         style={{
           cursor: cursorStyle,

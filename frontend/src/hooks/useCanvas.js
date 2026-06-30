@@ -1,7 +1,7 @@
 // frontend/src/hooks/useCanvas.js
 import { useEffect, useRef, useState, useCallback } from "react";
 import { recognizeAndSnap } from "../utils/shapeRecognizer.js";
-
+import { generateShapePoints } from "../utils/shapeGeometry.js";
 const getDistanceToSegment = (p, v, w) => {
   const l2 = (v[0] - w[0]) ** 2 + (v[1] - w[1]) ** 2;
   if (l2 === 0) return Math.hypot(p[0] - v[0], p[1] - v[1]);
@@ -19,6 +19,7 @@ export const useCanvas = (props) => {
     color,
     penSize,
     eraserSize,
+    shapeType = "rectangle",
     onStrokesChange,
     loadStrokes,
     onCursorMove,
@@ -36,10 +37,11 @@ export const useCanvas = (props) => {
   const holdTimerRef = useRef(null);
   const lastTrackedMousePos = useRef({ x: 0, y: 0 });
   const hasSnappedRef = useRef(false);
-
+  const shapeStartRef = useRef(null);
+  const shapeEndRef = useRef(null);
   // Maximum allowed movement radius (in workspace units) before resetting the 2s timer
   const STABILITY_THRESHOLD = 10;
-  const HOLD_DELAY = 1000; // 2 seconds
+  const HOLD_DELAY = 1000; // 1 seconds
 
   const getMouseCoordinates = (e) => {
     const { offsetX, offsetY } = e.nativeEvent;
@@ -48,7 +50,6 @@ export const useCanvas = (props) => {
       y: (offsetY - camera.y) / camera.scale,
     };
   };
-
   const redraw = useCallback(() => {
     const ctx = contextRef.current;
     const canvas = canvasRef.current;
@@ -156,7 +157,13 @@ export const useCanvas = (props) => {
   }, [loadStrokes, redraw]);
 
   const startDrawing = (e) => {
-    if (e.button !== 0) return;
+    // Only the primary mouse button starts a stroke; touch/pen pointerdown
+    // is always button 0, so this naturally allows them through.
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+
+    // Keep receiving move/up events even if the finger/cursor leaves the canvas
+    e.target.setPointerCapture?.(e.pointerId);
+
     const { x, y } = getMouseCoordinates(e);
     setIsDrawing(true);
 
@@ -165,6 +172,21 @@ export const useCanvas = (props) => {
       return;
     }
 
+    if (tool === "shape") {
+      shapeStartRef.current = [x, y];
+      shapeEndRef.current = [x, y];
+      currentStroke.current = {
+        id: crypto.randomUUID(),
+        points: [[x, y]],
+        color,
+        size: penSize,
+        tool: "shape",
+        shapeType,
+        createdAt: Date.now(),
+      };
+      redraw();
+      return;
+    }
     hasSnappedRef.current = false;
     currentStroke.current = {
       id: crypto.randomUUID(),
@@ -175,7 +197,6 @@ export const useCanvas = (props) => {
       createdAt: Date.now(),
     };
 
-    // Set positions and kick off the timer setup
     lastTrackedMousePos.current = { x, y };
     clearTimeout(holdTimerRef.current);
     holdTimerRef.current = setTimeout(triggerShapeSnap, HOLD_DELAY);
@@ -193,18 +214,27 @@ export const useCanvas = (props) => {
       handleEraser(x, y);
       return;
     }
+    if (tool === "shape") {
+      if (currentStroke.current && shapeStartRef.current) {
+        shapeEndRef.current = [x, y];
+        currentStroke.current.points = generateShapePoints(
+          shapeType,
+          shapeStartRef.current,
+          shapeEndRef.current,
+        );
+        redraw();
+      }
+      return;
+    }
 
     if (currentStroke.current) {
       currentStroke.current.points.push([x, y]);
 
-      // Dynamic holding tracking loop
       if (!hasSnappedRef.current) {
         const driftDistance = Math.hypot(
           x - lastTrackedMousePos.current.x,
           y - lastTrackedMousePos.current.y,
         );
-
-        // Reset timer window if user moves the cursor beyond the minor tremor threshold
         if (driftDistance > STABILITY_THRESHOLD) {
           lastTrackedMousePos.current = { x, y };
           clearTimeout(holdTimerRef.current);
@@ -216,18 +246,36 @@ export const useCanvas = (props) => {
     }
   };
 
-  const finishDrawing = () => {
+  const finishDrawing = (e) => {
     if (!isDrawing) return;
     setIsDrawing(false);
-
-    // Clean up active loop flags to protect future interactions
     clearTimeout(holdTimerRef.current);
+
+    if (e?.target?.releasePointerCapture && e?.pointerId != null) {
+      e.target.releasePointerCapture(e.pointerId);
+    }
 
     if (tool === "eraser") {
       if (erasedDuringDrag.current) {
         if (onStrokesChange) onStrokesChange([...strokesRef.current]);
         erasedDuringDrag.current = false;
       }
+      return;
+    }
+    if (tool === "shape") {
+      const start = shapeStartRef.current;
+      const end = shapeEndRef.current;
+      const dragged =
+        start && end && Math.hypot(end[0] - start[0], end[1] - start[1]) > 4;
+
+      if (dragged && currentStroke.current) {
+        strokesRef.current.push(currentStroke.current);
+        if (onStrokesChange) onStrokesChange([...strokesRef.current]);
+      }
+      currentStroke.current = null;
+      shapeStartRef.current = null;
+      shapeEndRef.current = null;
+      redraw();
       return;
     }
 
@@ -239,7 +287,6 @@ export const useCanvas = (props) => {
       redraw();
     }
   };
-
   const clearCanvas = useCallback(() => {
     const ctx = contextRef.current;
     const canvas = canvasRef.current;

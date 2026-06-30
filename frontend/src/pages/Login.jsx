@@ -43,8 +43,8 @@ export default function Login() {
   };
 
   return (
-    <div className="font-body grid grid-cols-2 h-screen">
-      <div className="relative">
+    <div className="font-body grid grid-cols-1 lg:grid-cols-2 min-h-screen">
+      <div className="relative hidden lg:block">
         <LiquidWarp
           speed={0.003}
           warpIntensity={1.5}
@@ -59,31 +59,31 @@ export default function Login() {
           zoom={1}
         />
       </div>
-      <div className="relative min-h-screen flex flex-col font-body items-center justify-center bg-background-muted">
+      <div className="relative min-h-screen flex flex-col font-body items-center justify-center bg-background-muted px-4 py-10">
         <Logo />
         <div className="absolute right-2 top-2">
           <DarkModeToggle />
         </div>
-        <div className="text-2xl mt-15 font-semibold p-2 text-foreground">
+        <div className="text-xl sm:text-2xl mt-10 sm:mt-15 font-semibold p-2 text-foreground text-center">
           {isSignUp ? "Create your account" : "Welcome Back"}
         </div>
-        <div className="pb-8 text-md text-foreground-muted">
+        <div className="pb-8 text-sm sm:text-md text-foreground-muted text-center px-4">
           {isSignUp
             ? "Get Started with a free account"
             : "Enter your email to sign in to your account"}
         </div>
 
-        <div className="bg-background p-8 rounded-xl text-foreground shadow-sm border border-black/10 w-110">
-          <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="bg-background p-6 sm:p-8 rounded-xl text-foreground shadow-sm border border-black/10 w-full max-w-110">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6">
             <button
-              className="cursor-pointer bg-background shadow-sm hover:shadow-md border border-border-muted hover:border-border/60 rounded-md p-2 flex justify-center items-center gap-4 hover:bg-background-highlight text-md"
+              className="cursor-pointer bg-background shadow-sm hover:shadow-md border border-border-muted hover:border-border/60 rounded-md p-2 flex justify-center items-center gap-2 sm:gap-4 hover:bg-background-highlight text-sm sm:text-md"
               onClick={() => {}}
             >
               <Google />
               Google
             </button>
             <button
-              className="cursor-pointer bg-background shadow-sm hover:shadow-md border border-border-muted hover:border-border/90 rounded-md p-2 hover:bg-background-highlight flex justify-center items-center gap-4 text-md"
+              className="cursor-pointer bg-background shadow-sm hover:shadow-md border border-border-muted hover:border-border/90 rounded-md p-2 hover:bg-background-highlight flex justify-center items-center gap-2 sm:gap-4 text-sm sm:text-md"
               onClick={() => {}}
             >
               <Github size={20} /> Github
@@ -92,7 +92,7 @@ export default function Login() {
 
           <div className="my-6 flex items-center">
             <div className="grow border border-border"></div>
-            <span className="mx-2 shrink text-sm text-border">
+            <span className="mx-2 shrink text-xs sm:text-sm text-border whitespace-nowrap">
               OR CONTINUE WITH
             </span>
             <div className="grow border border-border"></div>
@@ -106,7 +106,7 @@ export default function Login() {
                   {...register("name")}
                   type="text"
                   required
-                  className="border rounded-md p-3 w-full bg-background text-md border-border-muted focus:ring-1 focus:ring-border focus:outline-none"
+                  className="border rounded-md p-3 w-full bg-background text-base sm:text-md border-border-muted focus:ring-1 focus:ring-border focus:outline-none"
                   placeholder="Maxwell Pandey"
                 />
               </div>
@@ -117,7 +117,7 @@ export default function Login() {
                 {...register("email")}
                 type="email"
                 required
-                className="border rounded-md p-3 w-full bg-background text-md border-border-muted focus:ring-1 focus:ring-border focus:outline-none"
+                className="border rounded-md p-3 w-full bg-background text-base sm:text-md border-border-muted focus:ring-1 focus:ring-border focus:outline-none"
                 placeholder="name@example.com"
               />
             </div>
@@ -129,7 +129,7 @@ export default function Login() {
                 {...register("password")}
                 type="password"
                 required
-                className="border rounded-md p-3 w-full bg-background text-md border-border-muted focus:ring-1 focus:ring-border focus:outline-none"
+                className="border rounded-md p-3 w-full bg-background text-base sm:text-md border-border-muted focus:ring-1 focus:ring-border focus:outline-none"
                 placeholder="Enter your password"
               />
             </div>
@@ -141,15 +141,15 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <button
-              className="cursor-pointer bg-background hover:bg-background-muted shadow-sm border border-border-muted hover:border-border/60 rounded-md p-2 flex justify-center items-center gap-4 text-md w-full mt-4"
+              className="cursor-pointer bg-background hover:bg-background-muted shadow-sm border border-border-muted hover:border-border/60 rounded-md p-2 flex justify-center items-center gap-4 text-sm sm:text-md w-full mt-4"
               onClick={() => handleDemoLogin("demo@demo.com", "demo@123")}
             >
               Demo Account
             </button>
             <button
-              className="cursor-pointer bg-background hover:bg-background-muted shadow-sm border border-border-muted hover:border-border/60 rounded-md p-2 flex justify-center items-center gap-4 text-md w-full mt-4"
+              className="cursor-pointer bg-background hover:bg-background-muted shadow-sm border border-border-muted hover:border-border/60 rounded-md p-2 flex justify-center items-center gap-4 text-sm sm:text-md w-full mt-4"
               onClick={() => handleDemoLogin("demo2@demo.com", "demo@123")}
             >
               Demo Account 2
@@ -157,7 +157,7 @@ export default function Login() {
           </div>
         </div>
 
-        <div className="mt-4 text-sm text-foreground-muted">
+        <div className="mt-4 text-sm text-foreground-muted text-center">
           {isSignUp ? "Already have an account?  " : "Don't have an account?  "}
           <button
             onClick={() => setIsSignUp(!isSignUp)}
@@ -170,4 +170,3 @@ export default function Login() {
     </div>
   );
 }
-

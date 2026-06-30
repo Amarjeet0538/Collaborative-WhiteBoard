@@ -53,7 +53,6 @@ const generateGeometry = {
  * @returns {Array<Array<number>>} Snapped geometric point array
  */
 export const recognizeAndSnap = (points) => {
-  // Discard recognition for accidental small taps/clicks
   if (!points || points.length < 8) return points;
 
   // 1. Compute bounding box coordinates
@@ -72,50 +71,79 @@ export const recognizeAndSnap = (points) => {
   const width = maxX - minX;
   const height = maxY - minY;
 
-  // Guard against zero-division for single straight axes
   if (width === 0 || height === 0) return points;
 
   const firstPoint = points[0];
   const lastPoint = points[points.length - 1];
 
-  // 2. Measure proximity closure (Distance between drawing start and end)
+  // 2. Measure proximity closure
   const closureDistance = Math.hypot(
     firstPoint[0] - lastPoint[0],
     firstPoint[1] - lastPoint[1],
   );
   const boxDiagonal = Math.hypot(width, height);
-
-  // If the user didn't bring the pen back near the start point, it's an open line
   const isClosedShape = closureDistance < boxDiagonal * 0.35;
 
   if (!isClosedShape) {
     return generateGeometry.line(firstPoint, lastPoint);
   }
 
-  // 3. Evaluate Closed Geometries via Aspect Ratio & Fill Density
+  // ----------------------------------------------------
+  // 3. UPDATED: Evaluate Geometries using "Tapering"
+  // ----------------------------------------------------
   const aspectRatio = Math.max(width, height) / Math.min(width, height);
-
-  // Measure perimeter point footprint density against standard shapes
-  // Count how many points lie close to the center vs margins to split Triangles from Circles
-  let centerHits = 0;
   const cx = minX + width / 2;
   const cy = minY + height / 2;
-  const innerCoreRadius = Math.min(width, height) * 0.2;
+
+  // Measure the bounds of the different quadrants
+  let minXTop = Infinity,
+    maxXTop = -Infinity;
+  let minXBot = Infinity,
+    maxXBot = -Infinity;
+  let minYLeft = Infinity,
+    maxYLeft = -Infinity;
+  let minYRight = Infinity,
+    maxYRight = -Infinity;
 
   points.forEach(([x, y]) => {
-    if (Math.hypot(x - cx, y - cy) < innerCoreRadius) {
-      centerHits++;
+    // Top vs Bottom halves
+    if (y < cy) {
+      if (x < minXTop) minXTop = x;
+      if (x > maxXTop) maxXTop = x;
+    } else {
+      if (x < minXBot) minXBot = x;
+      if (x > maxXBot) maxXBot = x;
+    }
+    // Left vs Right halves
+    if (x < cx) {
+      if (y < minYLeft) minYLeft = y;
+      if (y > maxYLeft) maxYLeft = y;
+    } else {
+      if (y < minYRight) minYRight = y;
+      if (y > maxYRight) maxYRight = y;
     }
   });
 
-  // Triangles cut directly through the upper quadrant space, creating distinct path behaviors
-  const centerDensity = centerHits / points.length;
+  // Calculate the width/height of the stroke in each sector
+  const topWidth = Math.max(0, maxXTop - minXTop);
+  const botWidth = Math.max(0, maxXBot - minXBot);
+  const leftHeight = Math.max(0, maxYLeft - minYLeft);
+  const rightHeight = Math.max(0, maxYRight - minYRight);
 
-  if (centerDensity > 0.12) {
+  // TRIANGLE CHECK: If one end is significantly narrower than the other (tapers by 40% or more), it's a triangle
+  const isTriangle =
+    (topWidth > 0 &&
+      botWidth > 0 &&
+      (topWidth / botWidth < 0.6 || botWidth / topWidth < 0.6)) ||
+    (leftHeight > 0 &&
+      rightHeight > 0 &&
+      (leftHeight / rightHeight < 0.6 || rightHeight / leftHeight < 0.6));
+
+  if (isTriangle) {
     return generateGeometry.triangle(minX, minY, maxX, maxY);
   }
 
-  // Standard square aspect boundaries vs elongated strips
+  // STANDARD RECTANGLE / CIRCLE CHECK
   if (aspectRatio < 1.25) {
     return generateGeometry.circle(minX, minY, maxX, maxY);
   } else {

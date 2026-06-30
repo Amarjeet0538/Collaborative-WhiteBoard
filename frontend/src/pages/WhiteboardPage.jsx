@@ -11,7 +11,6 @@ import { useHistory } from "../hooks/useHistory";
 import Canvas from "../components/whiteboard/Canvas";
 import Toolbar from "../components/whiteboard/Toolbar";
 import BoardHeader from "../components/whiteboard/BoardHeader";
-import Minimap from "../components/whiteboard/Minimap";
 
 export default function WhiteboardPage() {
   const { id } = useParams();
@@ -19,7 +18,8 @@ export default function WhiteboardPage() {
   const toast = useToast();
   const canvasRef = useRef(null);
   const [saving, setSaving] = useState(false);
-
+  const [shapeType, setShapeType] = useState("rectangle");
+  const [activePanel, setActivePanel] = useState(null);
   // 1. Board state (drawing)
   const {
     strokes,
@@ -41,13 +41,13 @@ export default function WhiteboardPage() {
     handleWheel,
     isSpacePressed,
     isPanning,
+    isPinching,
     startPan,
     pan,
     stopPan,
     zoomIn,
     zoomOut,
   } = useCamera(tool);
-
   // 2. Networking (socket + fetching)
   const {
     boardName,
@@ -65,7 +65,7 @@ export default function WhiteboardPage() {
     setStrokes,
     emit,
   );
-  const isDrawMode = !isSpacePressed && tool !== "hand";
+  const isDrawMode = !isSpacePressed && !isPinching && tool !== "hand";
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -125,7 +125,6 @@ export default function WhiteboardPage() {
       saveThumbnail,
       toast,
     ],
-    //                ^^^^^^  ^^^^^^^^^^^^^^ ← add these two
   );
 
   const handleRespond = async (requestId, approve) => {
@@ -141,12 +140,13 @@ export default function WhiteboardPage() {
 
   return (
     <div
-      className="relative w-screen h-screen overflow-hidden"
+      className="relative w-screen h-screen overflow-hidden touch-none"
       onWheel={handleWheel}
-      onMouseDownCapture={startPan}
-      onMouseMoveCapture={pan}
-      onMouseUpCapture={stopPan}
-      onMouseLeave={stopPan}
+      onPointerDownCapture={startPan}
+      onPointerMoveCapture={pan}
+      onPointerUpCapture={stopPan}
+      onPointerCancel={stopPan}
+      onPointerLeave={stopPan}
     >
       <BoardHeader
         boardName={boardName}
@@ -158,11 +158,11 @@ export default function WhiteboardPage() {
         pendingRequests={pendingRequests}
         onRespond={handleRespond}
       />
-
       {/* Drawing canvas */}
       <Canvas
         ref={canvasRef}
         tool={tool}
+        shapeType={shapeType}
         overrideCursor={isSpacePressed || isPanning ? "grab" : null}
         readOnly={!isDrawMode}
         color={color}
@@ -171,12 +171,10 @@ export default function WhiteboardPage() {
         loadStrokes={strokes}
         onStrokesChange={handleStrokesChange}
         onCursorMove={(x, y) => emit("cursor-move", { boardId: id, x, y })}
+        onCanvasPointerDown={() => setActivePanel(null)}
         cursors={cursors}
         camera={camera}
-      />
-
-      {/* Minimap — bottom right      <Minimap strokes={strokes} camera={camera} />  */}
-
+      />{" "}
       {/* Unified toolbar — bottom centre */}
       <Toolbar
         tool={tool}
@@ -187,13 +185,17 @@ export default function WhiteboardPage() {
         setPenSize={setPenSize}
         eraserSize={eraserSize}
         setEraserSize={setEraserSize}
+        shapeType={shapeType}
+        setShapeType={setShapeType}
+        activePanel={activePanel}
+        setActivePanel={setActivePanel}
         scale={camera.scale}
         zoomIn={zoomIn}
         zoomOut={zoomOut}
         clearCanvas={() => canvasRef.current?.clear()}
         undo={undo}
         redo={redo}
-      />
+      />{" "}
     </div>
   );
 }

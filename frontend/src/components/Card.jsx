@@ -52,12 +52,12 @@ export default function Card({
   return (
     <div
       onClick={!isRenaming ? onClick : undefined}
-      className="cursor-pointer p-4 flex flex-col gap-3 justify-between max-h-73
+      className="cursor-pointer p-3 sm:p-4 flex flex-col gap-2 sm:gap-3 justify-between max-h-73
       rounded-md bg-background hover:bg-background-highlight border border-border-muted/60
       hover:border-border/40 text-foreground transition-all shadow-xs "
     >
       {/* Preview */}
-      <div className="w-full h-40 bg-foreground/10 rounded-md">
+      <div className="w-full h-28 sm:h-36 lg:h-40 bg-foreground/10 rounded-md">
         {thumbnail ? (
           <img
             src={thumbnail}
@@ -65,13 +65,13 @@ export default function Card({
             className="w-full h-full object-cover opacity-80 hover:opacity-100 transition-all rounded-md"
           />
         ) : (
-          <div className="w-full h-40 bg-foreground/10 rounded-md" />
+          <div className="w-full h-full bg-foreground/10 rounded-md" />
         )}
       </div>
 
       {/* Footer */}
-      <div className="flex justify-between items-center">
-        <div className="flex flex-col flex-1 mr-2">
+      <div className="flex justify-between items-start gap-1">
+        <div className="flex flex-col flex-1 mr-1 sm:mr-2 min-w-0">
           {/* Inline rename input */}
           {isRenaming ? (
             <div
@@ -87,20 +87,29 @@ export default function Card({
                   if (e.key === "Escape") handleCancelRename(e);
                 }}
                 className="text-sm font-semibold bg-background border border-border-muted 
-                rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-border"
+                rounded px-2 py-1 w-full min-w-0 focus:outline-none focus:ring-1 focus:ring-border"
               />
             </div>
           ) : (
-            <span className="font-semibold text-md">{text}</span>
+            <span
+              className="font-semibold text-sm sm:text-md truncate block"
+              title={text}
+            >
+              {text}
+            </span>
           )}
-          <span className="text-xs text-foreground/50">{time}</span>
+          <span className="text-xs text-foreground/50 truncate block">
+            {time}
+          </span>
 
-          <div className="text-xs text-foreground/50 ">{owner.name}</div>
+          <div className="text-xs text-foreground/50 truncate">
+            {owner.name}
+          </div>
           <div className="flex justify-between items-center">
-            <div className="flex -space-x-2 mt-2 ">
+            <div className="flex -space-x-2 mt-2 flex-shrink-0">
               {/* Show the Owner first */}
               <div
-                className="h-6 w-6 rounded-full border-2 border-primary/30 overflow-hidden"
+                className="h-5 w-5 sm:h-6 sm:w-6 rounded-full border-2 border-primary/30 overflow-hidden flex-shrink-0"
                 title={`Owner: ${owner.name}`}
               >
                 <img
@@ -116,7 +125,7 @@ export default function Card({
               {(sharedWith || []).slice(0, 3).map((item) => (
                 <div
                   key={item.userId?._id}
-                  className="h-6 w-6 rounded-full border border-secondary/80 bg-background-muted overflow-hidden"
+                  className="h-5 w-5 sm:h-6 sm:w-6 rounded-full border border-secondary/80 bg-background-muted overflow-hidden flex-shrink-0"
                   title={item.userId?.name}
                 >
                   <img
@@ -133,7 +142,7 @@ export default function Card({
         </div>
 
         {/* Menu */}
-        <div className="relative" ref={menuRef}>
+        <div className="relative flex-shrink-0" ref={menuRef}>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -146,7 +155,7 @@ export default function Card({
 
           {isOpen && (
             <div
-              className="absolute right-0 bottom-full mb-1 w-36 bg-background border
+              className="absolute right-0 bottom-full mb-1 w-36 max-w-[calc(100vw-2rem)] bg-background border
               border-border-muted rounded-md shadow-lg z-20 overflow-hidden"
             >
               <button

@@ -1,15 +1,15 @@
 - [-] change the project from javascript to typescript ---- no need
 - [-] remove/replace supabase to backend
-- [ ] add forget password and show password feature
+- [-] add forget password and show password feature
 - [-] add dark mode by making the color pallete constants
 - [-] add the filter calender range insted of value
 - [-] correct the dark mode button it is slightly off
 - [-] remove shadcn button
 - [-] add notification use
-- [ ] add on hover name of icon
+- [-] add on hover name of icon
 - [-] reduce the size of header and search in home page
 - [-] merge signin and signup
-- [ ] add a global state for dark/light mode
+- [0] add a global state for dark/light mode
 - [-] add owned boards and shared boards later -- https://dribbble.com/shots/26294998-Collaborative-Whiteboard-Dashboard-Clean-Minimal-UI
 - [-] replace dashboard with home
 - [-] add data
@@ -36,11 +36,11 @@ webrtc
 
 zg8M9QiML1HsLqc3
 
-- [ ] Make the website Responsive
-- [ ] Make the whiteboard to be used using TOuch
+- [-] Make the website Responsive
+- [-] Make the whiteboard to be used using TOuch
 - [-] Search Bar Functionality
 - [ ] Whiteboard Thumbnail to imagekit insted of database
-- [ ] add notification attribute to the users database model
+- [-] add notification attribute to the users database model
 - [-] Whiteboard card make design good like add owner and shared peoples , make the thumbnail size less
 - [-] Add Profile Pics to Users
 - [ ] Google and Github Integration for Login
@@ -60,9 +60,9 @@ zg8M9QiML1HsLqc3
 - [ ] Add thumbnail , profile photo to cloud
 - [-] Add a settings app for profile picture , name edit , etc
 - [-] Main Whiteboard Features :- - Pan and Zoom , Infinite Canvas
-  Featureful Toolbar - Clear button not working
-  undo redo
-  erase fulll line at once - MiniMap for Navigation
+- [-] Featureful Toolbar - Clear button not working
+- [-] undo redo
+- [-] erase fulll line at once - MiniMap for Navigation
 - [ ] WhiteBoard Background Pattern and Color Selector
 - [ ] Shapes button
 - [ ] make the pen selector and eraser selector to the right slider and the shapes too
@@ -74,4 +74,4 @@ A Drawing Canvas: For the current line being drawn (updates every mouse move).
 
 make account settings good
 
-- [-]show eraser and pen boundary
+- [-] show eraser and pen boundary

@@ -32,10 +32,10 @@ export default function NotificationDropdown({
     <div
       ref={dropdownRef}
       className="absolute top-[calc(100%+8px)] right-0 z-50
-        w-88 max-h-[480px] flex flex-col
-        bg-background border border-border/40
-        rounded-2xl shadow-2xl overflow-hidden
-        animate-in fade-in zoom-in-95 duration-150 origin-top-right"
+  w-[calc(100vw-1.5rem)] max-w-88 max-h-[480px] flex flex-col
+  bg-background border border-border/40
+  rounded-2xl shadow-2xl overflow-hidden
+  animate-in fade-in zoom-in-95 duration-150 origin-top-right"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 flex-shrink-0">

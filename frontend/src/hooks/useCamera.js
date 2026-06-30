@@ -1,9 +1,15 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { ZOOM } from "../utils/constants.js";
+
 export const useCamera = (tool) => {
   const [camera, setCamera] = useState({ x: 0, y: 0, scale: 1 });
   const [isPanning, setIsPanning] = useState(false);
+  const [isPinching, setIsPinching] = useState(false);
   const [isSpacePressed, setIsSpacePressed] = useState(false);
+
+  // pointerId -> {x, y} in screen coords, used to detect & track pinch gestures
+  const pointersRef = useRef(new Map());
+  const pinchRef = useRef(null); // { distance, midpoint } from the previous frame
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -12,7 +18,6 @@ export const useCamera = (tool) => {
     const handleKeyUp = (e) => {
       if (e.code === "Space") setIsSpacePressed(false);
     };
-
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
     return () => {
@@ -21,32 +26,45 @@ export const useCamera = (tool) => {
     };
   }, []);
 
-  // 2. The Zoom Math (Zoom towards cursor)
   const handleWheel = useCallback((e) => {
-    // Determine zoom direction and speed
     const zoomSensitivity = 0.001;
     const delta = e.deltaY * -zoomSensitivity;
 
     setCamera((prev) => {
-      // Clamp the scale between 10% and 500%
       const newScale = Math.min(Math.max(0.1, prev.scale + delta), 5);
-
-      // The Magic Math: Keep the mouse cursor pointing at the same World Coordinate
       const scaleRatio = newScale / prev.scale;
       const mouseX = e.clientX;
       const mouseY = e.clientY;
-
       const newX = mouseX - (mouseX - prev.x) * scaleRatio;
       const newY = mouseY - (mouseY - prev.y) * scaleRatio;
-
       return { x: newX, y: newY, scale: newScale };
     });
   }, []);
 
-  // 3. The Panning Math
   const startPan = useCallback(
     (e) => {
-      // Allow panning if middle mouse button (button 1) is clicked OR spacebar is held
+      if (e.pointerType === "touch") {
+        pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+        if (pointersRef.current.size === 2) {
+          // Second finger landed — start pinch, abandon any single-finger pan
+          const [a, b] = Array.from(pointersRef.current.values());
+          pinchRef.current = {
+            distance: Math.hypot(a.x - b.x, a.y - b.y),
+            midpoint: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+          };
+          setIsPanning(false);
+          setIsPinching(true);
+          return;
+        }
+
+        if (pointersRef.current.size === 1 && tool === "hand") {
+          setIsPanning(true);
+        }
+        return;
+      }
+
+      // Mouse / pen: unchanged behaviour
       if (
         e.button === 1 ||
         isSpacePressed ||
@@ -60,6 +78,43 @@ export const useCamera = (tool) => {
 
   const pan = useCallback(
     (e) => {
+      if (e.pointerType === "touch" && pointersRef.current.has(e.pointerId)) {
+        pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+        if (pointersRef.current.size === 2 && pinchRef.current) {
+          const [a, b] = Array.from(pointersRef.current.values());
+          const newDistance = Math.hypot(a.x - b.x, a.y - b.y);
+          const newMidpoint = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+          const distanceRatio = newDistance / pinchRef.current.distance;
+
+          setCamera((prev) => {
+            const newScale = Math.min(
+              Math.max(ZOOM.MIN || 0.1, prev.scale * distanceRatio),
+              ZOOM.MAX || 5,
+            );
+            const scaleRatio = newScale / prev.scale;
+
+            // Zoom toward this frame's pinch midpoint...
+            const zoomedX =
+              newMidpoint.x - (newMidpoint.x - prev.x) * scaleRatio;
+            const zoomedY =
+              newMidpoint.y - (newMidpoint.y - prev.y) * scaleRatio;
+
+            // ...then carry the two-finger pan delta on top
+            const panDx = newMidpoint.x - pinchRef.current.midpoint.x;
+            const panDy = newMidpoint.y - pinchRef.current.midpoint.y;
+
+            return { x: zoomedX + panDx, y: zoomedY + panDy, scale: newScale };
+          });
+
+          pinchRef.current = { distance: newDistance, midpoint: newMidpoint };
+          return;
+        }
+
+        if (!(pointersRef.current.size === 1 && isPanning)) return;
+        // single remaining finger: fall through to movementX/Y pan below
+      }
+
       if (!isPanning) return;
       setCamera((prev) => ({
         x: prev.x + e.movementX,
@@ -70,9 +125,26 @@ export const useCamera = (tool) => {
     [isPanning],
   );
 
-  const stopPan = useCallback(() => {
-    setIsPanning(false);
-  }, []);
+  const stopPan = useCallback(
+    (e) => {
+      if (e?.pointerType === "touch" && e?.pointerId != null) {
+        pointersRef.current.delete(e.pointerId);
+
+        if (pointersRef.current.size < 2) {
+          pinchRef.current = null;
+          setIsPinching(false);
+        }
+        if (pointersRef.current.size === 1 && tool === "hand") {
+          setIsPanning(true);
+        } else {
+          setIsPanning(false);
+        }
+        return;
+      }
+      setIsPanning(false);
+    },
+    [tool],
+  );
 
   const handleButtonZoom = useCallback((delta) => {
     setCamera((prev) => {
@@ -81,14 +153,10 @@ export const useCamera = (tool) => {
         ZOOM.MAX || 5,
       );
       const scaleRatio = newScale / prev.scale;
-
-      // Zoom towards the center of the screen
       const centerX = window.innerWidth / 2;
       const centerY = window.innerHeight / 2;
-
       const newX = centerX - (centerX - prev.x) * scaleRatio;
       const newY = centerY - (centerY - prev.y) * scaleRatio;
-
       return { x: newX, y: newY, scale: newScale };
     });
   }, []);
@@ -100,6 +168,7 @@ export const useCamera = (tool) => {
     camera,
     isSpacePressed,
     isPanning,
+    isPinching,
     startPan,
     pan,
     stopPan,

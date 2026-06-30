@@ -169,7 +169,7 @@ export default function AccountSettings({ currentUser, onSave }) {
           description="Update your display name, email, and bio."
         >
           {/* avatar */}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
             <div className="relative group w-20 h-20 flex-shrink-0">
               <img
                 src={avatarPreview ?? seedUrl}
@@ -351,7 +351,7 @@ export default function AccountSettings({ currentUser, onSave }) {
 
         {/* ── danger zone ── */}
         <Section title="Danger zone">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
               <p className="text-sm font-medium text-red-500">Delete account</p>
               <p className="text-xs text-foreground/50 mt-0.5">

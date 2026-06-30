@@ -111,24 +111,24 @@ export default function Home() {
       <Header />
       <div className="flex flex-col items-center pt-5 font-body">
         {/* New and Join */}
-        <div className="flex gap-5 w-1/2">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 w-full sm:w-11/12 md:w-3/4 lg:w-1/2">
           <button
-            className="flex flex-col gap-3 w-1/2 h-70 bg-background hover:bg-background-highlight justify-center items-center rounded-md transition-all border border-border-muted/60 hover:border-border/70 cursor-pointer hover:text-primary shadow-sm text-foreground"
+            className="flex flex-col gap-3 w-full sm:w-1/2 h-48 sm:h-56 lg:h-70 bg-background hover:bg-background-highlight justify-center items-center rounded-md transition-all border border-border-muted/60 hover:border-border/70 cursor-pointer hover:text-primary shadow-sm text-foreground"
             onClick={handleNewWhiteboard}
           >
             <Plus size={50} strokeWidth={2} />
             <span className="text-xl font-semibold">New Whiteboard</span>
           </button>
-          <div className="flex flex-col w-1/2 h-70 bg-background hover:bg-background-highlight justify-center items-center rounded-md transition-all cursor-pointer border border-border-muted/60 hover:border-border/70 shadow-sm text-foreground">
+          <div className="flex flex-col w-full sm:w-1/2 h-48 sm:h-56 lg:h-70 bg-background hover:bg-background-highlight justify-center items-center rounded-md transition-all cursor-pointer border border-border-muted/60 hover:border-border/70 shadow-sm text-foreground p-4">
             <form
               onSubmit={handleSubmit(onSubmitJoinCode)}
-              className="flex flex-col gap-3"
+              className="flex flex-col gap-3 w-full max-w-xs"
             >
               <input
                 {...register("joiningCode")}
                 type="text"
                 required
-                className="border border-border-muted/50 rounded-md p-3 bg-background focus:bg-background-highlight text-lg ring-foreground-muted focus:ring-1 focus:ring-border focus:outline-none"
+                className="border border-border-muted/50 rounded-md p-3 bg-background focus:bg-background-highlight text-base sm:text-lg ring-foreground-muted focus:ring-1 focus:ring-border focus:outline-none w-full"
                 placeholder="Enter the code or Link"
               />
               <button className="bg-primary p-2 text-md rounded-md hover:bg-primary-hover text-background cursor-pointer">
@@ -139,8 +139,8 @@ export default function Home() {
         </div>
 
         {/* My Whiteboards */}
-        <div className="mt-8 w-3/4 flex flex-col gap-5">
-          <span className="text-3xl font-heading text-foreground font-bold">
+        <div className="mt-8 w-full sm:w-11/12 md:w-3/4 flex flex-col gap-5 px-1 sm:px-0">
+          <span className="text-2xl sm:text-3xl font-heading text-foreground font-bold">
             My WhiteBoards
           </span>
           <BoardFilters

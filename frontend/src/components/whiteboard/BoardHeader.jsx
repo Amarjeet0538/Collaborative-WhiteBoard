@@ -112,10 +112,6 @@ export default function BoardHeader({
               bg-background text-foreground     border border-border/40            hover:opacity-90 active:scale-95
               transition-all shadow-sm text-sm font-medium"
           >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
-            </span>
             Share
             {presentUsers.length > 0 && (
               <span className="flex items-center gap-1 bg-white/15 rounded-full px-2 py-0.5 text-xs font-semibold">
@@ -178,7 +174,6 @@ export default function BoardHeader({
                         <span className="text-sm text-foreground truncate flex-1">
                           {u.username}
                         </span>
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
                       </div>
                     ))
                   ) : (

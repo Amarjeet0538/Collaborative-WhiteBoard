@@ -28,9 +28,9 @@ export default function Header() {
   };
 
   return (
-    <div className="flex justify-between p-2 rounded-lg bg-background shadow-sm">
+    <div className="flex justify-between items-center gap-2 p-2 rounded-lg bg-background shadow-sm flex-wrap">
       <Logo />
-      <div className="flex gap-3">
+      <div className="flex gap-2 sm:gap-3 items-center">
         <DarkModeToggle />
         <NotificationBell />
         {user ? (
@@ -46,10 +46,13 @@ export default function Header() {
               <User className="hover:text-primary" size={17} />
             </button>
             {isOpen && (
-              <div className="absolute top-full right-0 z-20 w-40 text-center p-5 border border-border-muted rounded-md bg-background text-foreground mt-2 shadow-lg">
+              <div
+                ref={menuRef}
+                className="absolute top-full right-0 z-20 w-40 max-w-[calc(100vw-1.5rem)] text-center p-5 border border-border-muted rounded-md bg-background text-foreground mt-2 shadow-lg"
+              >
                 <button
                   onClick={() => navigate("/settings")}
-                  className="text-sm text-foreground cursor-pointer"
+                  className="text-sm text-foreground cursor-pointer truncate w-full"
                 >
                   {user.name}
                 </button>
@@ -67,7 +70,7 @@ export default function Header() {
         ) : (
           <button
             onClick={() => navigate("/login")}
-            className="border border-border-muted py-2 px-4 rounded-md bg-primary cursor-pointer text-background hover:bg-background hover:text-primary hover:border-primary transition-all"
+            className="border border-border-muted py-2 px-3 sm:px-4 rounded-md bg-primary cursor-pointer text-background hover:bg-background hover:text-primary hover:border-primary transition-all whitespace-nowrap"
           >
             Login
           </button>
