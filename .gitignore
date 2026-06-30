@@ -32,3 +32,6 @@ dist-ssr
 venv/
 .venv/
 pythonServer/venv/
+
+
+pythonServer/dataset/
