@@ -1,4 +1,4 @@
-const bbox = (start, end) => {
+/*const bbox = (start, end) => {
   const minX = Math.min(start[0], end[0]);
   const maxX = Math.max(start[0], end[0]);
   const minY = Math.min(start[1], end[1]);
@@ -129,4 +129,142 @@ export const generateShapePoints = (shapeType, start, end) => {
     default:
       return rectanglePoints(minX, minY, maxX, maxY);
   }
+};*/
+
+/**
+ * Calculates the bounding box of a messy stroke.
+ */
+export const getBounds = (points) => {
+  let minX = Infinity,
+    minY = Infinity;
+  let maxX = -Infinity,
+    maxY = -Infinity;
+
+  points.forEach(([x, y]) => {
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+  });
+
+  return { minX, minY, maxX, maxY };
+};
+
+/**
+ * Replaces raw points with perfect geometric coordinates based on the AI's prediction.
+ */
+export const generatePerfectShape = (points, shapeType) => {
+  const { minX, minY, maxX, maxY } = getBounds(points);
+
+  // Calculate center and dimensions
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  const width = maxX - minX;
+  const height = maxY - minY;
+
+  const perfectPoints = [];
+
+  switch (shapeType) {
+    case "square":
+    case "rectangle":
+      // 4 corners of a rectangle
+      perfectPoints.push([minX, minY]);
+      perfectPoints.push([maxX, minY]);
+      perfectPoints.push([maxX, maxY]);
+      perfectPoints.push([minX, maxY]);
+      perfectPoints.push([minX, minY]); // close the loop
+      break;
+
+    case "circle":
+      // Generate 60 points to make a smooth circle
+      const radius = Math.max(width, height) / 2; // Use max dimension for a perfect circle
+      for (let i = 0; i <= 60; i++) {
+        const angle = (i / 60) * Math.PI * 2;
+        perfectPoints.push([
+          cx + radius * Math.cos(angle),
+          cy + radius * Math.sin(angle),
+        ]);
+      }
+      break;
+
+    case "triangle":
+      // Top center, bottom right, bottom left
+      perfectPoints.push([cx, minY]);
+      perfectPoints.push([maxX, maxY]);
+      perfectPoints.push([minX, maxY]);
+      perfectPoints.push([cx, minY]); // close the loop
+      break;
+
+    case "line":
+      // Just snap from the absolute first point to the absolute last point
+      perfectPoints.push(points[0]);
+      perfectPoints.push(points[points.length - 1]);
+      break;
+
+    default:
+      // If unknown, just return the messy drawing
+      return points;
+  }
+
+  return perfectPoints;
+};
+
+/**
+ * Generates perfect points for a shape being actively dragged (start to end coordinates)
+ */
+export const generateShapePoints = (shapeType, start, end) => {
+  const [x1, y1] = start;
+  const [x2, y2] = end;
+
+  const minX = Math.min(x1, x2);
+  const maxX = Math.max(x1, x2);
+  const minY = Math.min(y1, y2);
+  const maxY = Math.max(y1, y2);
+
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  const width = maxX - minX;
+  const height = maxY - minY;
+
+  const points = [];
+
+  switch (shapeType) {
+    case "rectangle":
+    case "square":
+      points.push([minX, minY]);
+      points.push([maxX, minY]);
+      points.push([maxX, maxY]);
+      points.push([minX, maxY]);
+      points.push([minX, minY]);
+      break;
+
+    case "circle":
+      const rx = width / 2;
+      const ry = height / 2;
+      // We generate an oval/circle based on the drag bounding box
+      for (let i = 0; i <= 60; i++) {
+        const angle = (i / 60) * Math.PI * 2;
+        points.push([cx + rx * Math.cos(angle), cy + ry * Math.sin(angle)]);
+      }
+      break;
+
+    case "triangle":
+      points.push([cx, minY]);
+      points.push([maxX, maxY]);
+      points.push([minX, maxY]);
+      points.push([cx, minY]);
+      break;
+
+    case "line":
+    case "arrow":
+      points.push([x1, y1]);
+      points.push([x2, y2]);
+      break;
+
+    default:
+      // Fallback
+      points.push([x1, y1], [x2, y2]);
+  }
+
+  return points;
 };

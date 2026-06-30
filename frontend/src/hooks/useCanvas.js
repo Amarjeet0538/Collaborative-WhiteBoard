@@ -1,7 +1,14 @@
 // frontend/src/hooks/useCanvas.js
 import { useEffect, useRef, useState, useCallback } from "react";
-import { recognizeAndSnap } from "../utils/shapeRecognizer.js";
-import { generateShapePoints } from "../utils/shapeGeometry.js";
+//import { recognizeAndSnap } from "../utils/shapeRecognizer.js";
+//import { generateShapePoints } from "../utils/shapeGeometry.js";
+
+import { recognizeShape } from "../utils/shapeRecognizer.js";
+import {
+  generatePerfectShape,
+  generateShapePoints,
+} from "../utils/shapeGeometry.js";
+
 const getDistanceToSegment = (p, v, w) => {
   const l2 = (v[0] - w[0]) ** 2 + (v[1] - w[1]) ** 2;
   if (l2 === 0) return Math.hypot(p[0] - v[0], p[1] - v[1]);
@@ -122,7 +129,7 @@ export const useCanvas = (props) => {
     },
     [eraserSize, camera.scale, redraw],
   );
-
+  /*
   // Execution algorithm when hold window clears successfully
   const triggerShapeSnap = useCallback(() => {
     if (
@@ -136,7 +143,41 @@ export const useCanvas = (props) => {
       redraw();
     }
   }, [redraw]);
+*/
 
+  // Execution algorithm when hold window clears successfully
+  const triggerShapeSnap = useCallback(async () => {
+    if (
+      currentStroke.current &&
+      currentStroke.current.points.length > 5 && // Ensure enough points for the AI
+      !hasSnappedRef.current
+    ) {
+      try {
+        // 1. Ask the Python ML Server what this shape is
+        const predictedShape = await recognizeShape(
+          currentStroke.current.points,
+        );
+
+        if (predictedShape !== "unknown") {
+          // 2. Morph the messy points into perfect geometry
+          const snappedPoints = generatePerfectShape(
+            currentStroke.current.points,
+            predictedShape,
+          );
+
+          // 3. Update the stroke data
+          currentStroke.current.points = snappedPoints;
+          currentStroke.current.shapeType = predictedShape; // Tag it for your DB
+          hasSnappedRef.current = true;
+
+          // 4. Re-render the canvas with the clean shape
+          redraw();
+        }
+      } catch (error) {
+        console.error("Shape snapping failed:", error);
+      }
+    }
+  }, [redraw]);
   useEffect(() => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
