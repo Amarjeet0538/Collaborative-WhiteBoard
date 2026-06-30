@@ -2,8 +2,78 @@ import { useState, useRef, useEffect } from "react";
 import DarkModeToggle from "../DarkModeToggle";
 import useToast from "@/hooks/useToast";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Link2, Check, Users } from "lucide-react";
+import { ArrowLeft, Link2, Check, Users, Download } from "lucide-react";
 import SharePanel from "./SharePanel";
+import { useTheme } from "@/context/ThemeContext";
+
+// ── Export helper ──────────────────────────────────────────────────────────
+const PADDING = 40; // px of whitespace around the drawing
+
+function exportToPng(strokes, boardName, isDark) {
+  if (!strokes || strokes.length === 0) return null;
+  console.log("fxn called");
+  // 1. Find bounding box across all stroke points (world coordinates)
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
+
+  strokes.forEach((stroke) => {
+    const halfSize = (stroke.size || 2) / 2;
+    stroke.points.forEach(([x, y]) => {
+      minX = Math.min(minX, x - halfSize);
+      minY = Math.min(minY, y - halfSize);
+      maxX = Math.max(maxX, x + halfSize);
+      maxY = Math.max(maxY, y + halfSize);
+    });
+  });
+
+  const contentW = maxX - minX;
+  const contentH = maxY - minY;
+
+  if (contentW <= 0 || contentH <= 0) return null;
+
+  // 2. Create an offscreen canvas sized to content + padding
+  const dpr = window.devicePixelRatio || 1;
+  const canvasW = contentW + PADDING * 2;
+  const canvasH = contentH + PADDING * 2;
+
+  const offscreen = document.createElement("canvas");
+  offscreen.width = canvasW * dpr;
+  offscreen.height = canvasH * dpr;
+
+  const ctx = offscreen.getContext("2d");
+  ctx.scale(dpr, dpr);
+
+  // 3. Fill background matching the current theme
+  ctx.fillStyle = isDark ? "#000000" : "#FFFFFF";
+  ctx.fillRect(0, 0, canvasW, canvasH);
+
+  // 4. Translate so world-origin maps to top-left padding
+  ctx.translate(PADDING - minX, PADDING - minY);
+
+  // 5. Redraw every stroke exactly as useCanvas does
+  strokes.forEach((stroke) => {
+    if (!stroke?.points?.length) return;
+    ctx.beginPath();
+    ctx.strokeStyle = stroke.color;
+    ctx.lineWidth = stroke.size;
+    ctx.globalCompositeOperation = "source-over";
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    stroke.points.forEach(([x, y], i) => {
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  });
+
+  // 6. Trigger download
+  const dataUrl = offscreen.toDataURL("image/png");
+  const a = document.createElement("a");
+  a.href = dataUrl;
+  a.download = `${boardName || "whiteboard"}.png`;
+  a.click();
+}
 
 export default function BoardHeader({
   boardName,
@@ -15,7 +85,9 @@ export default function BoardHeader({
   id,
   pendingRequests,
   handleRespond,
+  strokes,
 }) {
+  const { isDark } = useTheme();
   const [isRenaming, setIsRenaming] = useState(false);
   const [tempName, setTempName] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -103,8 +175,20 @@ export default function BoardHeader({
         </div>
       </div>
 
-      {/* ── Top-right: Share + Dark mode ── */}
+      {/* ── Top-right: Export + Share + Dark mode ── */}
       <div className="absolute top-3 right-3 z-10 flex items-center gap-2 ">
+        {/* Export button */}
+        <button
+          onClick={() => exportToPng(strokes, boardName, isDark)}
+          title="Export as PNG"
+          className="w-10 h-10 flex items-center justify-center rounded-2xl
+            bg-background text-foreground hover:bg-background-highlight
+            border border-border/40 hover:border-border
+            transition-all shadow-sm active:scale-95"
+        >
+          <Download size={17} />
+        </button>
+
         <div className="relative " ref={menuRef}>
           <button
             onClick={() => setIsMenuOpen((prev) => !prev)}

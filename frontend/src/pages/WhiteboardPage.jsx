@@ -157,6 +157,7 @@ export default function WhiteboardPage() {
         boardId={id}
         pendingRequests={pendingRequests}
         onRespond={handleRespond}
+        strokes={strokes}
       />
       {/* Drawing canvas */}
       <Canvas
