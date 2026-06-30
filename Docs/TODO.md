@@ -9,7 +9,7 @@
 - [-] add on hover name of icon
 - [-] reduce the size of header and search in home page
 - [-] merge signin and signup
-- [0] add a global state for dark/light mode
+- [-] add a global state for dark/light mode
 - [-] add owned boards and shared boards later -- https://dribbble.com/shots/26294998-Collaborative-Whiteboard-Dashboard-Clean-Minimal-UI
 - [-] replace dashboard with home
 - [-] add data
@@ -64,9 +64,9 @@ zg8M9QiML1HsLqc3
 - [-] undo redo
 - [-] erase fulll line at once - MiniMap for Navigation
 - [ ] WhiteBoard Background Pattern and Color Selector
-- [ ] Shapes button
-- [ ] make the pen selector and eraser selector to the right slider and the shapes too
-      uer add whiteboard in db , avatar pic , notification
+- [-] Shapes button
+- [-] make the pen selector and eraser selector to the right slider and the shapes too
+  uer add whiteboard in db , avatar pic , notification
 
 Right now, you redraw everything on every frame. For giant boards, we usually split it into:
 A Background Canvas: For finished strokes (only redraws when something changes).
@@ -75,3 +75,9 @@ A Drawing Canvas: For the current line being drawn (updates every mouse move).
 make account settings good
 
 - [-] show eraser and pen boundary
+- [ ] export board
+- [ ] add textbox image import
+- [ ] selection tool and make shape dimention changable and del to delete the shape
+- [ ] live chat
+
+- [ ] good backend service platform ditch render

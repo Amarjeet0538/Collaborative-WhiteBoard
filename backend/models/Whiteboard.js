@@ -20,8 +20,21 @@ const strokeSchema = new mongoose.Schema(
     },
     tool: {
       type: String,
-      enum: ["pen"],
+      enum: ["pen", "shape"],
       default: "pen",
+    },
+    shapeType: {
+      type: String,
+      enum: [
+        "rectangle",
+        "square",
+        "circle",
+        "triangle",
+        "diamond",
+        "line",
+        "arrow",
+        "star",
+      ],
     },
     createdAt: {
       type: Number,
