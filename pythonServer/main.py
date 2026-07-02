@@ -1,7 +1,9 @@
+import os
 from typing import List
 
 import numpy as np
 import tensorflow as tf
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from preprocess import preprocess_stroke
@@ -10,19 +12,22 @@ from pydantic import BaseModel
 # --- CONFIGURATION ---
 # Must match the exact order used in train.py
 CATEGORIES = ["circle", "square", "triangle", "line"]
+# 1. Load the variables from the .env file
+load_dotenv()
 
-# Initialize FastAPI
 app = FastAPI(title="Whiteboard ML Engine")
 
-# Enable CORS so your frontend port (e.g., localhost:5173) can talk to this port (8000)
+# 2. Get the frontend URL from the environment, with a fallback just in case
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+# 3. Use it in your CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, restrict this to your actual frontend URL
+    allow_origins=[FRONTEND_URL, "https://lienwand.vercel.app"],  # Allow local and prod
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # Load the trained model into memory on startup
 print("Loading Neural Network...")
 model = tf.keras.models.load_model("shape_model.keras")

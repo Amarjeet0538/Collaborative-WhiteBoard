@@ -159,19 +159,17 @@
 export const recognizeShape = async (points) => {
   // We need at least a few points to even attempt recognition
   if (!points || points.length < 5) return "unknown";
+  const API_URL = import.meta.env.VITE_ML_API_URL || "http://127.0.0.1:8000";
 
   try {
-    const response = await fetch(
-      "https://collaborative-whiteboard-python-server.onrender.com/api/recognize",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        // We pass the points array wrapped in the expected stroke schema
-        body: JSON.stringify({ points: points }),
+    const response = await fetch(`${API_URL}/api/recognize`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
       },
-    );
+      // We pass the points array wrapped in the expected stroke schema
+      body: JSON.stringify({ points: points }),
+    });
 
     if (!response.ok) {
       console.warn(
