@@ -91,8 +91,9 @@ const Canvas = forwardRef((props, ref) => {
 
   const handlePointerMove = (e) => {
     if (customCursorRef.current) {
-      customCursorRef.current.style.left = `${e.nativeEvent.offsetX}px`;
-      customCursorRef.current.style.top = `${e.nativeEvent.offsetY}px`;
+      const rect = e.currentTarget.getBoundingClientRect();
+      customCursorRef.current.style.left = `${e.clientX - rect.left}px`;
+      customCursorRef.current.style.top = `${e.clientY - rect.top}px`;
     }
     if (!readOnly && draw) draw(e);
   };

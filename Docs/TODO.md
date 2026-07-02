@@ -75,7 +75,7 @@ A Drawing Canvas: For the current line being drawn (updates every mouse move).
 make account settings good
 
 - [-] show eraser and pen boundary
-- [ ] export board
+- [-] export board
 - [ ] add textbox image import
 - [ ] selection tool and make shape dimention changable and del to delete the shape
 - [ ] live chat

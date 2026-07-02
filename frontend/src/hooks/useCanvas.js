@@ -50,8 +50,12 @@ export const useCanvas = (props) => {
   const STABILITY_THRESHOLD = 10;
   const HOLD_DELAY = 1000; // 1 seconds
 
+  // useCanvas.js
   const getMouseCoordinates = (e) => {
-    const { offsetX, offsetY } = e.nativeEvent;
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
     return {
       x: (offsetX - camera.x) / camera.scale,
       y: (offsetY - camera.y) / camera.scale,
