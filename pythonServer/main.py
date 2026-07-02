@@ -41,6 +41,13 @@ class StrokeInput(BaseModel):
 
 
 # --- API ENDPOINT ---
+
+
+@app.get("/")
+async def root():
+    return {"status": "online", "message": "Whiteboard ML Engine is running!"}
+
+
 @app.post("/api/recognize")
 async def recognize_shape(stroke: StrokeInput):
     try:
