@@ -85,7 +85,14 @@ export const useCamera = (tool) => {
           const [a, b] = Array.from(pointersRef.current.values());
           const newDistance = Math.hypot(a.x - b.x, a.y - b.y);
           const newMidpoint = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-          const distanceRatio = newDistance / pinchRef.current.distance;
+
+          // Guard again right before use — pinchRef.current may have been
+          // nulled by a racing pointerup/cancel between the check above
+          // and here (common on iPadOS Safari multi-touch).
+          const prevPinch = pinchRef.current;
+          if (!prevPinch) return;
+
+          const distanceRatio = newDistance / prevPinch.distance;
 
           setCamera((prev) => {
             const newScale = Math.min(
@@ -94,15 +101,13 @@ export const useCamera = (tool) => {
             );
             const scaleRatio = newScale / prev.scale;
 
-            // Zoom toward this frame's pinch midpoint...
             const zoomedX =
               newMidpoint.x - (newMidpoint.x - prev.x) * scaleRatio;
             const zoomedY =
               newMidpoint.y - (newMidpoint.y - prev.y) * scaleRatio;
 
-            // ...then carry the two-finger pan delta on top
-            const panDx = newMidpoint.x - pinchRef.current.midpoint.x;
-            const panDy = newMidpoint.y - pinchRef.current.midpoint.y;
+            const panDx = newMidpoint.x - prevPinch.midpoint.x;
+            const panDy = newMidpoint.y - prevPinch.midpoint.y;
 
             return { x: zoomedX + panDx, y: zoomedY + panDy, scale: newScale };
           });
@@ -112,7 +117,6 @@ export const useCamera = (tool) => {
         }
 
         if (!(pointersRef.current.size === 1 && isPanning)) return;
-        // single remaining finger: fall through to movementX/Y pan below
       }
 
       if (!isPanning) return;
@@ -124,7 +128,6 @@ export const useCamera = (tool) => {
     },
     [isPanning],
   );
-
   const stopPan = useCallback(
     (e) => {
       if (e?.pointerType === "touch" && e?.pointerId != null) {
@@ -141,6 +144,11 @@ export const useCamera = (tool) => {
         }
         return;
       }
+      // Non-touch pointerup (or synthetic call) — fully reset touch state too,
+      // in case a stray touch pointer never got its own up/cancel event.
+      pointersRef.current.clear();
+      pinchRef.current = null;
+      setIsPinching(false);
       setIsPanning(false);
     },
     [tool],

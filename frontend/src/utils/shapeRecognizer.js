@@ -161,14 +161,17 @@ export const recognizeShape = async (points) => {
   if (!points || points.length < 5) return "unknown";
 
   try {
-    const response = await fetch("http://127.0.0.1:8000/api/recognize", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      "https://collaborative-whiteboard-python-server.onrender.com/api/recognize",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        // We pass the points array wrapped in the expected stroke schema
+        body: JSON.stringify({ points: points }),
       },
-      // We pass the points array wrapped in the expected stroke schema
-      body: JSON.stringify({ points: points }),
-    });
+    );
 
     if (!response.ok) {
       console.warn(
