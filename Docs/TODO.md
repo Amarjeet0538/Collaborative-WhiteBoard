@@ -76,8 +76,8 @@ make account settings good
 
 - [-] show eraser and pen boundary
 - [-] export board
-- [ ] add textbox image import
-- [ ] selection tool and make shape dimention changable and del to delete the shape
+- [-] add textbox image import
+- [-] selection tool and make shape dimention changable and del to delete the shape
 - [ ] live chat
 
 - [ ] good backend service platform ditch render

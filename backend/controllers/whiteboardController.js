@@ -43,9 +43,8 @@ export const patchThumbnail = catchAsync(async (req, res) => {
       $or: [{ owner: req.user.id }, { "sharedWith.userId": req.user.id }],
     },
     { $set: { thumbnail } },
-    { new: true, select: "_id thumbnail" }, // only return what we need
+    { returnDocument: "after", select: "_id thumbnail" },
   );
-
   if (!board) throw ApiError.notFound("Board not found");
 
   res.json({ success: true });
@@ -88,15 +87,12 @@ export const update = catchAsync(async (req, res) => {
       _id: req.params.id,
       $or: [
         { owner: req.user.id },
-        {
-          sharedWith: { $elemMatch: { userId: req.user.id, role: "editor" } },
-        },
+        { sharedWith: { $elemMatch: { userId: req.user.id, role: "editor" } } },
       ],
     },
     { strokes, name },
-    { new: true },
+    { returnDocument: "after" },
   );
-
   if (!whiteboard) {
     throw ApiError.notFound("Whiteboard not found or not authorized");
   }

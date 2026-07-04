@@ -66,7 +66,8 @@ export default function WhiteboardPage() {
     emit,
   );
   const isDrawMode = !isSpacePressed && !isPinching && tool !== "hand";
-
+  const [textColor, setTextColor] = useState("#000000");
+  const [textFontSize, setTextFontSize] = useState(20);
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.ctrlKey || e.metaKey) {
@@ -81,6 +82,8 @@ export default function WhiteboardPage() {
   }, [undo, redo]);
 
   // 3. Handlers
+  const handleInsertImage = (dataUrl) =>
+    canvasRef.current?.insertImage(dataUrl);
   const handleStrokesChange = useCallback(
     (newStrokes) => {
       // 1. Push to undo/redo history FIRST (before setStrokes happens inside it)

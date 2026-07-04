@@ -20,6 +20,8 @@ export const TOOLS = {
   ERASER: "eraser",
   HAND: "hand",
   SELECT: "select",
+  IMAGE: "image",
+  TEXT: "text",
 };
 
 export const ROLES = {

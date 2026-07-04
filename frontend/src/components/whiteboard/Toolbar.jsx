@@ -8,11 +8,15 @@ import {
   Undo2,
   Redo2,
   MousePointer2,
+  Image as ImageIcon,
+  Type,
 } from "lucide-react";
 import PenTool from "../ToolDetails/PenTool";
 import EraserTool from "../ToolDetails/EraserTool";
 import ShapesTool from "../ToolDetails/ShapesTool";
 import ToolSidePanel from "./ToolSidePanel";
+import ImageTool from "../ToolDetails/ImageTool";
+import TextTool from "../ToolDetails/TextTool";
 
 function ToolBtn({ active, onClick, title, children, className = "" }) {
   return (
@@ -77,20 +81,6 @@ export default function Toolbar({
           setPenSize={setPenSize}
         />
       </ToolSidePanel>
-
-      <ToolSidePanel
-        open={activePanel === "eraser"}
-        title="Eraser"
-        icon={<Eraser size={15} />}
-        onClose={() => setActivePanel(null)}
-      >
-        <EraserTool
-          eraserSize={eraserSize}
-          setEraserSize={setEraserSize}
-          clearCanvas={clearCanvas}
-        />
-      </ToolSidePanel>
-
       <ToolSidePanel
         open={activePanel === "shapes"}
         title="Shapes"
@@ -102,6 +92,19 @@ export default function Toolbar({
           setShapeType={setShapeType}
           color={color}
           setColor={setColor}
+        />
+      </ToolSidePanel>
+
+      <ToolSidePanel
+        open={activePanel === "eraser"}
+        title="Eraser"
+        icon={<Eraser size={15} />}
+        onClose={() => setActivePanel(null)}
+      >
+        <EraserTool
+          eraserSize={eraserSize}
+          setEraserSize={setEraserSize}
+          clearCanvas={clearCanvas}
         />
       </ToolSidePanel>
 
@@ -161,6 +164,21 @@ export default function Toolbar({
             title="Hand (Space)"
           >
             <Hand size={17} />
+          </ToolBtn>
+          <ToolBtn
+            active={tool === "image"}
+            onClick={() => handleToolClick("image", "image")}
+            title="Image"
+          >
+            <ImageIcon size={17} />
+          </ToolBtn>
+
+          <ToolBtn
+            active={tool === "text"}
+            onClick={() => handleToolClick("text", "text")}
+            title="Text"
+          >
+            <Type size={17} />
           </ToolBtn>
 
           <ToolBtn

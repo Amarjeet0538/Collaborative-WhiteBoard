@@ -53,6 +53,8 @@ const Canvas = forwardRef((props, ref) => {
     penSize = 5,
     eraserSize = 20,
     onCanvasPointerDown,
+    textColor = "#000000",
+    textFontSize = 20,
   } = props;
 
   const { isDark } = useTheme();
@@ -70,14 +72,25 @@ const Canvas = forwardRef((props, ref) => {
   }, []);
 
   // ── useCanvas ────────────────────────────────────────────────────────────
-  const { canvasRef, startDrawing, draw, finishDrawing, clearCanvas } =
-    useCanvas({ ...props, onShapeSnapped: handleShapeSnapped });
+  const {
+    canvasRef,
+    startDrawing,
+    draw,
+    finishDrawing,
+    clearCanvas,
+    insertImage,
+    addTextStroke,
+  } = useCanvas({ ...props, onShapeSnapped: handleShapeSnapped });
+
+  const [textEditor, setTextEditor] = useState(null);
 
   const customCursorRef = useRef(null);
 
   useImperativeHandle(ref, () => ({
     clear: clearCanvas,
     getCanvas: () => canvasRef.current,
+    insertImage,
+    addTextStroke,
   }));
 
   // ── Pointer handlers (mouse, touch, pen — unified) ──────────────────────
@@ -86,6 +99,19 @@ const Canvas = forwardRef((props, ref) => {
     // canvas tap closes the open tool side-panel (Pen/Eraser/Shapes).
     onCanvasPointerDown?.();
     if (readOnly) return;
+
+    if (tool === "text") {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const screenX = e.clientX - rect.left;
+      const screenY = e.clientY - rect.top;
+      setTextEditor({
+        screenX,
+        screenY,
+        worldX: (screenX - camera.x) / camera.scale,
+        worldY: (screenY - camera.y) / camera.scale,
+      });
+      return;
+    }
     startDrawing(e);
   };
 
@@ -127,9 +153,11 @@ const Canvas = forwardRef((props, ref) => {
         ? "grab"
         : tool === "shape"
           ? "crosshair"
-          : tool === "select"
-            ? "default"
-            : "default";
+          : tool === "text"
+            ? "text"
+            : tool === "select"
+              ? "default"
+              : "default";
   const gridSize = 24 * camera.scale;
 
   return (
@@ -176,6 +204,39 @@ const Canvas = forwardRef((props, ref) => {
       {Object.entries(cursors).map(([id, c]) => (
         <CursorOverlay key={id} cursor={c} />
       ))}
+
+      {textEditor && (
+        <textarea
+          autoFocus
+          className="absolute z-50 bg-transparent outline-none border border-dashed border-primary p-1 resize-none"
+          style={{
+            left: textEditor.screenX,
+            top: textEditor.screenY,
+            fontSize: `${textFontSize * camera.scale}px`,
+            color: textColor,
+            lineHeight: 1.3,
+            minWidth: "120px",
+            minHeight: `${textFontSize * 1.3}px`,
+          }}
+          onBlur={(e) => {
+            addTextStroke(
+              textEditor.worldX,
+              textEditor.worldY,
+              e.target.value,
+              textFontSize,
+              textColor,
+            );
+            setTextEditor(null);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setTextEditor(null);
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              e.target.blur();
+            }
+          }}
+        />
+      )}
     </div>
   );
 });

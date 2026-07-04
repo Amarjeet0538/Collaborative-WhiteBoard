@@ -55,9 +55,8 @@ export const markAsRead = async (notificationId, userId) => {
   const notification = await Notification.findOneAndUpdate(
     { _id: notificationId, recipient: new mongoose.Types.ObjectId(userId) },
     { isRead: true },
-    { new: true },
+    { returnDocument: "after" },
   );
-
   if (!notification) {
     throw new Error("Notification not found");
   }
