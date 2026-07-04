@@ -127,8 +127,9 @@ const Canvas = forwardRef((props, ref) => {
         ? "grab"
         : tool === "shape"
           ? "crosshair"
-          : "default";
-
+          : tool === "select"
+            ? "default"
+            : "default";
   const gridSize = 24 * camera.scale;
 
   return (

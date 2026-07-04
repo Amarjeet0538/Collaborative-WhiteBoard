@@ -230,39 +230,104 @@ export const generateShapePoints = (shapeType, start, end) => {
 
   switch (shapeType) {
     case "rectangle":
-    case "square":
-      points.push([minX, minY]);
-      points.push([maxX, minY]);
-      points.push([maxX, maxY]);
-      points.push([minX, maxY]);
-      points.push([minX, minY]);
+      points.push(
+        [minX, minY],
+        [maxX, minY],
+        [maxX, maxY],
+        [minX, maxY],
+        [minX, minY],
+      );
       break;
 
-    case "circle":
+    case "square": {
+      // force equal sides, anchored at the drag's start point
+      const size = Math.max(width, height);
+      const dirX = x2 >= x1 ? 1 : -1;
+      const dirY = y2 >= y1 ? 1 : -1;
+      const sx1 = x1,
+        sy1 = y1;
+      const sx2 = x1 + dirX * size,
+        sy2 = y1 + dirY * size;
+      const sMinX = Math.min(sx1, sx2),
+        sMaxX = Math.max(sx1, sx2);
+      const sMinY = Math.min(sy1, sy2),
+        sMaxY = Math.max(sy1, sy2);
+      points.push(
+        [sMinX, sMinY],
+        [sMaxX, sMinY],
+        [sMaxX, sMaxY],
+        [sMinX, sMaxY],
+        [sMinX, sMinY],
+      );
+      break;
+    }
+
+    case "circle": {
       const rx = width / 2;
       const ry = height / 2;
-      // We generate an oval/circle based on the drag bounding box
       for (let i = 0; i <= 60; i++) {
         const angle = (i / 60) * Math.PI * 2;
         points.push([cx + rx * Math.cos(angle), cy + ry * Math.sin(angle)]);
       }
       break;
+    }
 
     case "triangle":
-      points.push([cx, minY]);
-      points.push([maxX, maxY]);
-      points.push([minX, maxY]);
-      points.push([cx, minY]);
+      points.push([cx, minY], [maxX, maxY], [minX, maxY], [cx, minY]);
       break;
+
+    case "diamond":
+      points.push([cx, minY], [maxX, cy], [cx, maxY], [minX, cy], [cx, minY]);
+      break;
+
+    case "star": {
+      const outerRx = width / 2;
+      const outerRy = height / 2;
+      const innerRatio = 0.42;
+      const spikes = 5;
+      let rot = -Math.PI / 2;
+      const step = Math.PI / spikes;
+      for (let i = 0; i <= spikes * 2; i++) {
+        const idx = i % (spikes * 2);
+        const isOuter = idx % 2 === 0;
+        const rx = isOuter ? outerRx : outerRx * innerRatio;
+        const ry = isOuter ? outerRy : outerRy * innerRatio;
+        points.push([cx + Math.cos(rot) * rx, cy + Math.sin(rot) * ry]);
+        rot += step;
+      }
+      break;
+    }
 
     case "line":
-    case "arrow":
-      points.push([x1, y1]);
-      points.push([x2, y2]);
+      points.push([x1, y1], [x2, y2]);
       break;
 
+    case "arrow": {
+      // single continuous path: shaft -> tip -> barb -> tip -> barb
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const len = Math.hypot(dx, dy) || 1;
+      const ux = dx / len;
+      const uy = dy / len;
+      const headLen = Math.min(len * 0.3, 24);
+      const headAngle = Math.PI / 7;
+      const rotate = (vx, vy, angle) => [
+        vx * Math.cos(angle) - vy * Math.sin(angle),
+        vx * Math.sin(angle) + vy * Math.cos(angle),
+      ];
+      const [bx1, by1] = rotate(-ux, -uy, headAngle);
+      const [bx2, by2] = rotate(-ux, -uy, -headAngle);
+      points.push(
+        [x1, y1],
+        [x2, y2],
+        [x2 + bx1 * headLen, y2 + by1 * headLen],
+        [x2, y2],
+        [x2 + bx2 * headLen, y2 + by2 * headLen],
+      );
+      break;
+    }
+
     default:
-      // Fallback
       points.push([x1, y1], [x2, y2]);
   }
 

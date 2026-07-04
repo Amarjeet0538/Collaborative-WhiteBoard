@@ -7,6 +7,7 @@ import {
   ZoomOut,
   Undo2,
   Redo2,
+  MousePointer2,
 } from "lucide-react";
 import PenTool from "../ToolDetails/PenTool";
 import EraserTool from "../ToolDetails/EraserTool";
@@ -139,7 +140,13 @@ export default function Toolbar({
           >
             <PenLine size={17} />
           </ToolBtn>
-
+          <ToolBtn
+            active={tool === "select"}
+            onClick={() => handleToolClick(null, "select")}
+            title="Select"
+          >
+            <MousePointer2 size={17} />
+          </ToolBtn>
           <ToolBtn
             active={tool === "shape"}
             onClick={() => handleToolClick("shapes", "shape")}
