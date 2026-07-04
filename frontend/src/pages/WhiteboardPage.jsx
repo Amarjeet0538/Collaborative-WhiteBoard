@@ -199,6 +199,11 @@ export default function WhiteboardPage() {
         clearCanvas={() => canvasRef.current?.clear()}
         undo={undo}
         redo={redo}
+        onInsertImage={handleInsertImage}
+        textColor={textColor}
+        setTextColor={setTextColor}
+        textFontSize={textFontSize}
+        setTextFontSize={setTextFontSize}
       />{" "}
     </div>
   );

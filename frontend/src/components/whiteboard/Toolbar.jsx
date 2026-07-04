@@ -59,6 +59,11 @@ export default function Toolbar({
   clearCanvas,
   undo,
   redo,
+  onInsertImage,
+  textColor,
+  setTextColor,
+  textFontSize,
+  setTextFontSize,
 }) {
   const handleToolClick = (panelName, toolName) => {
     setTool(toolName);
@@ -107,7 +112,28 @@ export default function Toolbar({
           clearCanvas={clearCanvas}
         />
       </ToolSidePanel>
+      <ToolSidePanel
+        open={activePanel === "image"}
+        title="Image"
+        icon={<ImageIcon size={15} />}
+        onClose={() => setActivePanel(null)}
+      >
+        <ImageTool onInsertImage={onInsertImage} />
+      </ToolSidePanel>
 
+      <ToolSidePanel
+        open={activePanel === "text"}
+        title="Text"
+        icon={<Type size={15} />}
+        onClose={() => setActivePanel(null)}
+      >
+        <TextTool
+          textColor={textColor}
+          setTextColor={setTextColor}
+          textFontSize={textFontSize}
+          setTextFontSize={setTextFontSize}
+        />
+      </ToolSidePanel>
       {/* Main pill, centred at the bottom */}
       <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20">
         <div
@@ -121,9 +147,7 @@ export default function Toolbar({
           <ToolBtn onClick={redo} title="Redo (Ctrl+Shift+Z)">
             <Redo2 size={17} />
           </ToolBtn>
-
           <Divider />
-
           <ToolBtn onClick={zoomOut} title="Zoom out">
             <ZoomOut size={17} />
           </ToolBtn>
@@ -133,9 +157,7 @@ export default function Toolbar({
           <ToolBtn onClick={zoomIn} title="Zoom in">
             <ZoomIn size={17} />
           </ToolBtn>
-
           <Divider />
-
           <ToolBtn
             active={tool === "pen"}
             onClick={() => handleToolClick("pen", "pen")}
@@ -157,7 +179,6 @@ export default function Toolbar({
           >
             <Shapes size={17} />
           </ToolBtn>
-
           <ToolBtn
             active={tool === "hand"}
             onClick={() => handleToolClick(null, "hand")}
@@ -172,15 +193,13 @@ export default function Toolbar({
           >
             <ImageIcon size={17} />
           </ToolBtn>
-
           <ToolBtn
             active={tool === "text"}
             onClick={() => handleToolClick("text", "text")}
             title="Text"
           >
             <Type size={17} />
-          </ToolBtn>
-
+          </ToolBtn>{" "}
           <ToolBtn
             active={tool === "eraser"}
             onClick={() => handleToolClick("eraser", "eraser")}
@@ -188,7 +207,6 @@ export default function Toolbar({
           >
             <Eraser size={17} />
           </ToolBtn>
-
           {(tool === "pen" || tool === "shape") && (
             <>
               <Divider />

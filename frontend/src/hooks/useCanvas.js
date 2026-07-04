@@ -1,7 +1,5 @@
 // frontend/src/hooks/useCanvas.js
 import { useEffect, useRef, useState, useCallback } from "react";
-//import { recognizeAndSnap } from "../utils/shapeRecognizer.js";
-//import { generateShapePoints } from "../utils/shapeGeometry.js";
 
 import { recognizeShape } from "../utils/shapeRecognizer.js";
 import {
@@ -48,12 +46,11 @@ export const useCanvas = (props) => {
   const shapeEndRef = useRef(null);
 
   const [selectedId, setSelectedId] = useState(null);
-  const dragStateRef = useRef(null); // { mode: 'move'|'resize', handle, originalPoints, startX, startY, bbox }
+  const dragStateRef = useRef(null); // { mode: 'move'|'resize', handle, original, startX, startY, bbox, strokeId }
   const imageCacheRef = useRef(new Map());
   const STABILITY_THRESHOLD = 10;
-  const HOLD_DELAY = 1000; // 1 seconds
+  const HOLD_DELAY = 1000; // 1 second
 
-  // useCanvas.js
   const getMouseCoordinates = (e) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -64,6 +61,7 @@ export const useCanvas = (props) => {
       y: (offsetY - camera.y) / camera.scale,
     };
   };
+
   const redraw = useCallback(() => {
     const ctx = contextRef.current;
     const canvas = canvasRef.current;
@@ -92,7 +90,19 @@ export const useCanvas = (props) => {
       ctx.stroke();
     };
 
+    const renderText = (stroke) => {
+      if (!stroke.text) return;
+      ctx.fillStyle = stroke.color;
+      ctx.font = `${stroke.fontSize}px sans-serif`;
+      ctx.textBaseline = "top";
+      const lineHeight = stroke.fontSize * 1.3;
+      stroke.text.split("\n").forEach((line, i) => {
+        ctx.fillText(line, stroke.x, stroke.y + i * lineHeight);
+      });
+    };
+
     const renderImage = (stroke) => {
+      if (!stroke.imageUrl) return;
       let img = imageCacheRef.current.get(stroke.imageUrl);
       if (!img) {
         img = new Image();
@@ -103,16 +113,6 @@ export const useCanvas = (props) => {
       if (img.complete && img.naturalWidth) {
         ctx.drawImage(img, stroke.x, stroke.y, stroke.width, stroke.height);
       }
-    };
-
-    const renderText = (stroke) => {
-      ctx.fillStyle = stroke.color;
-      ctx.font = `${stroke.fontSize}px sans-serif`;
-      ctx.textBaseline = "top";
-      const lineHeight = stroke.fontSize * 1.3;
-      stroke.text.split("\n").forEach((line, i) => {
-        ctx.fillText(line, stroke.x, stroke.y + i * lineHeight);
-      });
     };
 
     strokesRef.current.forEach((stroke) => {
@@ -146,6 +146,7 @@ export const useCanvas = (props) => {
 
     ctx.restore();
   }, [camera, tool, selectedId]);
+
   const getStrokeBBox = (stroke) => {
     if (stroke.tool === "image") {
       return {
@@ -156,6 +157,14 @@ export const useCanvas = (props) => {
       };
     }
     if (stroke.tool === "text") {
+      if (!stroke.text) {
+        return {
+          minX: stroke.x,
+          minY: stroke.y,
+          maxX: stroke.x,
+          maxY: stroke.y,
+        };
+      }
       const ctx = contextRef.current;
       ctx.font = `${stroke.fontSize}px sans-serif`;
       const lines = stroke.text.split("\n");
@@ -202,6 +211,7 @@ export const useCanvas = (props) => {
     }
     return null;
   };
+
   const HANDLE_SIZE = 8; // in workspace units, adjusted by scale when hit-testing
 
   const getHandleAt = (x, y, bbox) => {
@@ -236,7 +246,7 @@ export const useCanvas = (props) => {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [deleteSelected, tool]); // Maximum allowed movement radius (in workspace units) before resetting the 2s timer
+  }, [deleteSelected, tool]);
 
   const handleEraser = useCallback(
     (x, y) => {
@@ -244,6 +254,7 @@ export const useCanvas = (props) => {
       let erasedSomething = false;
 
       const remaining = strokesRef.current.filter((stroke) => {
+        if (stroke.tool === "image" || stroke.tool === "text") return true;
         if (stroke.points.length === 1) {
           const dist = Math.hypot(
             stroke.points[0][0] - x,
@@ -276,21 +287,6 @@ export const useCanvas = (props) => {
     },
     [eraserSize, camera.scale, redraw],
   );
-  /*
-  // Execution algorithm when hold window clears successfully
-  const triggerShapeSnap = useCallback(() => {
-    if (
-      currentStroke.current &&
-      currentStroke.current.points.length > 0 &&
-      !hasSnappedRef.current
-    ) {
-      const snappedPoints = recognizeAndSnap(currentStroke.current.points);
-      currentStroke.current.points = snappedPoints;
-      hasSnappedRef.current = true;
-      redraw();
-    }
-  }, [redraw]);
-*/
 
   const triggerShapeSnap = useCallback(async () => {
     const strokeAtStart = currentStroke.current;
@@ -336,6 +332,7 @@ export const useCanvas = (props) => {
       console.error("Shape snapping failed:", error);
     }
   }, [redraw, onStrokesChange]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -365,6 +362,13 @@ export const useCanvas = (props) => {
 
     const { x, y } = getMouseCoordinates(e);
     setIsDrawing(true);
+
+    if (tool === "image") {
+      // Image tool has no click-to-draw behavior; insertion happens via the side panel upload button
+      setIsDrawing(false);
+      return;
+    }
+
     // startDrawing — select branch
     if (tool === "select") {
       const sel = selectedId
@@ -411,6 +415,7 @@ export const useCanvas = (props) => {
       redraw();
       return;
     }
+
     if (tool === "eraser") {
       handleEraser(x, y);
       return;
@@ -431,6 +436,7 @@ export const useCanvas = (props) => {
       redraw();
       return;
     }
+
     hasSnappedRef.current = false;
     currentStroke.current = {
       id: crypto.randomUUID(),
@@ -449,7 +455,7 @@ export const useCanvas = (props) => {
   };
 
   const draw = (e) => {
-    if (!isDrawing || tool === "hand") return;
+    if (!isDrawing || tool === "hand" || tool === "image") return;
     const { x, y } = getMouseCoordinates(e);
     const { offsetX, offsetY } = e.nativeEvent;
     if (onCursorMove) onCursorMove(offsetX, offsetY);
@@ -516,10 +522,12 @@ export const useCanvas = (props) => {
       redraw();
       return;
     }
+
     if (tool === "eraser") {
       handleEraser(x, y);
       return;
     }
+
     if (tool === "shape") {
       if (currentStroke.current && shapeStartRef.current) {
         shapeEndRef.current = [x, y];
@@ -560,6 +568,7 @@ export const useCanvas = (props) => {
     if (e?.target?.releasePointerCapture && e?.pointerId != null) {
       e.target.releasePointerCapture(e.pointerId);
     }
+
     if (tool === "select") {
       if (dragStateRef.current) {
         dragStateRef.current = null;
@@ -567,6 +576,7 @@ export const useCanvas = (props) => {
       }
       return;
     }
+
     if (tool === "eraser") {
       if (erasedDuringDrag.current) {
         if (onStrokesChange) onStrokesChange([...strokesRef.current]);
@@ -574,6 +584,7 @@ export const useCanvas = (props) => {
       }
       return;
     }
+
     if (tool === "shape") {
       const start = shapeStartRef.current;
       const end = shapeEndRef.current;
@@ -599,6 +610,7 @@ export const useCanvas = (props) => {
       redraw();
     }
   };
+
   const clearCanvas = useCallback(() => {
     const ctx = contextRef.current;
     const canvas = canvasRef.current;
@@ -662,6 +674,7 @@ export const useCanvas = (props) => {
     },
     [redraw, onStrokesChange],
   );
+
   return {
     canvasRef,
     startDrawing,

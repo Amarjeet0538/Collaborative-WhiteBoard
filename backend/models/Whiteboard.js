@@ -6,22 +6,21 @@ const strokeSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    tool: {
+      type: String,
+      enum: ["pen", "shape", "image", "text"],
+      default: "pen",
+    },
+    // pen / shape fields
     points: {
       type: [[Number]],
-      required: true,
+      default: undefined,
     },
     color: {
       type: String,
-      required: true,
     },
     size: {
       type: Number,
-      required: true,
-    },
-    tool: {
-      type: String,
-      enum: ["pen", "shape"],
-      default: "pen",
     },
     shapeType: {
       type: String,
@@ -36,6 +35,30 @@ const strokeSchema = new mongoose.Schema(
         "star",
       ],
     },
+    // image fields
+    imageUrl: {
+      type: String,
+    },
+    width: {
+      type: Number,
+    },
+    height: {
+      type: Number,
+    },
+    // text fields
+    text: {
+      type: String,
+    },
+    fontSize: {
+      type: Number,
+    },
+    // shared position field (used by image + text)
+    x: {
+      type: Number,
+    },
+    y: {
+      type: Number,
+    },
     createdAt: {
       type: Number,
       required: true,
@@ -43,7 +66,6 @@ const strokeSchema = new mongoose.Schema(
   },
   { _id: false },
 );
-
 const whiteboardSchema = new mongoose.Schema(
   {
     name: {
