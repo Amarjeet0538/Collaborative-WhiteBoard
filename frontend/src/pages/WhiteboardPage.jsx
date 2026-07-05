@@ -204,7 +204,7 @@ export default function WhiteboardPage() {
         setTextColor={setTextColor}
         textFontSize={textFontSize}
         setTextFontSize={setTextFontSize}
-      />{" "}
+      />
     </div>
   );
 }

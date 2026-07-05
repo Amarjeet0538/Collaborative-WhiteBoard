@@ -90,19 +90,7 @@ export const useCanvas = (props) => {
       ctx.stroke();
     };
 
-    const renderText = (stroke) => {
-      if (!stroke.text) return;
-      ctx.fillStyle = stroke.color;
-      ctx.font = `${stroke.fontSize}px sans-serif`;
-      ctx.textBaseline = "top";
-      const lineHeight = stroke.fontSize * 1.3;
-      stroke.text.split("\n").forEach((line, i) => {
-        ctx.fillText(line, stroke.x, stroke.y + i * lineHeight);
-      });
-    };
-
     const renderImage = (stroke) => {
-      if (!stroke.imageUrl) return;
       let img = imageCacheRef.current.get(stroke.imageUrl);
       if (!img) {
         img = new Image();
@@ -113,6 +101,17 @@ export const useCanvas = (props) => {
       if (img.complete && img.naturalWidth) {
         ctx.drawImage(img, stroke.x, stroke.y, stroke.width, stroke.height);
       }
+    };
+
+    const renderText = (stroke) => {
+      if (typeof stroke.text !== "string") return;
+      ctx.fillStyle = stroke.color;
+      ctx.font = `${stroke.fontSize}px sans-serif`;
+      ctx.textBaseline = "top";
+      const lineHeight = stroke.fontSize * 1.3;
+      stroke.text.split("\n").forEach((line, i) => {
+        ctx.fillText(line, stroke.x, stroke.y + i * lineHeight);
+      });
     };
 
     strokesRef.current.forEach((stroke) => {
@@ -146,7 +145,6 @@ export const useCanvas = (props) => {
 
     ctx.restore();
   }, [camera, tool, selectedId]);
-
   const getStrokeBBox = (stroke) => {
     if (stroke.tool === "image") {
       return {
@@ -157,14 +155,13 @@ export const useCanvas = (props) => {
       };
     }
     if (stroke.tool === "text") {
-      if (!stroke.text) {
+      if (!stroke.text)
         return {
           minX: stroke.x,
           minY: stroke.y,
           maxX: stroke.x,
           maxY: stroke.y,
         };
-      }
       const ctx = contextRef.current;
       ctx.font = `${stroke.fontSize}px sans-serif`;
       const lines = stroke.text.split("\n");
@@ -363,7 +360,7 @@ export const useCanvas = (props) => {
     const { x, y } = getMouseCoordinates(e);
     setIsDrawing(true);
 
-    if (tool === "image") {
+    if (tool === "image" || tool === "text") {
       // Image tool has no click-to-draw behavior; insertion happens via the side panel upload button
       setIsDrawing(false);
       return;
@@ -455,7 +452,8 @@ export const useCanvas = (props) => {
   };
 
   const draw = (e) => {
-    if (!isDrawing || tool === "hand" || tool === "image") return;
+    if (!isDrawing || tool === "hand" || tool === "image" || tool === "text")
+      return;
     const { x, y } = getMouseCoordinates(e);
     const { offsetX, offsetY } = e.nativeEvent;
     if (onCursorMove) onCursorMove(offsetX, offsetY);
@@ -658,7 +656,9 @@ export const useCanvas = (props) => {
 
   const addTextStroke = useCallback(
     (worldX, worldY, text, fontSize, color) => {
-      if (!text.trim()) return;
+      // Ensure text is a string before calling trim()
+      if (typeof text !== "string" || !text.trim()) return;
+
       strokesRef.current.push({
         id: crypto.randomUUID(),
         tool: "text",
@@ -674,7 +674,6 @@ export const useCanvas = (props) => {
     },
     [redraw, onStrokesChange],
   );
-
   return {
     canvasRef,
     startDrawing,
