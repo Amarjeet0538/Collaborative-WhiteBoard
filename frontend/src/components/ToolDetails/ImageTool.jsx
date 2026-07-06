@@ -1,16 +1,25 @@
-import { useRef } from "react";
-import { ImagePlus } from "lucide-react";
+import { useRef, useState } from "react";
+import { ImagePlus, Loader2 } from "lucide-react";
+import { whiteboardApi } from "../../api/whiteboard.api.js";
 
-export default function ImageTool({ onInsertImage }) {
+export default function ImageTool({ boardId, onInsertImage }) {
   const fileInputRef = useRef(null);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => onInsertImage(reader.result);
-    reader.readAsDataURL(file);
     e.target.value = "";
+
+    setIsUploading(true);
+    try {
+      const { imageUrl } = await whiteboardApi.uploadImage(boardId, file);
+      onInsertImage(imageUrl);
+    } catch (err) {
+      console.error("Image upload failed:", err);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -21,12 +30,19 @@ export default function ImageTool({ onInsertImage }) {
       </p>
       <button
         type="button"
+        disabled={isUploading}
         onClick={() => fileInputRef.current?.click()}
         className="flex items-center justify-center gap-2 h-10 rounded-lg
           bg-primary text-background hover:opacity-90
-          transition-all cursor-pointer text-sm font-semibold"
+          transition-all cursor-pointer text-sm font-semibold
+          disabled:opacity-60 disabled:cursor-not-allowed"
       >
-        <ImagePlus size={15} /> Upload image
+        {isUploading ? (
+          <Loader2 size={15} className="animate-spin" />
+        ) : (
+          <ImagePlus size={15} />
+        )}
+        {isUploading ? "Uploading..." : "Upload image"}
       </button>
       <input
         ref={fileInputRef}

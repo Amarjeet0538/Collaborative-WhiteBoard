@@ -64,6 +64,7 @@ export default function Toolbar({
   setTextColor,
   textFontSize,
   setTextFontSize,
+  boardId,
 }) {
   const handleToolClick = (panelName, toolName) => {
     setTool(toolName);
@@ -118,7 +119,7 @@ export default function Toolbar({
         icon={<ImageIcon size={15} />}
         onClose={() => setActivePanel(null)}
       >
-        <ImageTool onInsertImage={onInsertImage} />
+        <ImageTool boardId={boardId} onInsertImage={onInsertImage} />
       </ToolSidePanel>
 
       <ToolSidePanel

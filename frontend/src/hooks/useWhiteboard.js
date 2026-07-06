@@ -24,38 +24,34 @@ export const useWhiteboard = (boardId, initialStrokes = []) => {
     }, 1000);
   }, []);
 
-  const captureThumbnail = useCallback((canvas) => {
-    if (!canvas) return null;
-
-    const TARGET_W = 320;
-    const TARGET_H = 180;
-
-    const offscreen = document.createElement("canvas");
-    offscreen.width = TARGET_W;
-    offscreen.height = TARGET_H;
-
-    const ctx = offscreen.getContext("2d");
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, TARGET_W, TARGET_H);
-    ctx.drawImage(canvas, 0, 0, TARGET_W, TARGET_H);
-
-    // 0.3 quality — thumbnails are tiny previews, no need for higher fidelity
-    return offscreen.toDataURL("image/jpeg", 0.3);
+  const captureThumbnailBlob = useCallback((canvas) => {
+    return new Promise((resolve) => {
+      if (!canvas) return resolve(null);
+      const TARGET_W = 320;
+      const TARGET_H = 180;
+      const offscreen = document.createElement("canvas");
+      offscreen.width = TARGET_W;
+      offscreen.height = TARGET_H;
+      const ctx = offscreen.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, TARGET_W, TARGET_H);
+      ctx.drawImage(canvas, 0, 0, TARGET_W, TARGET_H);
+      offscreen.toBlob((blob) => resolve(blob), "image/jpeg", 0.7);
+    });
   }, []);
 
   const saveThumbnail = useCallback(
     async (canvas) => {
-      const thumbnail = captureThumbnail(canvas);
-      if (!thumbnail) return;
+      const blob = await captureThumbnailBlob(canvas);
+      if (!blob) return;
       try {
-        await whiteboardApi.patchThumbnail(boardId, thumbnail);
+        await whiteboardApi.uploadThumbnail(boardId, blob);
       } catch (err) {
         console.error("Thumbnail save failed:", err);
       }
     },
-    [boardId, captureThumbnail],
+    [boardId, captureThumbnailBlob],
   );
-
   return {
     strokes,
     setStrokes,
@@ -73,7 +69,7 @@ export const useWhiteboard = (boardId, initialStrokes = []) => {
     clearStrokes,
     updateStrokes,
     debouncedSave,
-    captureThumbnail,
+    captureThumbnailBlob,
     saveThumbnail,
   };
 };

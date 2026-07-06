@@ -46,11 +46,21 @@ export const whiteboardApi = {
     });
   },
 
-  patchThumbnail: async (id, thumbnail) => {
+  uploadImage: async (id, file) => {
+    const formData = new FormData();
+    formData.append("image", file);
+    return apiFetch(`/whiteboards/${id}/upload-image`, {
+      method: "POST",
+      body: formData,
+    });
+  },
+
+  uploadThumbnail: async (id, blob) => {
+    const formData = new FormData();
+    formData.append("thumbnail", blob, "thumbnail.png");
     return apiFetch(`/whiteboards/${id}/thumbnail`, {
-      method: "PATCH",
-      body: JSON.stringify({ thumbnail }),
+      method: "POST",
+      body: formData,
     });
   },
 };
-

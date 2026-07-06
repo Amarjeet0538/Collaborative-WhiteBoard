@@ -5,7 +5,11 @@ import { generateUniqueShareCode } from "../services/shareCodeService.js";
 import * as notificationService from "../services/notificationService.js";
 import catchAsync from "../utils/catchAsync.js";
 import ApiError from "../utils/ApiError.js";
-
+import {
+  uploadImage,
+  uploadThumbnail,
+  deleteImageByUrl,
+} from "../services/uploadService.js";
 export const joinByCode = catchAsync(async (req, res) => {
   const { code } = req.params;
 
@@ -215,4 +219,81 @@ export const respondToRequest = catchAsync(async (req, res) => {
   res.json({
     message: approve ? "Access granted" : "Request denied",
   });
+});
+
+export const uploadBoardImage = catchAsync(async (req, res) => {
+  if (!req.file) throw ApiError.badRequest("No image file provided");
+
+  const whiteboard = await Whiteboard.findOne({
+    _id: req.params.id,
+    $or: [
+      { owner: req.user.id },
+      { sharedWith: { $elemMatch: { userId: req.user.id, role: "editor" } } },
+    ],
+  });
+  if (!whiteboard) {
+    throw ApiError.notFound("Whiteboard not found or not authorized");
+  }
+
+  const url = await uploadImage(req.file.buffer);
+  res.status(200).json({ success: true, imageUrl: url });
+});
+/*
+export const uploadBoardThumbnail = catchAsync(async (req, res) => {
+  if (!req.file) throw ApiError.badRequest("No thumbnail file provided");
+
+  const whiteboard = await Whiteboard.findOne({
+    _id: req.params.id,
+    $or: [{ owner: req.user.id }, { "sharedWith.userId": req.user.id }],
+  });
+  if (!whiteboard) throw ApiError.notFound("Whiteboard not found");
+
+  // clean up old thumbnail to avoid orphaned Cloudinary assets
+  if (whiteboard.thumbnail) {
+    await deleteImageByUrl(whiteboard.thumbnail);
+  }
+
+  const url = await uploadThumbnail(req.file.buffer);
+  whiteboard.thumbnail = url;
+  await whiteboard.save();
+
+  res.status(200).json({ success: true, thumbnail: url });
+});
+*/
+
+export const uploadBoardThumbnail = catchAsync(async (req, res) => {
+  // --- TEMPORARY DEBUG LOGS ---
+  console.log("--- THUMBNAIL UPLOAD TRIGGERED ---");
+  console.log("Board ID:", req.params.id);
+  console.log("req.file:", req.file ? "File exists!" : "UNDEFINED");
+  if (req.file) {
+    console.log("File Mimetype:", req.file.mimetype);
+    console.log("File Size:", req.file.size);
+  }
+  console.log("----------------------------------");
+  // ----------------------------
+
+  if (!req.file) throw ApiError.badRequest("No thumbnail file provided");
+
+  const whiteboard = await Whiteboard.findOne({
+    _id: req.params.id,
+    $or: [{ owner: req.user.id }, { "sharedWith.userId": req.user.id }],
+  });
+
+  if (!whiteboard) throw ApiError.notFound("Whiteboard not found");
+
+  if (whiteboard.thumbnail) {
+    await deleteImageByUrl(whiteboard.thumbnail);
+  }
+
+  // 1. Upload to Cloudinary
+  const url = await uploadThumbnail(req.file.buffer);
+
+  // 2. Use findOneAndUpdate to bypass full document validation
+  await Whiteboard.findOneAndUpdate(
+    { _id: req.params.id },
+    { $set: { thumbnail: url } },
+  );
+
+  res.status(200).json({ success: true, thumbnail: url });
 });

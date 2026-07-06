@@ -94,6 +94,7 @@ export const useCanvas = (props) => {
       let img = imageCacheRef.current.get(stroke.imageUrl);
       if (!img) {
         img = new Image();
+        img.crossOrigin = "anonymous";
         img.src = stroke.imageUrl;
         img.onload = () => redraw();
         imageCacheRef.current.set(stroke.imageUrl, img);
@@ -620,8 +621,9 @@ export const useCanvas = (props) => {
   }, [onStrokesChange]);
 
   const insertImage = useCallback(
-    (dataUrl) => {
+    (imageUrl) => {
       const img = new Image();
+      img.crossOrigin = "anonymous";
       img.onload = () => {
         const maxDim = 300;
         let w = img.naturalWidth;
@@ -634,12 +636,11 @@ export const useCanvas = (props) => {
         const rect = canvasRef.current.getBoundingClientRect();
         const worldX = (rect.width / 2 - camera.x) / camera.scale - w / 2;
         const worldY = (rect.height / 2 - camera.y) / camera.scale - h / 2;
-
-        imageCacheRef.current.set(dataUrl, img);
+        imageCacheRef.current.set(imageUrl, img);
         strokesRef.current.push({
           id: crypto.randomUUID(),
           tool: "image",
-          imageUrl: dataUrl,
+          imageUrl,
           x: worldX,
           y: worldY,
           width: w,
@@ -649,11 +650,10 @@ export const useCanvas = (props) => {
         redraw();
         if (onStrokesChange) onStrokesChange([...strokesRef.current]);
       };
-      img.src = dataUrl;
+      img.src = imageUrl;
     },
     [camera, redraw, onStrokesChange],
   );
-
   const addTextStroke = useCallback(
     (worldX, worldY, text, fontSize, color) => {
       // Ensure text is a string before calling trim()
