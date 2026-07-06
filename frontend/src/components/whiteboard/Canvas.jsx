@@ -95,21 +95,29 @@ const Canvas = forwardRef((props, ref) => {
 
   // ── Pointer handlers (mouse, touch, pen — unified) ──────────────────────
   const handlePointerDown = (e) => {
-    // Fire unconditionally — even in read-only/hand/pan mode — so any
-    // canvas tap closes the open tool side-panel (Pen/Eraser/Shapes).
     onCanvasPointerDown?.();
     if (readOnly) return;
 
     if (tool === "text") {
+      // 1. Prevent the browser from starting a native drag/select action
+      e.preventDefault();
+
       const rect = e.currentTarget.getBoundingClientRect();
       const screenX = e.clientX - rect.left;
       const screenY = e.clientY - rect.top;
-      setTextEditor({
-        screenX,
-        screenY,
-        worldX: (screenX - camera.x) / camera.scale,
-        worldY: (screenY - camera.y) / camera.scale,
-      });
+
+      // 2. Push the mount to the next tick of the event loop.
+      // This forces the browser to resolve the pointer event FIRST,
+      // ensuring the new overlay is immediately painted to the screen.
+      setTimeout(() => {
+        setTextEditor({
+          screenX,
+          screenY,
+          worldX: (screenX - camera.x) / camera.scale,
+          worldY: (screenY - camera.y) / camera.scale,
+        });
+      }, 0);
+
       return;
     }
     startDrawing(e);
@@ -207,7 +215,8 @@ const Canvas = forwardRef((props, ref) => {
 
       {textEditor && (
         <textarea
-          autoFocus
+          // Replace autoFocus with this callback ref:
+          ref={(el) => el && el.focus()}
           className="absolute z-50 bg-transparent outline-none border border-dashed border-primary p-1 resize-none"
           style={{
             left: textEditor.screenX,

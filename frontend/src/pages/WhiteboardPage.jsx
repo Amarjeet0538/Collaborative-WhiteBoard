@@ -178,6 +178,8 @@ export default function WhiteboardPage() {
         onCanvasPointerDown={() => setActivePanel(null)}
         cursors={cursors}
         camera={camera}
+        textColor={textColor}
+        textFontSize={textFontSize}
       />{" "}
       {/* Unified toolbar — bottom centre */}
       <Toolbar

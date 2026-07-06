@@ -238,41 +238,7 @@ export const uploadBoardImage = catchAsync(async (req, res) => {
   const url = await uploadImage(req.file.buffer);
   res.status(200).json({ success: true, imageUrl: url });
 });
-/*
 export const uploadBoardThumbnail = catchAsync(async (req, res) => {
-  if (!req.file) throw ApiError.badRequest("No thumbnail file provided");
-
-  const whiteboard = await Whiteboard.findOne({
-    _id: req.params.id,
-    $or: [{ owner: req.user.id }, { "sharedWith.userId": req.user.id }],
-  });
-  if (!whiteboard) throw ApiError.notFound("Whiteboard not found");
-
-  // clean up old thumbnail to avoid orphaned Cloudinary assets
-  if (whiteboard.thumbnail) {
-    await deleteImageByUrl(whiteboard.thumbnail);
-  }
-
-  const url = await uploadThumbnail(req.file.buffer);
-  whiteboard.thumbnail = url;
-  await whiteboard.save();
-
-  res.status(200).json({ success: true, thumbnail: url });
-});
-*/
-
-export const uploadBoardThumbnail = catchAsync(async (req, res) => {
-  // --- TEMPORARY DEBUG LOGS ---
-  console.log("--- THUMBNAIL UPLOAD TRIGGERED ---");
-  console.log("Board ID:", req.params.id);
-  console.log("req.file:", req.file ? "File exists!" : "UNDEFINED");
-  if (req.file) {
-    console.log("File Mimetype:", req.file.mimetype);
-    console.log("File Size:", req.file.size);
-  }
-  console.log("----------------------------------");
-  // ----------------------------
-
   if (!req.file) throw ApiError.badRequest("No thumbnail file provided");
 
   const whiteboard = await Whiteboard.findOne({
