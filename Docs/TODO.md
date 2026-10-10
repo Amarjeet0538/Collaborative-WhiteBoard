@@ -39,7 +39,7 @@ zg8M9QiML1HsLqc3
 - [-] Make the website Responsive
 - [-] Make the whiteboard to be used using TOuch
 - [-] Search Bar Functionality
-- [ ] Whiteboard Thumbnail to imagekit insted of database
+- [-] Whiteboard Thumbnail to imagekit insted of database
 - [-] add notification attribute to the users database model
 - [-] Whiteboard card make design good like add owner and shared peoples , make the thumbnail size less
 - [-] Add Profile Pics to Users
@@ -57,7 +57,7 @@ zg8M9QiML1HsLqc3
 - [ ] Add a global state for dark/light mode
 - [-] Add Shimmer UI
 - [-] Add Home Button in Whiteboard
-- [ ] Add thumbnail , profile photo to cloud
+- [-] Add thumbnail , profile photo to cloud
 - [-] Add a settings app for profile picture , name edit , etc
 - [-] Main Whiteboard Features :- - Pan and Zoom , Infinite Canvas
 - [-] Featureful Toolbar - Clear button not working

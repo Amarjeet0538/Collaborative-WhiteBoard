@@ -51,6 +51,9 @@ export const useCanvas = (props) => {
   const STABILITY_THRESHOLD = 10;
   const HOLD_DELAY = 1000; // 1 second
 
+  // --- HOISTED CONSTANTS AND HELPERS ---
+  const HANDLE_SIZE = 8; // in workspace units, adjusted by scale when hit-testing
+
   const getMouseCoordinates = (e) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
@@ -61,6 +64,63 @@ export const useCanvas = (props) => {
       y: (offsetY - camera.y) / camera.scale,
     };
   };
+
+  const getStrokeBBox = (stroke) => {
+    if (stroke.tool === "image") {
+      return {
+        minX: stroke.x,
+        minY: stroke.y,
+        maxX: stroke.x + stroke.width,
+        maxY: stroke.y + stroke.height,
+      };
+    }
+    if (stroke.tool === "text") {
+      if (!stroke.text)
+        return {
+          minX: stroke.x,
+          minY: stroke.y,
+          maxX: stroke.x,
+          maxY: stroke.y,
+        };
+      const ctx = contextRef.current;
+      ctx.font = `${stroke.fontSize}px sans-serif`;
+      const lines = stroke.text.split("\n");
+      const w = Math.max(...lines.map((l) => ctx.measureText(l).width), 10);
+      const h = stroke.fontSize * 1.3 * lines.length;
+      return {
+        minX: stroke.x,
+        minY: stroke.y,
+        maxX: stroke.x + w,
+        maxY: stroke.y + h,
+      };
+    }
+    let minX = Infinity,
+      minY = Infinity,
+      maxX = -Infinity,
+      maxY = -Infinity;
+    stroke.points.forEach(([x, y]) => {
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    });
+    return { minX, minY, maxX, maxY };
+  };
+
+  const getHandleAt = (x, y, bbox) => {
+    const s = HANDLE_SIZE / camera.scale;
+    const corners = {
+      tl: [bbox.minX, bbox.minY],
+      tr: [bbox.maxX, bbox.minY],
+      bl: [bbox.minX, bbox.maxY],
+      br: [bbox.maxX, bbox.maxY],
+    };
+    for (const [key, [hx, hy]] of Object.entries(corners)) {
+      if (Math.hypot(x - hx, y - hy) <= s) return key;
+    }
+    return null;
+  };
+  // -------------------------------------
 
   const redraw = useCallback(() => {
     const ctx = contextRef.current;
@@ -146,47 +206,6 @@ export const useCanvas = (props) => {
 
     ctx.restore();
   }, [camera, tool, selectedId]);
-  const getStrokeBBox = (stroke) => {
-    if (stroke.tool === "image") {
-      return {
-        minX: stroke.x,
-        minY: stroke.y,
-        maxX: stroke.x + stroke.width,
-        maxY: stroke.y + stroke.height,
-      };
-    }
-    if (stroke.tool === "text") {
-      if (!stroke.text)
-        return {
-          minX: stroke.x,
-          minY: stroke.y,
-          maxX: stroke.x,
-          maxY: stroke.y,
-        };
-      const ctx = contextRef.current;
-      ctx.font = `${stroke.fontSize}px sans-serif`;
-      const lines = stroke.text.split("\n");
-      const w = Math.max(...lines.map((l) => ctx.measureText(l).width), 10);
-      const h = stroke.fontSize * 1.3 * lines.length;
-      return {
-        minX: stroke.x,
-        minY: stroke.y,
-        maxX: stroke.x + w,
-        maxY: stroke.y + h,
-      };
-    }
-    let minX = Infinity,
-      minY = Infinity,
-      maxX = -Infinity,
-      maxY = -Infinity;
-    stroke.points.forEach(([x, y]) => {
-      minX = Math.min(minX, x);
-      minY = Math.min(minY, y);
-      maxX = Math.max(maxX, x);
-      maxY = Math.max(maxY, y);
-    });
-    return { minX, minY, maxX, maxY };
-  };
 
   const hitTestStroke = (x, y) => {
     for (let i = strokesRef.current.length - 1; i >= 0; i--) {
@@ -206,22 +225,6 @@ export const useCanvas = (props) => {
         if (Math.hypot(s.points[0][0] - x, s.points[0][1] - y) <= pad)
           return s.id;
       }
-    }
-    return null;
-  };
-
-  const HANDLE_SIZE = 8; // in workspace units, adjusted by scale when hit-testing
-
-  const getHandleAt = (x, y, bbox) => {
-    const s = HANDLE_SIZE / camera.scale;
-    const corners = {
-      tl: [bbox.minX, bbox.minY],
-      tr: [bbox.maxX, bbox.minY],
-      bl: [bbox.minX, bbox.maxY],
-      br: [bbox.maxX, bbox.maxY],
-    };
-    for (const [key, [hx, hy]] of Object.entries(corners)) {
-      if (Math.hypot(x - hx, y - hy) <= s) return key;
     }
     return null;
   };

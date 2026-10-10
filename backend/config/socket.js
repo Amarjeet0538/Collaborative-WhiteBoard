@@ -1,4 +1,4 @@
-import { ALLOWED_ORIGINS } from '../utils/constants.js';
+import { ALLOWED_ORIGINS } from "../utils/constants.js";
 
 const socketOptions = {
   cors: {
