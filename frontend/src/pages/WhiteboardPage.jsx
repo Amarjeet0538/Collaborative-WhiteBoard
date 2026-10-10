@@ -48,7 +48,6 @@ export default function WhiteboardPage() {
     zoomIn,
     zoomOut,
   } = useCamera(tool);
-  // 2. Networking (socket + fetching)
   const {
     boardName,
     setBoardName,
