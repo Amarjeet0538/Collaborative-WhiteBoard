@@ -6,6 +6,7 @@ import WhiteboardPage from "./pages/WhiteboardPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import JoinBoard from "./pages/JoinBoard";
 import AccountSettings from "./pages/AccountSettings";
+import OAuthCallback from "./pages/OAuthCallback";
 
 const AppRouter = createBrowserRouter([
   {
@@ -15,6 +16,10 @@ const AppRouter = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
+  },
+  {
+    path: "/oauth/callback",
+    element: <OAuthCallback />,
   },
   {
     path: "/home",

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import LiquidWarp from "@/components/ui/background/LiquidWarp";
 import DarkModeToggle from "@/components/DarkModeToggle";
 import Logo from "@/components/Logo";
@@ -16,6 +16,7 @@ export default function Login() {
   const navigate = useNavigate();
   const toast = useToast();
   const [isSignUp, setIsSignUp] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const onSubmit = async (data) => {
     try {
@@ -29,6 +30,18 @@ export default function Login() {
       console.error(err);
       toast.error("Login Failed");
     }
+  };
+
+  // Backend redirects to /login?error=... if the OAuth flow fails
+  useEffect(() => {
+    if (searchParams.get("error")) {
+      toast.error("Login Failed");
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams, toast]);
+
+  const handleOAuth = (provider) => {
+    window.location.href = authApi.oauthUrl(provider);
   };
 
   const handleDemoLogin = async (email, password) => {
@@ -77,14 +90,14 @@ export default function Login() {
           <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6">
             <button
               className="cursor-pointer bg-background shadow-sm hover:shadow-md border border-border-muted hover:border-border/60 rounded-md p-2 flex justify-center items-center gap-2 sm:gap-4 hover:bg-background-highlight text-sm sm:text-md"
-              onClick={() => {}}
+              onClick={() => handleOAuth("google")}
             >
               <Google />
               Google
             </button>
             <button
               className="cursor-pointer bg-background shadow-sm hover:shadow-md border border-border-muted hover:border-border/90 rounded-md p-2 hover:bg-background-highlight flex justify-center items-center gap-2 sm:gap-4 text-sm sm:text-md"
-              onClick={() => {}}
+              onClick={() => handleOAuth("github")}
             >
               <Github size={20} /> Github
             </button>

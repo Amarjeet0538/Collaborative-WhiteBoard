@@ -14,12 +14,17 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+    // Optional for users who only sign in with Google/GitHub
     password: {
       type: String,
-      required: true,
+      required: function () {
+        return !this.googleId && !this.githubId;
+      },
       minlength: 6,
       select: false,
     },
+    googleId: { type: String, unique: true, sparse: true },
+    githubId: { type: String, unique: true, sparse: true },
     profilePicture: {
       type: String,
       default: function () {

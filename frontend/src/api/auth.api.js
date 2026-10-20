@@ -18,4 +18,8 @@ export const authApi = {
   getMe: async () => {
     return apiFetch('/auth/me');
   },
+
+  // Full-page redirect target that starts the Google/GitHub OAuth flow
+  oauthUrl: (provider) =>
+    `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/${provider}`,
 };
