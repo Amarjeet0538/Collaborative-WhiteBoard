@@ -7,6 +7,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import JoinBoard from "./pages/JoinBoard";
 import AccountSettings from "./pages/AccountSettings";
 import OAuthCallback from "./pages/OAuthCallback";
+import ResetPassword from "./pages/ResetPassword";
 
 const AppRouter = createBrowserRouter([
   {
@@ -16,6 +17,10 @@ const AppRouter = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPassword />,
   },
   {
     path: "/oauth/callback",

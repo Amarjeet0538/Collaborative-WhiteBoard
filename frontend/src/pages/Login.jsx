@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import LiquidWarp from "@/components/ui/background/LiquidWarp";
 import DarkModeToggle from "@/components/DarkModeToggle";
 import Logo from "@/components/Logo";
+import PasswordInput from "@/components/PasswordInput";
 import { Github } from "lucide-react";
 import { Google } from "@boxicons/react";
 import { useAuth } from "../hooks/useAuth.js";
@@ -12,7 +13,7 @@ import useToast from "../hooks/useToast.js";
 
 export default function Login() {
   const { login } = useAuth();
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit, getValues } = useForm();
   const navigate = useNavigate();
   const toast = useToast();
   const [isSignUp, setIsSignUp] = useState(false);
@@ -39,6 +40,22 @@ export default function Login() {
       setSearchParams({}, { replace: true });
     }
   }, [searchParams, setSearchParams, toast]);
+
+  // Sends a reset link to whatever is in the email field
+  const handleForgotPassword = async () => {
+    const email = getValues("email")?.trim();
+    if (!email) {
+      toast.error("Enter your email address first");
+      return;
+    }
+    try {
+      await authApi.forgotPassword(email);
+      toast.success("If that email exists, a reset link has been sent");
+    } catch (err) {
+      console.error(err);
+      toast.error("Could not send reset link");
+    }
+  };
 
   const handleOAuth = (provider) => {
     window.location.href = authApi.oauthUrl(provider);
@@ -137,10 +154,18 @@ export default function Login() {
             <div className="mb-6">
               <div className="flex justify-between items-center mb-2">
                 <label className="text-sm">Password</label>
+                {!isSignUp && (
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="cursor-pointer text-sm text-primary hover:text-primary-hover"
+                  >
+                    Forgot password?
+                  </button>
+                )}
               </div>
-              <input
+              <PasswordInput
                 {...register("password")}
-                type="password"
                 required
                 className="border rounded-md p-3 w-full bg-background text-base sm:text-md border-border-muted focus:ring-1 focus:ring-border focus:outline-none"
                 placeholder="Enter your password"

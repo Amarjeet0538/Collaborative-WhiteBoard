@@ -33,15 +33,19 @@ export const useBoardSocket = (id, user, setStrokes) => {
     if (!id || !user) return;
     const socket = connect();
 
-    socket.emit("join-board", {
-      boardId: id,
-      userId: user.id,
-      username: user.name,
-    });
+    // Identity comes from the socket's JWT on the server
+    socket.emit("join-board", { boardId: id });
 
     socket.on("stroke-update", ({ stroke }) =>
       setStrokes((prev) => [...prev, stroke]),
     );
+
+    // Full-array replace from a collaborator's erase/undo/redo
+    socket.on("board-sync", ({ strokes }) => setStrokes(strokes));
+
+    socket.on("connect_error", (err) => {
+      console.error("Socket connection error:", err.message);
+    });
 
     socket.on("cursor-move", ({ socketId, username, color, x, y }) => {
       setCursors((prev) => ({

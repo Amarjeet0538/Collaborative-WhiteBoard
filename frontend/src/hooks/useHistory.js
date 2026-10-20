@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 
-export const useHistory = (strokes, setStrokes, emit) => {
+// onRestore(strokes) runs after undo/redo so the caller can sync and save
+export const useHistory = (strokes, setStrokes, onRestore) => {
   const [history, setHistory] = useState({ past: [], future: [] });
 
   const pushToHistory = useCallback(
@@ -15,30 +16,26 @@ export const useHistory = (strokes, setStrokes, emit) => {
   );
 
   const undo = useCallback(() => {
-    setHistory((h) => {
-      if (h.past.length === 0) return h;
-      const previousState = h.past[h.past.length - 1];
-      setStrokes(previousState);
-      if (emit) emit("board-sync", previousState);
-      return {
-        past: h.past.slice(0, -1),
-        future: [strokes, ...h.future],
-      };
+    if (history.past.length === 0) return;
+    const previousState = history.past[history.past.length - 1];
+    setHistory({
+      past: history.past.slice(0, -1),
+      future: [strokes, ...history.future],
     });
-  }, [strokes, setStrokes, emit]);
+    setStrokes(previousState);
+    if (onRestore) onRestore(previousState);
+  }, [history, strokes, setStrokes, onRestore]);
 
   const redo = useCallback(() => {
-    setHistory((h) => {
-      if (h.future.length === 0) return h;
-      const nextState = h.future[0];
-      setStrokes(nextState);
-      if (emit) emit("board-sync", nextState);
-      return {
-        past: [...h.past, strokes],
-        future: h.future.slice(1),
-      };
+    if (history.future.length === 0) return;
+    const nextState = history.future[0];
+    setHistory({
+      past: [...history.past, strokes],
+      future: history.future.slice(1),
     });
-  }, [strokes, setStrokes, emit]);
+    setStrokes(nextState);
+    if (onRestore) onRestore(nextState);
+  }, [history, strokes, setStrokes, onRestore]);
 
   return {
     pushToHistory,

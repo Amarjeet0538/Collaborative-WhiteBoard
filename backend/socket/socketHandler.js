@@ -1,9 +1,28 @@
-import { COLORS } from '../utils/constants.js';
+import mongoose from 'mongoose';
+import Whiteboard from '../models/Whiteboard.js';
+import User from '../models/User.js';
+import { verifyToken } from '../services/tokenService.js';
+import { COLORS, ROLES } from '../utils/constants.js';
 
 const boardUsers = {};
 
 const getColor = (index) => {
   return COLORS[index % COLORS.length];
+};
+
+// Returns the user's role on the board, or null if they have no access
+const getBoardRole = async (boardId, userId) => {
+  if (!mongoose.isValidObjectId(boardId)) return null;
+  const board = await Whiteboard.findById(boardId).select('owner sharedWith');
+  if (!board) return null;
+  if (board.owner.equals(userId)) return ROLES.OWNER;
+  const share = board.sharedWith.find((s) => s.userId?.equals(userId));
+  return share ? share.role : null;
+};
+
+const canEdit = (socket, boardId) => {
+  const user = boardUsers[boardId]?.[socket.id];
+  return Boolean(user) && user.role !== ROLES.VIEWER;
 };
 
 const handleLeave = (socket, boardId, io) => {
@@ -20,28 +39,59 @@ const handleLeave = (socket, boardId, io) => {
   socket.leave(boardId);
 };
 
+const authenticate = (socket, next) => {
+  const { token } = socket.handshake.auth || {};
+  if (!token) return next(new Error('Not authorized, no token'));
+  try {
+    socket.data.userId = verifyToken(token).id;
+    next();
+  } catch {
+    next(new Error('Token invalid or expired'));
+  }
+};
+
 export const initSocket = (io) => {
+  io.use(authenticate);
+
   io.on('connection', (socket) => {
     console.log('Socket connected:', socket.id);
 
-    socket.on('join-board', ({ boardId, userId, username }) => {
-      socket.join(boardId);
+    socket.on('join-board', async ({ boardId }) => {
+      try {
+        const { userId } = socket.data;
+        const [role, user] = await Promise.all([
+          getBoardRole(boardId, userId),
+          User.findById(userId).select('name'),
+        ]);
+        if (!role || !user) return;
 
-      if (!boardUsers[boardId]) boardUsers[boardId] = {};
+        socket.join(boardId);
 
-      const userCount = Object.keys(boardUsers[boardId]).length;
-      boardUsers[boardId][socket.id] = {
-        userId,
-        username,
-        color: getColor(userCount),
-      };
+        if (!boardUsers[boardId]) boardUsers[boardId] = {};
 
-      io.to(boardId).emit('presence-update', Object.values(boardUsers[boardId]));
-      console.log(`${username} joined board ${boardId}`);
+        const userCount = Object.keys(boardUsers[boardId]).length;
+        boardUsers[boardId][socket.id] = {
+          userId,
+          username: user.name,
+          color: getColor(userCount),
+          role,
+        };
+
+        io.to(boardId).emit('presence-update', Object.values(boardUsers[boardId]));
+        console.log(`${user.name} joined board ${boardId}`);
+      } catch (err) {
+        console.error('join-board error:', err);
+      }
     });
 
     socket.on('stroke-update', ({ boardId, stroke }) => {
+      if (!canEdit(socket, boardId)) return;
       socket.to(boardId).emit('stroke-update', { stroke, socketId: socket.id });
+    });
+
+    socket.on('board-sync', ({ boardId, strokes }) => {
+      if (!canEdit(socket, boardId) || !Array.isArray(strokes)) return;
+      socket.to(boardId).emit('board-sync', { strokes, socketId: socket.id });
     });
 
     socket.on('cursor-move', ({ boardId, x, y }) => {

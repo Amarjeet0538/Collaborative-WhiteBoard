@@ -17,13 +17,17 @@ load_dotenv()
 
 app = FastAPI(title="Whiteboard ML Engine")
 
-# 2. Get the frontend URL from the environment, with a fallback just in case
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+# 2. Get the frontend origins (comma-separated) from the environment
+ALLOWED_ORIGINS = [
+    origin.strip().rstrip("/")
+    for origin in os.getenv("FRONTEND_URL", "http://localhost:5173").split(",")
+    if origin.strip()
+]
 
-# 3. Use it in your CORS middleware
+# 3. Use them in your CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL, "https://lienwand.vercel.app"],  # Allow local and prod
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

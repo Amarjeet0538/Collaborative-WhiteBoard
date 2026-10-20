@@ -4,6 +4,9 @@ import { hashPassword, comparePassword } from "../services/passwordService.js";
 import { generateToken } from "../services/tokenService.js";
 import { getProvider } from "../services/oauthService.js";
 import catchAsync from "../utils/catchAsync.js";
+import { ALLOWED_ORIGINS } from "../utils/constants.js";
+import ApiError from "../utils/ApiError.js";
+import { sendPasswordResetEmail } from "../services/emailService.js";
 
 const OAUTH_STATE_COOKIE = "oauth_state";
 
@@ -16,7 +19,7 @@ const readCookie = (req, name) => {
 };
 
 const redirectToClient = (res, path) =>
-  res.redirect(`${process.env.CLIENT_URL.replace(/\/$/, "")}${path}`);
+  res.redirect(`${ALLOWED_ORIGINS[0]}${path}`);
 
 export const oauthStart = catchAsync(async (req, res) => {
   const provider = getProvider(req.params.provider);
@@ -123,4 +126,48 @@ export const login = catchAsync(async (req, res) => {
 export const getMe = catchAsync(async (req, res) => {
   const user = await User.findById(req.user.id).select("-password");
   res.json(user);
+});
+
+const RESET_TOKEN_TTL = 15 * 60 * 1000;
+const hashResetToken = (token) =>
+  crypto.createHash("sha256").update(token).digest("hex");
+
+// Always responds the same way so emails can't be enumerated
+export const forgotPassword = catchAsync(async (req, res) => {
+  const user = await User.findOne({ email: req.body.email });
+
+  if (user) {
+    const token = crypto.randomBytes(32).toString("hex");
+    user.passwordResetToken = hashResetToken(token);
+    user.passwordResetExpires = new Date(Date.now() + RESET_TOKEN_TTL);
+    await user.save();
+
+    try {
+      await sendPasswordResetEmail(
+        user.email,
+        `${ALLOWED_ORIGINS[0]}/reset-password?token=${token}`,
+      );
+    } catch (err) {
+      console.error("Reset email error:", err.message);
+    }
+  }
+
+  res.json({ message: "If that email exists, a reset link has been sent" });
+});
+
+export const resetPassword = catchAsync(async (req, res) => {
+  const { token, password } = req.body;
+
+  const user = await User.findOne({
+    passwordResetToken: hashResetToken(token),
+    passwordResetExpires: { $gt: new Date() },
+  });
+  if (!user) throw ApiError.badRequest("Reset link is invalid or has expired");
+
+  user.password = await hashPassword(password);
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  await user.save();
+
+  res.json({ message: "Password updated" });
 });

@@ -15,6 +15,20 @@ export const authApi = {
     });
   },
 
+  forgotPassword: async (email) => {
+    return apiFetch('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
+
+  resetPassword: async (token, password) => {
+    return apiFetch('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, password }),
+    });
+  },
+
   getMe: async () => {
     return apiFetch('/auth/me');
   },

@@ -27,6 +27,19 @@ export const loginValidation = [
   validate,
 ];
 
+export const forgotPasswordValidation = [
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+  validate,
+];
+
+export const resetPasswordValidation = [
+  body('token').isHexadecimal().isLength({ min: 64, max: 64 }).withMessage('Invalid token'),
+  body('password')
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters'),
+  validate,
+];
+
 export const whiteboardIdValidation = [
   param('id').isMongoId().withMessage('Invalid whiteboard ID'),
   validate,

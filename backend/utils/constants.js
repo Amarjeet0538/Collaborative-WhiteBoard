@@ -9,10 +9,11 @@ export const COLORS = [
   "#F15BB5",
 ];
 
-export const ALLOWED_ORIGINS = [
-  "http://localhost:5173",
-  "https://lienwand.vercel.app",
-];
+// CLIENT_URL may hold several comma-separated origins
+export const ALLOWED_ORIGINS = (process.env.CLIENT_URL || "http://localhost:5173")
+  .split(",")
+  .map((origin) => origin.trim().replace(/\/$/, ""))
+  .filter(Boolean);
 
 export const JWT_EXPIRY = "7d";
 export const TOOLS = {

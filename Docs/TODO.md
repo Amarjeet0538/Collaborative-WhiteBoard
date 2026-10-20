@@ -43,7 +43,7 @@ zg8M9QiML1HsLqc3
 - [-] add notification attribute to the users database model
 - [-] Whiteboard card make design good like add owner and shared peoples , make the thumbnail size less
 - [-] Add Profile Pics to Users
-- [ ] Google and Github Integration for Login
+- [-] Google and Github Integration for Login
 - [-] Add Button Feature/Name on Hovering it
 - [-] Notification System including Toast Popups
 - [-] Correct the toast usage and name on hover icons
@@ -53,7 +53,7 @@ zg8M9QiML1HsLqc3
 - [-] min size of grids
 - [-] use username insted of user in sharepanel
 - [-] use usedebounce in debounce save in usewhiteboard page
-- [ ] Forgot and Show Password
+- [-] Forgot and Show Password
 - [ ] Add a global state for dark/light mode
 - [-] Add Shimmer UI
 - [-] Add Home Button in Whiteboard
@@ -80,4 +80,4 @@ make account settings good
 - [-] selection tool and make shape dimention changable and del to delete the shape
 - [ ] live chat
 
-- [ ] good backend service platform ditch render
+- [-] good backend service platform ditch render

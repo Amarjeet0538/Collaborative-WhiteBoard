@@ -1,5 +1,6 @@
 import { useRef, useCallback } from "react";
 import { io } from "socket.io-client";
+import { storage } from "../utils/storage.js";
 
 const SOCKET_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
@@ -10,6 +11,8 @@ export const useSocket = () => {
     if (!socketRef.current) {
       socketRef.current = io(SOCKET_URL, {
         autoConnect: false,
+        // Read the token on every (re)connect so it's never stale
+        auth: (cb) => cb({ token: storage.getToken() }),
       });
     }
     socketRef.current.connect();

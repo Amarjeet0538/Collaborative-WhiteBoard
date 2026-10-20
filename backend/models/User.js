@@ -23,6 +23,9 @@ const userSchema = new mongoose.Schema(
       minlength: 6,
       select: false,
     },
+    // sha256 of the emailed reset token
+    passwordResetToken: { type: String, select: false },
+    passwordResetExpires: { type: Date, select: false },
     googleId: { type: String, unique: true, sparse: true },
     githubId: { type: String, unique: true, sparse: true },
     profilePicture: {

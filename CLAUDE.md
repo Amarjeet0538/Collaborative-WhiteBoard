@@ -47,8 +47,9 @@ A board (`backend/models/Whiteboard.js`) stores its whole content as one embedde
 ### Persistence vs. realtime are separate paths
 
 - **Persistence is REST only.** `WhiteboardPage.handleStrokesChange` debounces (1s, `useWhiteboard.debouncedSave`) a `PUT /api/whiteboards/:id` with the _full_ strokes array, then uploads a canvas-rendered JPEG thumbnail to `POST /:id/thumbnail` (→ Cloudinary). Images are uploaded via `POST /:id/upload-image` (multer memory storage → Cloudinary) and stored as URLs.
-- **Socket.io is a stateless relay** (`backend/socket/socketHandler.js`). It keeps in-memory presence per board (`boardUsers`) and relays `join-board`, `leave-board`, `stroke-update`, `cursor-move`, emitting `presence-update` / `cursor-leave`. It never writes to MongoDB and does not authenticate the socket (the client sends `auth.token` but the server ignores it).
-- The frontend emits `board-sync` (on erase, undo, redo — see `useHistory.js` and `WhiteboardPage.jsx`) but **the backend has no `board-sync` handler**, so those changes only reach other clients after they reload from the DB. Note `useHistory` also emits a bare strokes array, unlike `WhiteboardPage`'s `{ boardId, strokes }` payload.
+- **Socket.io is a stateless relay** (`backend/socket/socketHandler.js`). It keeps in-memory presence per board (`boardUsers`) and relays `join-board`, `leave-board`, `stroke-update`, `board-sync`, `cursor-move`, emitting `presence-update` / `cursor-leave`. It never writes to MongoDB.
+- Sockets are authenticated by an `io.use` middleware that verifies `handshake.auth.token` (JWT) and sets `socket.data.userId`. `join-board` checks board access in the DB and takes the username from `User`, not the client. `stroke-update` / `board-sync` are dropped for sockets that haven't joined or are `viewer`s.
+- `stroke-update` carries one added stroke. `board-sync` (`{ boardId, strokes }`) carries the full array and is sent on erase, undo and redo; undo/redo also save via `persistStrokes` in `WhiteboardPage.jsx`.
 
 ### Frontend structure
 
@@ -66,4 +67,4 @@ Holding still at the end of a stroke (`useCanvas` hold timer) calls `utils/shape
 - Controllers are wrapped in `utils/catchAsync`; throw `ApiError` (with `isOperational`) for client-facing errors — non-operational errors are masked as 500 unless `NODE_ENV=development`.
 - Validation uses express-validator chains in `middleware/validationMiddleware.js`, ending with `validate`.
 - `protect` middleware puts the decoded JWT (`{ id }`) on `req.user`.
-- CORS is hand-rolled in `app.js` and in `config/socket.js`, both driven by `ALLOWED_ORIGINS` in `utils/constants.js` (not by `CLIENT_URL`). Add new frontend origins there; the Python server has its own CORS list in `main.py`.
+- CORS is hand-rolled in `app.js` and in `config/socket.js`, both driven by `ALLOWED_ORIGINS` in `utils/constants.js`, which is parsed from the comma-separated `CLIENT_URL` env (default `http://localhost:5173`). Its first entry is also the OAuth redirect target. The Python server reads a comma-separated `FRONTEND_URL` the same way.

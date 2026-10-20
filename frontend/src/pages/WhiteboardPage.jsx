@@ -59,10 +59,42 @@ export default function WhiteboardPage() {
     emit,
   } = useBoardSocket(id, user, setStrokes);
 
+  // Debounced save of the full strokes array + thumbnail
+  const persistStrokes = useCallback(
+    (newStrokes) => {
+      setSaving(true);
+      debouncedSave(newStrokes, async (strokesToSave) => {
+        try {
+          await whiteboardApi.update(id, {
+            strokes: strokesToSave,
+            name: boardName,
+          });
+          const canvasElement = canvasRef.current?.getCanvas();
+          if (canvasElement) await saveThumbnail(canvasElement);
+        } catch (err) {
+          console.error("Save error:", err);
+          toast.error("Failed to save changes");
+        } finally {
+          setSaving(false);
+        }
+      });
+    },
+    [id, boardName, debouncedSave, saveThumbnail, toast],
+  );
+
+  // Undo/redo: broadcast the restored array and save it
+  const handleHistoryRestore = useCallback(
+    (restoredStrokes) => {
+      emit("board-sync", { boardId: id, strokes: restoredStrokes });
+      persistStrokes(restoredStrokes);
+    },
+    [id, emit, persistStrokes],
+  );
+
   const { pushToHistory, undo, redo, canUndo, canRedo } = useHistory(
     strokes,
     setStrokes,
-    emit,
+    handleHistoryRestore,
   );
   const isDrawMode = !isSpacePressed && !isPinching && tool !== "hand";
   const [textColor, setTextColor] = useState("#000000");
@@ -99,34 +131,10 @@ export default function WhiteboardPage() {
         emit("board-sync", { boardId: id, strokes: newStrokes });
       }
 
-      // 3. Save to DB (your existing logic, unchanged)
-      setSaving(true);
-      debouncedSave(newStrokes, async (strokesToSave) => {
-        try {
-          await whiteboardApi.update(id, {
-            strokes: strokesToSave,
-            name: boardName,
-          });
-          const canvasElement = canvasRef.current?.getCanvas();
-          if (canvasElement) await saveThumbnail(canvasElement);
-        } catch (err) {
-          console.error("Save error:", err);
-          toast.error("Failed to save changes");
-        } finally {
-          setSaving(false);
-        }
-      });
+      // 3. Save to DB
+      persistStrokes(newStrokes);
     },
-    [
-      id,
-      boardName,
-      strokes,
-      pushToHistory,
-      emit,
-      debouncedSave,
-      saveThumbnail,
-      toast,
-    ],
+    [id, strokes, pushToHistory, emit, persistStrokes],
   );
 
   const handleRespond = async (requestId, approve) => {
