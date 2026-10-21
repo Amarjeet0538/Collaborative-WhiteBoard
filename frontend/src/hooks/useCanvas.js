@@ -1,11 +1,26 @@
 // frontend/src/hooks/useCanvas.js
-import { useEffect, useRef, useState, useCallback } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useCallback,
+} from "react";
 
 import { recognizeShape } from "../utils/shapeRecognizer.js";
 import {
   generatePerfectShape,
   generateShapePoints,
 } from "../utils/shapeGeometry.js";
+import { createSpatialIndex } from "../utils/spatialIndex.js";
+
+const HANDLE_SIZE = 8; // in workspace units, adjusted by scale when hit-testing
+const STABILITY_THRESHOLD = 10;
+const HOLD_DELAY = 1000; // 1 second
+
+const getDpr = () => window.devicePixelRatio || 2;
+
+const isBoxStroke = (s) => s.tool === "image" || s.tool === "text";
 
 const getDistanceToSegment = (p, v, w) => {
   const l2 = (v[0] - w[0]) ** 2 + (v[1] - w[1]) ** 2;
@@ -18,6 +33,117 @@ const getDistanceToSegment = (p, v, w) => {
   );
 };
 
+const getStrokeBBox = (stroke, ctx) => {
+  if (stroke.tool === "image") {
+    return {
+      minX: stroke.x,
+      minY: stroke.y,
+      maxX: stroke.x + stroke.width,
+      maxY: stroke.y + stroke.height,
+    };
+  }
+  if (stroke.tool === "text") {
+    if (!stroke.text || !ctx)
+      return {
+        minX: stroke.x,
+        minY: stroke.y,
+        maxX: stroke.x,
+        maxY: stroke.y,
+      };
+    ctx.font = `${stroke.fontSize}px sans-serif`;
+    const lines = stroke.text.split("\n");
+    const w = Math.max(...lines.map((l) => ctx.measureText(l).width), 10);
+    const h = stroke.fontSize * 1.3 * lines.length;
+    return {
+      minX: stroke.x,
+      minY: stroke.y,
+      maxX: stroke.x + w,
+      maxY: stroke.y + h,
+    };
+  }
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
+  stroke.points.forEach(([x, y]) => {
+    minX = Math.min(minX, x);
+    minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x);
+    maxY = Math.max(maxY, y);
+  });
+  return { minX, minY, maxX, maxY };
+};
+
+// Index entry: the stroke's bbox padded by its line width, plus its z-order
+const makeIndexItem = (stroke, order, ctx) => {
+  if (!isBoxStroke(stroke) && !stroke.points?.length) return null;
+  const b = getStrokeBBox(stroke, ctx);
+  if (![b.minX, b.minY, b.maxX, b.maxY].every(Number.isFinite)) return null;
+  const pad = isBoxStroke(stroke) ? 0 : (stroke.size || 4) / 2;
+  return {
+    minX: b.minX - pad,
+    minY: b.minY - pad,
+    maxX: b.maxX + pad,
+    maxY: b.maxY + pad,
+    stroke,
+    order,
+  };
+};
+
+const getHandleAt = (x, y, bbox, scale) => {
+  const s = HANDLE_SIZE / scale;
+  const corners = {
+    tl: [bbox.minX, bbox.minY],
+    tr: [bbox.maxX, bbox.minY],
+    bl: [bbox.minX, bbox.maxY],
+    br: [bbox.maxX, bbox.maxY],
+  };
+  for (const [key, [hx, hy]] of Object.entries(corners)) {
+    if (Math.hypot(x - hx, y - hy) <= s) return key;
+  }
+  return null;
+};
+
+// Clears the canvas and applies dpr + camera as one transform
+const beginFrame = (ctx, canvas, camera) => {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const k = getDpr();
+  ctx.setTransform(
+    k * camera.scale,
+    0,
+    0,
+    k * camera.scale,
+    k * camera.x,
+    k * camera.y,
+  );
+};
+
+const renderStroke = (ctx, stroke) => {
+  if (!stroke || !stroke.points?.length) return;
+  ctx.beginPath();
+  ctx.strokeStyle = stroke.color;
+  ctx.lineWidth = stroke.size;
+  ctx.globalCompositeOperation = "source-over";
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  stroke.points.forEach(([x, y], i) => {
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+};
+
+const renderText = (ctx, stroke) => {
+  if (typeof stroke.text !== "string") return;
+  ctx.fillStyle = stroke.color;
+  ctx.font = `${stroke.fontSize}px sans-serif`;
+  ctx.textBaseline = "top";
+  const lineHeight = stroke.fontSize * 1.3;
+  stroke.text.split("\n").forEach((line, i) => {
+    ctx.fillText(line, stroke.x, stroke.y + i * lineHeight);
+  });
+};
+
 export const useCanvas = (props) => {
   const {
     tool,
@@ -26,17 +152,29 @@ export const useCanvas = (props) => {
     eraserSize,
     shapeType = "rectangle",
     onStrokesChange,
+    onStrokeProgress,
+    onStrokeCancel,
     loadStrokes,
-    onCursorMove,
+    live,
     camera = { x: 0, y: 0, scale: 1 },
   } = props;
 
   const erasedDuringDrag = useRef(false);
+  // Two layers: committed strokes on the base canvas, in-progress strokes and
+  // selection UI on the overlay (which also receives pointer events)
   const canvasRef = useRef(null);
+  const overlayRef = useRef(null);
   const contextRef = useRef(null);
+  const overlayCtxRef = useRef(null);
+  const cameraRef = useRef(camera);
   const strokesRef = useRef([]);
   const currentStroke = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  // { tree, items: Map<strokeId, indexItem> }
+  const [spatial] = useState(() => ({
+    tree: createSpatialIndex(),
+    items: new Map(),
+  }));
 
   // Hold to Snap Timing References
   const holdTimerRef = useRef(null);
@@ -48,14 +186,53 @@ export const useCanvas = (props) => {
   const [selectedId, setSelectedId] = useState(null);
   const dragStateRef = useRef(null); // { mode: 'move'|'resize', handle, original, startX, startY, bbox, strokeId }
   const imageCacheRef = useRef(new Map());
-  const STABILITY_THRESHOLD = 10;
-  const HOLD_DELAY = 1000; // 1 second
 
-  // --- HOISTED CONSTANTS AND HELPERS ---
-  const HANDLE_SIZE = 8; // in workspace units, adjusted by scale when hit-testing
+  // Points of the current stroke already streamed to collaborators
+  const progressRef = useRef({ id: null, sent: 0, reset: false });
+
+  // --- Render scheduling: at most one draw per layer per animation frame ---
+  const dirtyRef = useRef({ base: false, overlay: false });
+  const frameRef = useRef(null);
+  const renderFrameRef = useRef(() => {});
+
+  const requestRender = useCallback((base = true, overlay = true) => {
+    const dirty = dirtyRef.current;
+    dirty.base = dirty.base || base;
+    dirty.overlay = dirty.overlay || overlay;
+    if (frameRef.current !== null) return;
+    frameRef.current = requestAnimationFrame(() => {
+      frameRef.current = null;
+      renderFrameRef.current();
+    });
+  }, []);
+
+  const rebuildIndex = useCallback(() => {
+    spatial.tree.clear();
+    spatial.items.clear();
+    strokesRef.current.forEach((s, i) => {
+      const item = makeIndexItem(s, i, contextRef.current);
+      if (!item) return;
+      spatial.tree.insert(item);
+      spatial.items.set(s.id, item);
+    });
+  }, [spatial]);
+
+  // (Re)index one stroke after it was added or changed in place
+  const indexStroke = useCallback(
+    (stroke) => {
+      const old = spatial.items.get(stroke.id);
+      if (old) spatial.tree.remove(old);
+      const order = old ? old.order : strokesRef.current.length - 1;
+      const item = makeIndexItem(stroke, order, contextRef.current);
+      if (!item) return spatial.items.delete(stroke.id);
+      spatial.tree.insert(item);
+      spatial.items.set(stroke.id, item);
+    },
+    [spatial],
+  );
 
   const getMouseCoordinates = (e) => {
-    const canvas = canvasRef.current;
+    const canvas = overlayRef.current;
     const rect = canvas.getBoundingClientRect();
     const offsetX = e.clientX - rect.left;
     const offsetY = e.clientY - rect.top;
@@ -65,164 +242,153 @@ export const useCanvas = (props) => {
     };
   };
 
-  const getStrokeBBox = (stroke) => {
-    if (stroke.tool === "image") {
-      return {
-        minX: stroke.x,
-        minY: stroke.y,
-        maxX: stroke.x + stroke.width,
-        maxY: stroke.y + stroke.height,
-      };
+  const renderImage = (ctx, stroke) => {
+    let img = imageCacheRef.current.get(stroke.imageUrl);
+    if (!img) {
+      img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = stroke.imageUrl;
+      img.onload = () => requestRender(true, false);
+      imageCacheRef.current.set(stroke.imageUrl, img);
     }
-    if (stroke.tool === "text") {
-      if (!stroke.text)
-        return {
-          minX: stroke.x,
-          minY: stroke.y,
-          maxX: stroke.x,
-          maxY: stroke.y,
-        };
-      const ctx = contextRef.current;
-      ctx.font = `${stroke.fontSize}px sans-serif`;
-      const lines = stroke.text.split("\n");
-      const w = Math.max(...lines.map((l) => ctx.measureText(l).width), 10);
-      const h = stroke.fontSize * 1.3 * lines.length;
-      return {
-        minX: stroke.x,
-        minY: stroke.y,
-        maxX: stroke.x + w,
-        maxY: stroke.y + h,
-      };
+    if (img.complete && img.naturalWidth) {
+      ctx.drawImage(img, stroke.x, stroke.y, stroke.width, stroke.height);
     }
-    let minX = Infinity,
-      minY = Infinity,
-      maxX = -Infinity,
-      maxY = -Infinity;
-    stroke.points.forEach(([x, y]) => {
-      minX = Math.min(minX, x);
-      minY = Math.min(minY, y);
-      maxX = Math.max(maxX, x);
-      maxY = Math.max(maxY, y);
-    });
-    return { minX, minY, maxX, maxY };
   };
 
-  const getHandleAt = (x, y, bbox) => {
-    const s = HANDLE_SIZE / camera.scale;
-    const corners = {
-      tl: [bbox.minX, bbox.minY],
-      tr: [bbox.maxX, bbox.minY],
-      bl: [bbox.minX, bbox.maxY],
-      br: [bbox.maxX, bbox.maxY],
-    };
-    for (const [key, [hx, hy]] of Object.entries(corners)) {
-      if (Math.hypot(x - hx, y - hy) <= s) return key;
-    }
-    return null;
-  };
-  // -------------------------------------
-
-  const redraw = useCallback(() => {
+  const drawBase = () => {
     const ctx = contextRef.current;
     const canvas = canvasRef.current;
     if (!ctx || !canvas) return;
+    const cam = cameraRef.current;
+    beginFrame(ctx, canvas, cam);
 
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    const dpr = window.devicePixelRatio || 2;
-    ctx.save();
-    ctx.scale(dpr, dpr);
-    ctx.translate(camera.x, camera.y);
-    ctx.scale(camera.scale, camera.scale);
-
-    const renderStroke = (stroke) => {
-      if (!stroke || !stroke.points.length) return;
-      ctx.beginPath();
-      ctx.strokeStyle = stroke.color;
-      ctx.lineWidth = stroke.size;
-      ctx.globalCompositeOperation = "source-over";
-      ctx.lineJoin = "round";
-      ctx.lineCap = "round";
-      stroke.points.forEach(([x, y], i) => {
-        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    // Only strokes intersecting the viewport (images off-screen never load)
+    const dpr = getDpr();
+    const view = {
+      minX: -cam.x / cam.scale,
+      minY: -cam.y / cam.scale,
+      maxX: (canvas.width / dpr - cam.x) / cam.scale,
+      maxY: (canvas.height / dpr - cam.y) / cam.scale,
+    };
+    spatial.tree
+      .search(view)
+      .sort((a, b) => a.order - b.order)
+      .forEach(({ stroke }) => {
+        if (stroke.tool === "image") renderImage(ctx, stroke);
+        else if (stroke.tool === "text") renderText(ctx, stroke);
+        else renderStroke(ctx, stroke);
       });
-      ctx.stroke();
-    };
+  };
 
-    const renderImage = (stroke) => {
-      let img = imageCacheRef.current.get(stroke.imageUrl);
-      if (!img) {
-        img = new Image();
-        img.crossOrigin = "anonymous";
-        img.src = stroke.imageUrl;
-        img.onload = () => redraw();
-        imageCacheRef.current.set(stroke.imageUrl, img);
-      }
-      if (img.complete && img.naturalWidth) {
-        ctx.drawImage(img, stroke.x, stroke.y, stroke.width, stroke.height);
-      }
-    };
+  const drawOverlay = () => {
+    const ctx = overlayCtxRef.current;
+    const canvas = overlayRef.current;
+    if (!ctx || !canvas) return;
+    const cam = cameraRef.current;
+    beginFrame(ctx, canvas, cam);
 
-    const renderText = (stroke) => {
-      if (typeof stroke.text !== "string") return;
-      ctx.fillStyle = stroke.color;
-      ctx.font = `${stroke.fontSize}px sans-serif`;
-      ctx.textBaseline = "top";
-      const lineHeight = stroke.fontSize * 1.3;
-      stroke.text.split("\n").forEach((line, i) => {
-        ctx.fillText(line, stroke.x, stroke.y + i * lineHeight);
-      });
-    };
-
-    strokesRef.current.forEach((stroke) => {
-      if (stroke.tool === "image") renderImage(stroke);
-      else if (stroke.tool === "text") renderText(stroke);
-      else renderStroke(stroke);
-    });
-    if (currentStroke.current) renderStroke(currentStroke.current);
+    live?.get().forEach((s) => renderStroke(ctx, s));
+    if (currentStroke.current) renderStroke(ctx, currentStroke.current);
 
     if (tool === "select" && selectedId) {
       const sel = strokesRef.current.find((s) => s.id === selectedId);
       if (sel) {
-        const { minX, minY, maxX, maxY } = getStrokeBBox(sel);
-        ctx.save();
+        const { minX, minY, maxX, maxY } = getStrokeBBox(sel, ctx);
         ctx.strokeStyle = "#3B82F6";
-        ctx.lineWidth = 1 / camera.scale;
-        ctx.setLineDash([6 / camera.scale, 4 / camera.scale]);
+        ctx.lineWidth = 1 / cam.scale;
+        ctx.setLineDash([6 / cam.scale, 4 / cam.scale]);
         ctx.strokeRect(minX, minY, maxX - minX, maxY - minY);
         ctx.setLineDash([]);
         ctx.fillStyle = "#3B82F6";
-        const hs = HANDLE_SIZE / camera.scale;
+        const hs = HANDLE_SIZE / cam.scale;
         [
           [minX, minY],
           [maxX, minY],
           [minX, maxY],
           [maxX, maxY],
         ].forEach(([hx, hy]) => ctx.fillRect(hx - hs / 2, hy - hs / 2, hs, hs));
-        ctx.restore();
       }
     }
+  };
 
-    ctx.restore();
-  }, [camera, tool, selectedId]);
+  // Stream new points of the in-progress stroke (batched per frame)
+  const flushProgress = () => {
+    const s = currentStroke.current;
+    if (!s || !onStrokeProgress) return;
+    const p = progressRef.current;
+    const full = p.id !== s.id || p.reset;
+    const from = full ? 0 : p.sent;
+    if (!full && s.points.length <= from) return;
+    onStrokeProgress(
+      { id: s.id, color: s.color, size: s.size, tool: s.tool },
+      from,
+      s.points.slice(from),
+    );
+    progressRef.current = { id: s.id, sent: s.points.length, reset: false };
+  };
+
+  const renderFrame = () => {
+    const dirty = dirtyRef.current;
+    if (dirty.base) drawBase();
+    if (dirty.overlay) drawOverlay();
+    dirtyRef.current = { base: false, overlay: false };
+    flushProgress();
+  };
+
+  useLayoutEffect(() => {
+    renderFrameRef.current = renderFrame;
+  });
+
+  useLayoutEffect(() => {
+    cameraRef.current = camera;
+    requestRender();
+  }, [camera, requestRender]);
+
+  useEffect(() => {
+    requestRender(false, true);
+  }, [tool, selectedId, requestRender]);
+
+  // Remote in-progress strokes changed — draw them right away
+  useEffect(() => {
+    if (!live) return;
+    return live.subscribe(() => {
+      dirtyRef.current.overlay = true;
+      renderFrameRef.current();
+    });
+  }, [live]);
+
+  // Reset the handle too: StrictMode re-runs effects, and a stale non-null
+  // handle would make requestRender think a frame is pending forever
+  useEffect(
+    () => () => {
+      cancelAnimationFrame(frameRef.current);
+      frameRef.current = null;
+    },
+    [],
+  );
 
   const hitTestStroke = (x, y) => {
-    for (let i = strokesRef.current.length - 1; i >= 0; i--) {
-      const s = strokesRef.current[i];
-      if (s.tool === "image" || s.tool === "text") {
-        const { minX, minY, maxX, maxY } = getStrokeBBox(s);
+    const pad = 6 / camera.scale;
+    const candidates = spatial.tree
+      .search({ minX: x - pad, minY: y - pad, maxX: x + pad, maxY: y + pad })
+      .sort((a, b) => b.order - a.order);
+    for (const { stroke: s } of candidates) {
+      if (isBoxStroke(s)) {
+        const { minX, minY, maxX, maxY } = getStrokeBBox(s, contextRef.current);
         if (x >= minX && x <= maxX && y >= minY && y <= maxY) return s.id;
         continue;
       }
-      const pad = (s.size || 4) / 2 + 6 / camera.scale;
+      const reach = (s.size || 4) / 2 + pad;
       for (let j = 0; j < s.points.length - 1; j++) {
-        if (getDistanceToSegment([x, y], s.points[j], s.points[j + 1]) <= pad) {
+        if (
+          getDistanceToSegment([x, y], s.points[j], s.points[j + 1]) <= reach
+        ) {
           return s.id;
         }
       }
       if (s.points.length === 1) {
-        if (Math.hypot(s.points[0][0] - x, s.points[0][1] - y) <= pad)
+        if (Math.hypot(s.points[0][0] - x, s.points[0][1] - y) <= reach)
           return s.id;
       }
     }
@@ -232,10 +398,11 @@ export const useCanvas = (props) => {
   const deleteSelected = useCallback(() => {
     if (!selectedId) return;
     strokesRef.current = strokesRef.current.filter((s) => s.id !== selectedId);
+    rebuildIndex();
     setSelectedId(null);
-    redraw();
+    requestRender();
     if (onStrokesChange) onStrokesChange([...strokesRef.current]);
-  }, [selectedId, redraw, onStrokesChange]);
+  }, [selectedId, rebuildIndex, requestRender, onStrokesChange]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -252,41 +419,40 @@ export const useCanvas = (props) => {
   const handleEraser = useCallback(
     (x, y) => {
       const hitRadius = eraserSize / 2 / camera.scale;
-      let erasedSomething = false;
+      const erased = new Set();
 
-      const remaining = strokesRef.current.filter((stroke) => {
-        if (stroke.tool === "image" || stroke.tool === "text") return true;
-        if (stroke.points.length === 1) {
-          const dist = Math.hypot(
-            stroke.points[0][0] - x,
-            stroke.points[0][1] - y,
-          );
-          if (dist <= hitRadius + stroke.size / 2) {
-            erasedSomething = true;
-            return false;
-          }
-        }
-        for (let i = 0; i < stroke.points.length - 1; i++) {
-          const dist = getDistanceToSegment(
-            [x, y],
-            stroke.points[i],
-            stroke.points[i + 1],
-          );
-          if (dist <= hitRadius + stroke.size / 2) {
-            erasedSomething = true;
-            return false;
-          }
-        }
-        return true;
-      });
+      spatial.tree
+        .search({
+          minX: x - hitRadius,
+          minY: y - hitRadius,
+          maxX: x + hitRadius,
+          maxY: y + hitRadius,
+        })
+        .forEach(({ stroke }) => {
+          if (isBoxStroke(stroke)) return;
+          const reach = hitRadius + stroke.size / 2;
+          const pts = stroke.points;
+          const hit =
+            pts.length === 1
+              ? Math.hypot(pts[0][0] - x, pts[0][1] - y) <= reach
+              : pts.some(
+                  (p, i) =>
+                    i < pts.length - 1 &&
+                    getDistanceToSegment([x, y], p, pts[i + 1]) <= reach,
+                );
+          if (hit) erased.add(stroke.id);
+        });
 
-      if (erasedSomething) {
-        strokesRef.current = remaining;
+      if (erased.size) {
+        strokesRef.current = strokesRef.current.filter(
+          (s) => !erased.has(s.id),
+        );
+        rebuildIndex();
         erasedDuringDrag.current = true;
-        redraw();
+        requestRender(true, false);
       }
     },
-    [eraserSize, camera.scale, redraw],
+    [eraserSize, camera.scale, spatial, rebuildIndex, requestRender],
   );
 
   const triggerShapeSnap = useCallback(async () => {
@@ -314,7 +480,8 @@ export const useCanvas = (props) => {
         currentStroke.current.points = snappedPoints;
         currentStroke.current.shapeType = predictedShape;
         hasSnappedRef.current = true;
-        redraw();
+        progressRef.current.reset = true;
+        requestRender(false, true);
         return;
       }
 
@@ -326,32 +493,58 @@ export const useCanvas = (props) => {
       if (committed) {
         committed.points = snappedPoints;
         committed.shapeType = predictedShape;
-        redraw();
+        indexStroke(committed);
+        requestRender(true, false);
         if (onStrokesChange) onStrokesChange([...strokesRef.current]);
       }
     } catch (error) {
       console.error("Shape snapping failed:", error);
     }
-  }, [redraw, onStrokesChange]);
+  }, [indexStroke, requestRender, onStrokesChange]);
 
+  // Keep both canvas bitmaps in sync with their CSS size (window resize, DevTools, zoom)
   useEffect(() => {
     const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 2;
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    const ctx = canvas.getContext("2d");
-    ctx.lineJoin = "round";
-    ctx.lineCap = "round";
-    contextRef.current = ctx;
+    const overlay = overlayRef.current;
+    contextRef.current = canvas.getContext("2d");
+    overlayCtxRef.current = overlay.getContext("2d");
+
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = getDpr();
+      for (const c of [canvas, overlay]) {
+        c.width = Math.round(rect.width * dpr);
+        c.height = Math.round(rect.height * dpr);
+      }
+      // Resizing blanks the bitmaps, so repaint synchronously
+      dirtyRef.current = { base: true, overlay: true };
+      renderFrameRef.current();
+    };
+
+    resize();
+    const observer = new ResizeObserver(resize);
+    observer.observe(canvas);
+    window.addEventListener("resize", resize);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", resize);
+    };
   }, []);
 
   useEffect(() => {
-    if (loadStrokes) {
-      strokesRef.current = [...loadStrokes];
-      redraw();
+    if (!loadStrokes) return;
+    strokesRef.current = [...loadStrokes];
+    rebuildIndex();
+    // Remote live strokes that have now been committed move to the base layer
+    const liveStrokes = live?.get();
+    if (liveStrokes?.size) {
+      const ids = new Set(loadStrokes.map((s) => s.id));
+      for (const id of liveStrokes.keys()) {
+        if (ids.has(id)) liveStrokes.delete(id);
+      }
     }
-  }, [loadStrokes, redraw]);
+    requestRender();
+  }, [loadStrokes, live, rebuildIndex, requestRender]);
 
   const startDrawing = (e) => {
     // Only the primary mouse button starts a stroke; touch/pen pointerdown
@@ -376,24 +569,23 @@ export const useCanvas = (props) => {
         ? strokesRef.current.find((s) => s.id === selectedId)
         : null;
       if (sel) {
-        const bbox = getStrokeBBox(sel);
-        const handle = getHandleAt(x, y, bbox);
+        const bbox = getStrokeBBox(sel, contextRef.current);
+        const handle = getHandleAt(x, y, bbox, camera.scale);
         if (handle) {
           dragStateRef.current = {
             mode: "resize",
             handle,
             bbox,
             strokeId: sel.id,
-            original:
-              sel.tool === "image" || sel.tool === "text"
-                ? {
-                    x: sel.x,
-                    y: sel.y,
-                    width: sel.width,
-                    height: sel.height,
-                    fontSize: sel.fontSize,
-                  }
-                : { points: sel.points.map((p) => [...p]) },
+            original: isBoxStroke(sel)
+              ? {
+                  x: sel.x,
+                  y: sel.y,
+                  width: sel.width,
+                  height: sel.height,
+                  fontSize: sel.fontSize,
+                }
+              : { points: sel.points.map((p) => [...p]) },
           };
           return;
         }
@@ -407,13 +599,12 @@ export const useCanvas = (props) => {
           startX: x,
           startY: y,
           strokeId: hitId,
-          original:
-            s.tool === "image" || s.tool === "text"
-              ? { x: s.x, y: s.y }
-              : { points: s.points.map((p) => [...p]) },
+          original: isBoxStroke(s)
+            ? { x: s.x, y: s.y }
+            : { points: s.points.map((p) => [...p]) },
         };
       }
-      redraw();
+      requestRender(false, true);
       return;
     }
 
@@ -434,7 +625,7 @@ export const useCanvas = (props) => {
         shapeType,
         createdAt: Date.now(),
       };
-      redraw();
+      requestRender(false, true);
       return;
     }
 
@@ -452,15 +643,13 @@ export const useCanvas = (props) => {
     clearTimeout(holdTimerRef.current);
     holdTimerRef.current = setTimeout(triggerShapeSnap, HOLD_DELAY);
 
-    redraw();
+    requestRender(false, true);
   };
 
   const draw = (e) => {
     if (!isDrawing || tool === "hand" || tool === "image" || tool === "text")
       return;
     const { x, y } = getMouseCoordinates(e);
-    const { offsetX, offsetY } = e.nativeEvent;
-    if (onCursorMove) onCursorMove(offsetX, offsetY);
 
     // draw — select branch
     if (tool === "select" && dragStateRef.current) {
@@ -469,7 +658,7 @@ export const useCanvas = (props) => {
       );
       if (!s) return;
       const drag = dragStateRef.current;
-      const isBox = s.tool === "image" || s.tool === "text";
+      const isBox = isBoxStroke(s);
 
       if (drag.mode === "move") {
         const dx = x - drag.startX;
@@ -521,7 +710,8 @@ export const useCanvas = (props) => {
           ]);
         }
       }
-      redraw();
+      indexStroke(s);
+      requestRender();
       return;
     }
 
@@ -538,7 +728,8 @@ export const useCanvas = (props) => {
           shapeStartRef.current,
           shapeEndRef.current,
         );
-        redraw();
+        progressRef.current.reset = true;
+        requestRender(false, true);
       }
       return;
     }
@@ -558,7 +749,7 @@ export const useCanvas = (props) => {
         }
       }
 
-      redraw();
+      requestRender(false, true);
     }
   };
 
@@ -595,33 +786,34 @@ export const useCanvas = (props) => {
 
       if (dragged && currentStroke.current) {
         strokesRef.current.push(currentStroke.current);
+        indexStroke(currentStroke.current);
         if (onStrokesChange) onStrokesChange([...strokesRef.current]);
+      } else if (currentStroke.current && onStrokeCancel) {
+        onStrokeCancel(currentStroke.current.id);
       }
       currentStroke.current = null;
       shapeStartRef.current = null;
       shapeEndRef.current = null;
-      redraw();
+      requestRender();
       return;
     }
 
     if (currentStroke.current) {
       strokesRef.current.push(currentStroke.current);
+      indexStroke(currentStroke.current);
       if (onStrokesChange) onStrokesChange([...strokesRef.current]);
       currentStroke.current = null;
       hasSnappedRef.current = false;
-      redraw();
+      requestRender();
     }
   };
 
   const clearCanvas = useCallback(() => {
-    const ctx = contextRef.current;
-    const canvas = canvasRef.current;
-    if (!ctx || !canvas) return;
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     strokesRef.current = [];
+    rebuildIndex();
+    requestRender();
     if (onStrokesChange) onStrokesChange([]);
-  }, [onStrokesChange]);
+  }, [rebuildIndex, requestRender, onStrokesChange]);
 
   const insertImage = useCallback(
     (imageUrl) => {
@@ -640,7 +832,7 @@ export const useCanvas = (props) => {
         const worldX = (rect.width / 2 - camera.x) / camera.scale - w / 2;
         const worldY = (rect.height / 2 - camera.y) / camera.scale - h / 2;
         imageCacheRef.current.set(imageUrl, img);
-        strokesRef.current.push({
+        const stroke = {
           id: crypto.randomUUID(),
           tool: "image",
           imageUrl,
@@ -649,20 +841,22 @@ export const useCanvas = (props) => {
           width: w,
           height: h,
           createdAt: Date.now(),
-        });
-        redraw();
+        };
+        strokesRef.current.push(stroke);
+        indexStroke(stroke);
+        requestRender(true, false);
         if (onStrokesChange) onStrokesChange([...strokesRef.current]);
       };
       img.src = imageUrl;
     },
-    [camera, redraw, onStrokesChange],
+    [camera, indexStroke, requestRender, onStrokesChange],
   );
   const addTextStroke = useCallback(
     (worldX, worldY, text, fontSize, color) => {
       // Ensure text is a string before calling trim()
       if (typeof text !== "string" || !text.trim()) return;
 
-      strokesRef.current.push({
+      const stroke = {
         id: crypto.randomUUID(),
         tool: "text",
         text,
@@ -671,14 +865,17 @@ export const useCanvas = (props) => {
         fontSize,
         color,
         createdAt: Date.now(),
-      });
-      redraw();
+      };
+      strokesRef.current.push(stroke);
+      indexStroke(stroke);
+      requestRender(true, false);
       if (onStrokesChange) onStrokesChange([...strokesRef.current]);
     },
-    [redraw, onStrokesChange],
+    [indexStroke, requestRender, onStrokesChange],
   );
   return {
     canvasRef,
+    overlayRef,
     startDrawing,
     draw,
     finishDrawing,

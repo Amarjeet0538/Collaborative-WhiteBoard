@@ -89,6 +89,22 @@ export const initSocket = (io) => {
       socket.to(boardId).emit('stroke-update', { stroke, socketId: socket.id });
     });
 
+    // In-progress stroke points, streamed while the author is still drawing
+    socket.on('stroke-progress', ({ boardId, stroke, from, points }) => {
+      if (!canEdit(socket, boardId) || !stroke?.id || !Array.isArray(points)) return;
+      socket.to(boardId).emit('stroke-progress', { stroke, from, points, socketId: socket.id });
+    });
+
+    socket.on('stroke-cancel', ({ boardId, id }) => {
+      if (!canEdit(socket, boardId)) return;
+      socket.to(boardId).emit('stroke-cancel', { id });
+    });
+
+    socket.on('stroke-erase', ({ boardId, ids }) => {
+      if (!canEdit(socket, boardId) || !Array.isArray(ids)) return;
+      socket.to(boardId).emit('stroke-erase', { ids, socketId: socket.id });
+    });
+
     socket.on('board-sync', ({ boardId, strokes }) => {
       if (!canEdit(socket, boardId) || !Array.isArray(strokes)) return;
       socket.to(boardId).emit('board-sync', { strokes, socketId: socket.id });
@@ -97,7 +113,8 @@ export const initSocket = (io) => {
     socket.on('cursor-move', ({ boardId, x, y }) => {
       const user = boardUsers[boardId]?.[socket.id];
       if (!user) return;
-      socket.to(boardId).emit('cursor-move', {
+      // volatile: drop stale cursor packets for slow clients instead of queueing them
+      socket.volatile.to(boardId).emit('cursor-move', {
         socketId: socket.id,
         username: user.username,
         color: user.color,

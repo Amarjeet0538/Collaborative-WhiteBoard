@@ -22,13 +22,8 @@
   https://www.goodnotes.com/
 
 https://github.com/TomHumphries/InfiniteCanvasWhiteboard/blob/master/index.html
-
 use this as ref -- https://dev.to/keyurparalkar/mastering-real-time-collaboration-building-figma-and-miro-inspired-features-with-supabase-57eh
-
 pan-and-zoon ref -- https://harrisonmilbradt.com/blog/canvas-panning-and-zooming
-
-landing page ref -- https://www.canva.com/online-whiteboard/
-
 https://www.instagram.com/reel/DVgsX7SAc8K/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==
 
 crdts
@@ -72,12 +67,10 @@ Right now, you redraw everything on every frame. For giant boards, we usually sp
 A Background Canvas: For finished strokes (only redraws when something changes).
 A Drawing Canvas: For the current line being drawn (updates every mouse move).
 
-make account settings good
-
+- [-] make account settings good
 - [-] show eraser and pen boundary
 - [-] export board
 - [-] add textbox image import
 - [-] selection tool and make shape dimention changable and del to delete the shape
 - [ ] live chat
-
 - [-] good backend service platform ditch render

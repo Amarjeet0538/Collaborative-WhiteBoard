@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { whiteboardApi } from "../api/whiteboard.api.js";
 import { useSocket } from "./useSocket.js";
 import useToast from "./useToast.js";
+import { createFrameStore } from "../utils/frameStore.js";
 
 export const useBoardSocket = (id, user, setStrokes) => {
   const { connect, disconnect, emit } = useSocket();
@@ -10,7 +11,9 @@ export const useBoardSocket = (id, user, setStrokes) => {
   const [boardName, setBoardName] = useState("Untitled");
   const [shareCode, setShareCode] = useState("");
   const [pendingRequests, setPendingRequests] = useState([]);
-  const [cursors, setCursors] = useState({});
+  // Kept outside React state so high-frequency socket events don't re-render the page
+  const [cursorStore] = useState(() => createFrameStore({}));
+  const [liveStrokes] = useState(() => createFrameStore(new Map()));
   const [presentUsers, setPresentUsers] = useState([]);
 
   useEffect(() => {
@@ -40,7 +43,30 @@ export const useBoardSocket = (id, user, setStrokes) => {
       setStrokes((prev) => [...prev, stroke]),
     );
 
-    // Full-array replace from a collaborator's erase/undo/redo
+    // A collaborator's stroke while it is being drawn: batches of points
+    // appended from index `from` (0 = replace, e.g. shapes and snaps)
+    socket.on("stroke-progress", ({ stroke, from, points, socketId }) => {
+      liveStrokes.set((map) => {
+        const existing = map.get(stroke.id);
+        if (existing && from > 0) existing.points.push(...points);
+        else map.set(stroke.id, { ...stroke, points, socketId });
+        return map;
+      });
+    });
+
+    socket.on("stroke-cancel", ({ id }) => {
+      liveStrokes.set((map) => {
+        map.delete(id);
+        return map;
+      });
+    });
+
+    socket.on("stroke-erase", ({ ids }) => {
+      const erased = new Set(ids);
+      setStrokes((prev) => prev.filter((s) => !erased.has(s.id)));
+    });
+
+    // Full-array replace from a collaborator's move/undo/redo
     socket.on("board-sync", ({ strokes }) => setStrokes(strokes));
 
     socket.on("connect_error", (err) => {
@@ -48,17 +74,21 @@ export const useBoardSocket = (id, user, setStrokes) => {
     });
 
     socket.on("cursor-move", ({ socketId, username, color, x, y }) => {
-      setCursors((prev) => ({
+      cursorStore.set((prev) => ({
         ...prev,
         [socketId]: { username, color, x, y },
       }));
     });
 
     socket.on("cursor-leave", ({ socketId }) => {
-      setCursors((prev) => {
+      cursorStore.set((prev) => {
         const next = { ...prev };
         delete next[socketId];
         return next;
+      });
+      liveStrokes.set((map) => {
+        for (const [id, s] of map) if (s.socketId === socketId) map.delete(id);
+        return map;
       });
     });
 
@@ -68,7 +98,7 @@ export const useBoardSocket = (id, user, setStrokes) => {
       socket.emit("leave-board", { boardId: id });
       disconnect();
     };
-  }, [id, user, connect, disconnect, setStrokes]);
+  }, [id, user, connect, disconnect, setStrokes, cursorStore, liveStrokes]);
 
   return {
     boardName,
@@ -76,7 +106,8 @@ export const useBoardSocket = (id, user, setStrokes) => {
     shareCode,
     pendingRequests,
     setPendingRequests,
-    cursors,
+    cursorStore,
+    liveStrokes,
     presentUsers,
     emit,
   };

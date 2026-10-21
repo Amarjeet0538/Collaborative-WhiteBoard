@@ -54,7 +54,8 @@ export default function WhiteboardPage() {
     shareCode,
     pendingRequests,
     setPendingRequests,
-    cursors,
+    cursorStore,
+    liveStrokes,
     presentUsers,
     emit,
   } = useBoardSocket(id, user, setStrokes);
@@ -126,8 +127,13 @@ export default function WhiteboardPage() {
         const latestStroke = newStrokes[newStrokes.length - 1];
         if (latestStroke)
           emit("stroke-update", { boardId: id, stroke: latestStroke });
+      } else if (newStrokes.length < strokes.length) {
+        // Strokes were erased/deleted — send only their ids
+        const kept = new Set(newStrokes.map((s) => s.id));
+        const ids = strokes.filter((s) => !kept.has(s.id)).map((s) => s.id);
+        emit("stroke-erase", { boardId: id, ids });
       } else {
-        // A stroke was erased — send the full array
+        // A stroke was moved/resized/snapped — send the full array
         emit("board-sync", { boardId: id, strokes: newStrokes });
       }
 
@@ -181,9 +187,16 @@ export default function WhiteboardPage() {
         eraserSize={eraserSize}
         loadStrokes={strokes}
         onStrokesChange={handleStrokesChange}
+        onStrokeProgress={(stroke, from, points) =>
+          emit("stroke-progress", { boardId: id, stroke, from, points })
+        }
+        onStrokeCancel={(strokeId) =>
+          emit("stroke-cancel", { boardId: id, id: strokeId })
+        }
         onCursorMove={(x, y) => emit("cursor-move", { boardId: id, x, y })}
         onCanvasPointerDown={() => setActivePanel(null)}
-        cursors={cursors}
+        cursorStore={cursorStore}
+        live={liveStrokes}
         camera={camera}
         textColor={textColor}
         textFontSize={textFontSize}

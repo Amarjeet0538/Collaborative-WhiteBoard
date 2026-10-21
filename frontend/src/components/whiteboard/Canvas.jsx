@@ -4,6 +4,7 @@ import {
   useRef,
   useState,
   useCallback,
+  useSyncExternalStore,
 } from "react";
 import { useCanvas } from "../../hooks/useCanvas";
 import { CANVAS_COLORS } from "../../utils/constants.js";
@@ -47,7 +48,8 @@ const Canvas = forwardRef((props, ref) => {
     tool,
     color = "#000000",
     readOnly,
-    cursors = {},
+    cursorStore,
+    onCursorMove,
     camera = { x: 0, y: 0, scale: 1 },
     overrideCursor,
     penSize = 5,
@@ -74,6 +76,7 @@ const Canvas = forwardRef((props, ref) => {
   // ── useCanvas ────────────────────────────────────────────────────────────
   const {
     canvasRef,
+    overlayRef,
     startDrawing,
     draw,
     finishDrawing,
@@ -85,6 +88,9 @@ const Canvas = forwardRef((props, ref) => {
   const [textEditor, setTextEditor] = useState(null);
 
   const customCursorRef = useRef(null);
+  // Latest pointer position in world space, sent at most once per frame
+  const pendingCursorRef = useRef(null);
+  const cursorFrameRef = useRef(null);
 
   useImperativeHandle(ref, () => ({
     clear: clearCanvas,
@@ -129,6 +135,20 @@ const Canvas = forwardRef((props, ref) => {
       customCursorRef.current.style.left = `${e.clientX - rect.left}px`;
       customCursorRef.current.style.top = `${e.clientY - rect.top}px`;
     }
+    if (onCursorMove) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      pendingCursorRef.current = {
+        x: (e.clientX - rect.left - camera.x) / camera.scale,
+        y: (e.clientY - rect.top - camera.y) / camera.scale,
+      };
+      if (cursorFrameRef.current === null) {
+        cursorFrameRef.current = requestAnimationFrame(() => {
+          cursorFrameRef.current = null;
+          const { x, y } = pendingCursorRef.current;
+          onCursorMove(x, y);
+        });
+      }
+    }
     if (!readOnly && draw) draw(e);
   };
 
@@ -172,19 +192,23 @@ const Canvas = forwardRef((props, ref) => {
     <div className="fixed inset-0 w-screen h-screen">
       <canvas
         ref={canvasRef}
+        className="absolute inset-0 w-full h-full"
+        style={{
+          background: backgroundColor,
+          backgroundSize: `${gridSize}px ${gridSize}px`,
+          backgroundPosition: `${camera.x}px ${camera.y}px`,
+        }}
+      />
+      <canvas
+        ref={overlayRef}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerLeaveOrCancel}
         onPointerLeave={handlePointerLeaveOrCancel}
         onPointerEnter={handlePointerEnter}
-        className="w-full h-full touch-none" // touch-none stops browser scroll interference
-        style={{
-          cursor: cursorStyle,
-          background: backgroundColor,
-          backgroundSize: `${gridSize}px ${gridSize}px`,
-          backgroundPosition: `${camera.x}px ${camera.y}px`,
-        }}
+        className="absolute inset-0 w-full h-full touch-none" // touch-none stops browser scroll interference
+        style={{ cursor: cursorStyle }}
       />
 
       {/* Dynamic cursor overlay */}
@@ -209,9 +233,7 @@ const Canvas = forwardRef((props, ref) => {
       <SnapToast snap={snapInfo} />
 
       {/* Remote cursors */}
-      {Object.entries(cursors).map(([id, c]) => (
-        <CursorOverlay key={id} cursor={c} />
-      ))}
+      {cursorStore && <RemoteCursors store={cursorStore} camera={camera} />}
 
       {textEditor && (
         <textarea
@@ -250,10 +272,24 @@ const Canvas = forwardRef((props, ref) => {
   );
 });
 
-const CursorOverlay = ({ cursor }) => (
+// Subscribes to cursor updates itself so they don't re-render the board.
+// Cursors arrive in world space and are projected with the local camera.
+const RemoteCursors = ({ store, camera }) => {
+  const cursors = useSyncExternalStore(store.subscribe, store.get);
+  return Object.entries(cursors).map(([id, c]) => (
+    <CursorOverlay
+      key={id}
+      cursor={c}
+      left={c.x * camera.scale + camera.x}
+      top={c.y * camera.scale + camera.y}
+    />
+  ));
+};
+
+const CursorOverlay = ({ cursor, left, top }) => (
   <div
     className="absolute pointer-events-none flex items-center gap-1"
-    style={{ left: cursor.x, top: cursor.y, transform: "translate(0, -100%)" }}
+    style={{ left, top, transform: "translate(0, -100%)" }}
   >
     <div
       className="w-2 h-2 rounded-full"
