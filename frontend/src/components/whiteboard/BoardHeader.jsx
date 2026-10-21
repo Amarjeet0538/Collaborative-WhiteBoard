@@ -198,7 +198,7 @@ export default function BoardHeader({
           >
             Share
             {presentUsers.length > 0 && (
-              <span className="flex items-center gap-1 bg-white/15 rounded-full px-2 py-0.5 text-xs font-semibold">
+              <span className="flex items-center gap-1 bg-background-highlight rounded-md px-2 py-0.5 text-xs font-semibold">
                 <Users size={11} />
                 {presentUsers.length}
               </span>
@@ -219,7 +219,7 @@ export default function BoardHeader({
                     onClick={handleCopy}
                     className={`flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all flex-shrink-0 ${
                       copied
-                        ? "bg-green-500/15 text-green-600"
+                        ? "bg-success/15 text-success"
                         : "bg-background hover:bg-background-highlight border border-border/60 text-foreground"
                     }`}
                   >

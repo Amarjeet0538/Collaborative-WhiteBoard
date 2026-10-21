@@ -71,7 +71,7 @@ export default function TextTool({
               className={`flex-1 h-8 rounded-lg text-xs font-medium transition-all cursor-pointer
                 ${
                   textFontSize === s
-                    ? "bg-primary text-background"
+                    ? "bg-primary text-primary-foreground"
                     : "bg-background-highlight text-foreground/60 hover:text-foreground"
                 }`}
             >

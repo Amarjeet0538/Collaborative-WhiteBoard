@@ -106,7 +106,7 @@ export default function JoinBoard() {
     <div className="relative w-screen h-screen overflow-hidden">
       <div className="absolute top-3 left-3 z-10 bg-background border border-border-muted rounded-md px-3 py-1 text-sm text-foreground flex items-center gap-2">
         <span>{board.name}</span>
-        <span className="text-xs text-foreground-muted bg-background-highlight px-2 py-0.5 rounded-full">
+        <span className="text-xs text-foreground-muted bg-background-highlight px-2 py-0.5 rounded-md">
           View only
         </span>
       </div>
@@ -115,7 +115,7 @@ export default function JoinBoard() {
         {requestStatus === "idle" && (
           <button
             onClick={handleRequestAccess}
-            className="bg-background text-foreground text-d text-sm px-4 py-2 rounded-md hover:bg-primary-hover transition-all cursor-pointer"
+            className="bg-primary text-primary-foreground font-semibold text-sm px-4 py-2 rounded-md hover:bg-primary-hover transition-all cursor-pointer"
           >
             {user ? "Request to Edit" : "Login to Edit"}
           </button>

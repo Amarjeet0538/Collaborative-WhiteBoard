@@ -175,8 +175,8 @@ export default function Card({
                   setIsOpen(false);
                   onDelete?.(e);
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500
-                hover:bg-red-500/10 transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-danger
+                hover:bg-danger/10 transition-colors"
               >
                 <Trash2 size={14} /> Delete
               </button>

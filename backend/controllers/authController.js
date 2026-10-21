@@ -1,5 +1,8 @@
 import crypto from "crypto";
 import User from "../models/User.js";
+import Whiteboard from "../models/Whiteboard.js";
+import Notification from "../models/Notification.js";
+import { uploadImage } from "../services/uploadService.js";
 import { hashPassword, comparePassword } from "../services/passwordService.js";
 import { generateToken } from "../services/tokenService.js";
 import { getProvider } from "../services/oauthService.js";
@@ -126,6 +129,53 @@ export const login = catchAsync(async (req, res) => {
 export const getMe = catchAsync(async (req, res) => {
   const user = await User.findById(req.user.id).select("-password");
   res.json(user);
+});
+
+export const updateProfile = catchAsync(async (req, res) => {
+  const { name, email } = req.body;
+
+  const taken = await User.findOne({ email, _id: { $ne: req.user.id } });
+  if (taken) throw ApiError.badRequest("Email already in use");
+
+  const update = { name, email };
+  if (req.file) update.profilePicture = await uploadImage(req.file.buffer);
+
+  const user = await User.findByIdAndUpdate(req.user.id, update, {
+    new: true,
+    runValidators: true,
+  });
+  if (!user) throw ApiError.notFound("User not found");
+  res.json(user);
+});
+
+export const changePassword = catchAsync(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const user = await User.findById(req.user.id).select("+password");
+  if (!user) throw ApiError.notFound("User not found");
+
+  // OAuth-only accounts have no password yet and may set one directly
+  if (
+    user.password &&
+    !(await comparePassword(currentPassword || "", user.password))
+  ) {
+    throw ApiError.badRequest("Current password is incorrect");
+  }
+
+  user.password = await hashPassword(newPassword);
+  await user.save();
+  res.json({ message: "Password updated" });
+});
+
+export const deleteAccount = catchAsync(async (req, res) => {
+  const id = req.user.id;
+  await Whiteboard.deleteMany({ owner: id });
+  await Whiteboard.updateMany(
+    {},
+    { $pull: { sharedWith: { userId: id }, pendingRequests: { userId: id } } },
+  );
+  await Notification.deleteMany({ $or: [{ recipient: id }, { sender: id }] });
+  await User.findByIdAndDelete(id);
+  res.json({ message: "Account deleted" });
 });
 
 const RESET_TOKEN_TTL = 15 * 60 * 1000;

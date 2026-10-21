@@ -14,11 +14,7 @@ export default function DarkModeToggle({ className = "" }) {
         text-foreground transition-all rounded-2xl shadow-sm
         active:scale-95 ${className}`}
     >
-      {isDark ? (
-        <Sun className="text-secondary" size={17} />
-      ) : (
-        <Moon className="text-primary" size={17} />
-      )}
+      {isDark ? <Sun size={17} /> : <Moon size={17} />}
     </button>
   );
 }

@@ -131,7 +131,7 @@ export default function Home() {
                 className="border border-border-muted/50 rounded-md p-3 bg-background focus:bg-background-highlight text-base sm:text-lg ring-foreground-muted focus:ring-1 focus:ring-border focus:outline-none w-full"
                 placeholder="Enter the code or Link"
               />
-              <button className="bg-primary p-2 text-md rounded-md hover:bg-primary-hover text-background cursor-pointer">
+              <button className="bg-primary p-2 text-md rounded-md hover:bg-primary-hover text-primary-foreground font-semibold cursor-pointer">
                 Join Board
               </button>
             </form>
@@ -140,7 +140,7 @@ export default function Home() {
 
         {/* My Whiteboards */}
         <div className="mt-8 w-full sm:w-11/12 md:w-3/4 flex flex-col gap-5 px-1 sm:px-0">
-          <span className="text-2xl sm:text-3xl font-heading text-foreground font-bold">
+          <span className="text-2xl sm:text-3xl font-heading text-foreground font-extrabold tracking-[-0.04em]">
             My WhiteBoards
           </span>
           <BoardFilters

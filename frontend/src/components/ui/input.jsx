@@ -15,13 +15,13 @@ export const Input = forwardRef(
             'w-full px-3 py-2 rounded-md bg-background border border-border-muted',
             'focus:outline-none focus:ring-1 focus:ring-border',
             'text-foreground placeholder:text-foreground-muted',
-            error && 'border-red-500 focus:ring-red-500',
+            error && 'border-danger focus:ring-danger',
             className
           )}
           {...props}
         />
         {error && (
-          <p className="mt-1 text-sm text-red-500">{error}</p>
+          <p className="mt-1 text-sm text-danger">{error}</p>
         )}
       </div>
     );

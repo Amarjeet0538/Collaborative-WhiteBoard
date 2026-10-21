@@ -48,7 +48,11 @@ const AppRouter = createBrowserRouter([
   },
   {
     path: "/settings",
-    element: <AccountSettings />,
+    element: (
+      <ProtectedRoute>
+        <AccountSettings />
+      </ProtectedRoute>
+    ),
   },
 ]);
 

@@ -33,7 +33,7 @@ export default function ImageTool({ boardId, onInsertImage }) {
         disabled={isUploading}
         onClick={() => fileInputRef.current?.click()}
         className="flex items-center justify-center gap-2 h-10 rounded-lg
-          bg-primary text-background hover:opacity-90
+          bg-primary text-primary-foreground hover:bg-primary-hover
           transition-all cursor-pointer text-sm font-semibold
           disabled:opacity-60 disabled:cursor-not-allowed"
       >

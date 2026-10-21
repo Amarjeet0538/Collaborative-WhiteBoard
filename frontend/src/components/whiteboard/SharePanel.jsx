@@ -79,7 +79,7 @@ export default function SharePanel({ boardId, pendingRequests, onRespond }) {
               onClick={() => handleRespond(req._id, true)}
               title="Approve"
               className="w-8 h-8 flex items-center justify-center rounded-xl
-                bg-green-500/10 hover:bg-green-500 text-green-600 hover:text-white
+                bg-success/10 hover:bg-success text-success hover:text-background
                 transition-all active:scale-90 cursor-pointer"
             >
               <Check size={14} strokeWidth={2.5} />
@@ -88,7 +88,7 @@ export default function SharePanel({ boardId, pendingRequests, onRespond }) {
               onClick={() => handleRespond(req._id, false)}
               title="Deny"
               className="w-8 h-8 flex items-center justify-center rounded-xl
-                bg-background-highlight hover:bg-red-500 text-foreground/60 hover:text-white
+                bg-background-highlight hover:bg-danger text-foreground/60 hover:text-background
                 transition-all active:scale-90 cursor-pointer"
             >
               <X size={14} strokeWidth={2.5} />

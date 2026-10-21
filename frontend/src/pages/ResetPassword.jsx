@@ -74,7 +74,7 @@ export default function ResetPassword() {
             <button
               type="submit"
               disabled={submitting}
-              className="cursor-pointer bg-primary shadow-sm hover:bg-primary/70 border border-border-muted hover:border-border/60 rounded-md p-2 flex justify-center items-center text-background text-md w-full disabled:opacity-60"
+              className="cursor-pointer bg-primary shadow-sm hover:bg-primary-hover rounded-md p-2 flex justify-center items-center text-primary-foreground font-semibold text-md w-full disabled:opacity-60"
             >
               {submitting ? "Updating..." : "Update password"}
             </button>

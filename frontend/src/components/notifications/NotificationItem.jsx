@@ -11,10 +11,10 @@ const timeAgo = (date) => {
 };
 
 const TYPE_CONFIG = {
-  request_received: { dot: "bg-blue-400" },
-  request_approved: { dot: "bg-green-400" },
-  request_denied: { dot: "bg-red-400" },
-  added_to_board: { dot: "bg-violet-400" },
+  request_received: { dot: "bg-primary" },
+  request_approved: { dot: "bg-success" },
+  request_denied: { dot: "bg-danger" },
+  added_to_board: { dot: "bg-info" },
 };
 
 export default function NotificationItem({
@@ -80,8 +80,8 @@ export default function NotificationItem({
                 onAction(_id, "accept", board?._id);
               }}
               className="flex items-center gap-1.5 h-7 px-3 rounded-lg
-                bg-primary text-background text-xs font-semibold
-                hover:opacity-90 active:scale-95 transition-all cursor-pointer"
+                bg-primary text-primary-foreground text-xs font-semibold
+                hover:bg-primary-hover active:scale-95 transition-all cursor-pointer"
             >
               <Check size={12} strokeWidth={2.5} /> Accept
             </button>
@@ -93,7 +93,7 @@ export default function NotificationItem({
               className="flex items-center gap-1.5 h-7 px-3 rounded-lg
                 bg-background-highlight border border-border/50
                 text-foreground/60 text-xs font-semibold
-                hover:bg-red-500 hover:text-white hover:border-red-500
+                hover:bg-danger hover:text-background hover:border-danger
                 active:scale-95 transition-all cursor-pointer"
             >
               <X size={12} strokeWidth={2.5} /> Reject
@@ -109,7 +109,7 @@ export default function NotificationItem({
           onDelete(_id);
         }}
         className="flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-lg
-          text-foreground/20 hover:text-red-500 hover:bg-red-500/10
+          text-foreground/20 hover:text-danger hover:bg-danger/10
           opacity-0 group-hover:opacity-100
           transition-all active:scale-90 cursor-pointer mt-0.5"
       >

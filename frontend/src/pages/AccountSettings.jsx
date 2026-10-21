@@ -1,6 +1,5 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
-  User,
   Mail,
   Lock,
   Camera,
@@ -13,6 +12,10 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import DarkModeToggle from "@/components/DarkModeToggle";
+import { useAuth } from "@/hooks/useAuth";
+import useToast from "@/hooks/useToast";
+import { authApi } from "@/api/auth.api";
+import { storage } from "@/utils/storage";
 
 // ─── tiny section wrapper ────────────────────────────────────────────────────
 function Section({ title, description, children }) {
@@ -45,17 +48,30 @@ const inputCls = `w-full px-3 py-2 text-sm rounded-lg bg-background
   placeholder:text-foreground/30`;
 
 // ─── main page ───────────────────────────────────────────────────────────────
-export default function AccountSettings({ currentUser, onSave }) {
+export default function AccountSettings() {
   const navigate = useNavigate();
+  const { user, login, logout } = useAuth();
+  const toast = useToast();
 
   /* profile state */
-  const [name, setName] = useState(currentUser?.name ?? "");
-  const [email, setEmail] = useState(currentUser?.email ?? "");
-  const [bio, setBio] = useState(currentUser?.bio ?? "");
+  const [name, setName] = useState(user?.name ?? "");
+  const [email, setEmail] = useState(user?.email ?? "");
   const [avatarPreview, setAvatarPreview] = useState(
-    currentUser?.profilePicture ?? null,
+    user?.profilePicture ?? null,
   );
   const [avatarFile, setAvatarFile] = useState(null);
+
+  // Stored user may lack profilePicture, so load the fresh profile once
+  useEffect(() => {
+    authApi
+      .getMe()
+      .then((me) => {
+        setName(me.name);
+        setEmail(me.email);
+        setAvatarPreview(me.profilePicture ?? null);
+      })
+      .catch(() => {});
+  }, []);
 
   /* password state */
   const [currentPw, setCurrentPw] = useState("");
@@ -93,15 +109,21 @@ export default function AccountSettings({ currentUser, onSave }) {
             const fd = new FormData();
             fd.append("name", name.trim());
             fd.append("email", email.trim());
-            fd.append("bio", bio.trim());
             fd.append("avatar", avatarFile);
             return fd;
           })()
-        : { name: name.trim(), email: email.trim(), bio: bio.trim() };
+        : { name: name.trim(), email: email.trim() };
 
-      await onSave?.(payload);
+      const me = await authApi.updateProfile(payload);
+      login(
+        { ...user, name: me.name, email: me.email, profilePicture: me.profilePicture },
+        storage.getToken(),
+      );
+      setAvatarFile(null);
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      toast.error(err.message);
     } finally {
       setSaving(false);
     }
@@ -123,7 +145,7 @@ export default function AccountSettings({ currentUser, onSave }) {
 
     setSaving(true);
     try {
-      await onSave?.({ currentPassword: currentPw, newPassword: newPw });
+      await authApi.changePassword(currentPw, newPw);
       setCurrentPw("");
       setNewPw("");
       setConfirmPw("");
@@ -133,6 +155,16 @@ export default function AccountSettings({ currentUser, onSave }) {
       setPwError(err?.message ?? "Failed to update password.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      await authApi.deleteAccount();
+      logout();
+      navigate("/");
+    } catch (err) {
+      toast.error(err.message);
     }
   };
 
@@ -152,7 +184,7 @@ export default function AccountSettings({ currentUser, onSave }) {
           <h1 className="text-sm font-semibold">Account Settings</h1>
 
           {saved && (
-            <span className="ml-auto text-xs text-emerald-500 font-medium animate-in fade-in">
+            <span className="ml-auto text-xs text-success font-medium animate-in fade-in">
               Saved ✓
             </span>
           )}
@@ -166,7 +198,7 @@ export default function AccountSettings({ currentUser, onSave }) {
         {/* ── profile section ── */}
         <Section
           title="Profile"
-          description="Update your display name, email, and bio."
+          description="Update your display name, email, and photo."
         >
           {/* avatar */}
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
@@ -237,26 +269,13 @@ export default function AccountSettings({ currentUser, onSave }) {
               </div>
             </Field>
 
-            <Field label="Bio">
-              <textarea
-                className={`${inputCls} resize-none h-20`}
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                placeholder="Tell your team a little about yourself…"
-                maxLength={200}
-              />
-              <span className="text-xs text-foreground/30 text-right">
-                {bio.length}/200
-              </span>
-            </Field>
-
             <div className="flex justify-end">
               <button
                 type="submit"
                 disabled={saving}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm
-                font-medium bg-primary text-background
-                hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50"
+                font-medium bg-primary text-primary-foreground
+                hover:bg-primary-hover active:scale-95 transition-all disabled:opacity-50"
               >
                 <Save size={14} />
                 {saving ? "Saving…" : "Save changes"}
@@ -282,8 +301,7 @@ export default function AccountSettings({ currentUser, onSave }) {
                   type={showCurrentPw ? "text" : "password"}
                   value={currentPw}
                   onChange={(e) => setCurrentPw(e.target.value)}
-                  placeholder="••••••••"
-                  required
+                  placeholder="Leave blank if you sign in with Google/GitHub"
                 />
                 <button
                   type="button"
@@ -332,15 +350,15 @@ export default function AccountSettings({ currentUser, onSave }) {
               />
             </Field>
 
-            {pwError && <p className="text-xs text-red-500">{pwError}</p>}
+            {pwError && <p className="text-xs text-danger">{pwError}</p>}
 
             <div className="flex justify-end">
               <button
                 type="submit"
                 disabled={saving}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm
-                font-medium bg-primary text-background
-                hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50"
+                font-medium bg-primary text-primary-foreground
+                hover:bg-primary-hover active:scale-95 transition-all disabled:opacity-50"
               >
                 <Lock size={14} />
                 {saving ? "Updating…" : "Update password"}
@@ -353,7 +371,7 @@ export default function AccountSettings({ currentUser, onSave }) {
         <Section title="Danger zone">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
-              <p className="text-sm font-medium text-red-500">Delete account</p>
+              <p className="text-sm font-medium text-danger">Delete account</p>
               <p className="text-xs text-foreground/50 mt-0.5">
                 Permanently remove your account and all associated data. This
                 cannot be undone.
@@ -364,14 +382,14 @@ export default function AccountSettings({ currentUser, onSave }) {
               <button
                 onClick={() => setDeleteConfirm(true)}
                 className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-lg
-                text-xs font-medium text-red-500 border border-red-500/30
-                hover:bg-red-500/10 active:scale-95 transition-all"
+                text-xs font-medium text-danger border border-danger/30
+                hover:bg-danger/10 active:scale-95 transition-all"
               >
                 <Trash2 size={13} /> Delete
               </button>
             ) : (
               <div className="flex-shrink-0 flex flex-col items-end gap-2">
-                <div className="flex items-center gap-1 text-xs text-red-500">
+                <div className="flex items-center gap-1 text-xs text-danger">
                   <AlertTriangle size={12} /> Are you sure?
                 </div>
                 <div className="flex gap-2">
@@ -383,11 +401,9 @@ export default function AccountSettings({ currentUser, onSave }) {
                     Cancel
                   </button>
                   <button
-                    onClick={() => {
-                      /* call your delete account API here */
-                    }}
+                    onClick={handleDeleteAccount}
                     className="px-3 py-1.5 rounded-lg text-xs font-medium
-                    bg-red-500 text-white hover:bg-red-600 active:scale-95 transition-all"
+                    bg-danger text-background hover:opacity-90 active:scale-95 transition-all"
                   >
                     Yes, delete
                   </button>

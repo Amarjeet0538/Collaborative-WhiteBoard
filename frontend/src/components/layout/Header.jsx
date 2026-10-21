@@ -60,7 +60,7 @@ export default function Header() {
                 <hr className="my-2 border-t border-border" />
                 <button
                   onClick={handleLogout}
-                  className="py-2 px-1 w-full hover:bg-red-500 hover:text-white rounded-md text-sm cursor-pointer"
+                  className="py-2 px-1 w-full hover:bg-danger hover:text-background rounded-md text-sm cursor-pointer"
                 >
                   Logout
                 </button>
@@ -70,7 +70,7 @@ export default function Header() {
         ) : (
           <button
             onClick={() => navigate("/login")}
-            className="border border-border-muted py-2 px-3 sm:px-4 rounded-md bg-primary cursor-pointer text-background hover:bg-background hover:text-primary hover:border-primary transition-all whitespace-nowrap"
+            className="border border-border-muted py-2 px-3 sm:px-4 rounded-md bg-primary cursor-pointer text-primary-foreground hover:bg-background hover:text-primary hover:border-primary transition-all whitespace-nowrap"
           >
             Login
           </button>

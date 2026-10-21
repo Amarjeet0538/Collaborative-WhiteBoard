@@ -33,6 +33,25 @@ export const authApi = {
     return apiFetch('/auth/me');
   },
 
+  // body: FormData (with avatar) or { name, email }
+  updateProfile: async (body) => {
+    return apiFetch('/auth/me', {
+      method: 'PATCH',
+      body: body instanceof FormData ? body : JSON.stringify(body),
+    });
+  },
+
+  changePassword: async (currentPassword, newPassword) => {
+    return apiFetch('/auth/me/password', {
+      method: 'PATCH',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  },
+
+  deleteAccount: async () => {
+    return apiFetch('/auth/me', { method: 'DELETE' });
+  },
+
   // Full-page redirect target that starts the Google/GitHub OAuth flow
   oauthUrl: (provider) =>
     `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/${provider}`,

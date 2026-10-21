@@ -35,7 +35,7 @@ export default function NotificationBell() {
       >
         <Bell className="hover:text-primary" size={17} />
         {unreadCount > 0 && (
-          <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-background" />
+          <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-primary rounded-full border-2 border-background" />
         )}
       </button>
 

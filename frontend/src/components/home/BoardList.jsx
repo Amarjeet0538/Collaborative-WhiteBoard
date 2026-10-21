@@ -98,7 +98,7 @@ export default function BoardList({ boards, loading, onDelete, onRename }) {
                   onClick={() => setCurrentPage(page)}
                   className={`w-9 h-9 rounded-xl text-sm font-medium transition-all active:scale-95 ${
                     isCurrent
-                      ? "bg-primary text-background shadow-sm"
+                      ? "bg-primary text-primary-foreground shadow-sm"
                       : "text-foreground/50 hover:text-foreground hover:bg-background-highlight"
                   }`}
                 >

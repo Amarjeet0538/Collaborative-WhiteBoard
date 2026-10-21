@@ -103,7 +103,7 @@ export default function Login() {
             : "Enter your email to sign in to your account"}
         </div>
 
-        <div className="bg-background p-6 sm:p-8 rounded-xl text-foreground shadow-sm border border-black/10 w-full max-w-110">
+        <div className="bg-background p-6 sm:p-8 rounded-xl text-foreground shadow-sm border border-border-muted w-full max-w-110">
           <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6">
             <button
               className="cursor-pointer bg-background shadow-sm hover:shadow-md border border-border-muted hover:border-border/60 rounded-md p-2 flex justify-center items-center gap-2 sm:gap-4 hover:bg-background-highlight text-sm sm:text-md"
@@ -173,7 +173,7 @@ export default function Login() {
             </div>
             <button
               type="submit"
-              className="cursor-pointer bg-primary shadow-sm hover:bg-primary/70 border border-border-muted hover:border-border/60 rounded-md p-2 flex justify-center items-center gap-4 text-background text-md w-full"
+              className="cursor-pointer bg-primary shadow-sm hover:bg-primary-hover rounded-md p-2 flex justify-center items-center gap-4 text-primary-foreground font-semibold text-md w-full"
             >
               {isSignUp ? "Sign up" : "Sign in"}
             </button>

@@ -23,12 +23,12 @@ function ToolBtn({ active, onClick, title, children, className = "" }) {
     <button
       onClick={onClick}
       title={title}
-      className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all cursor-pointer
-        hover:bg-background-highlight active:scale-90
+      className={`w-9 h-9 flex items-center justify-center rounded-md transition-all cursor-pointer
+        active:scale-90
         ${
           active
-            ? "bg-background-highlight text-primary-foreground shadow-sm"
-            : "text-foreground/70 hover:text-foreground"
+            ? "bg-primary text-primary-foreground shadow-sm hover:bg-primary-hover"
+            : "text-foreground/70 hover:text-foreground hover:bg-background-highlight"
         } ${className}`}
     >
       {children}

@@ -43,7 +43,7 @@ export default function ShapesTool({
               className={`aspect-square rounded-xl flex items-center justify-center transition-all cursor-pointer border
                 ${
                   shapeType === id
-                    ? "bg-primary text-background border-primary"
+                    ? "bg-primary text-primary-foreground border-primary"
                     : "bg-background-highlight text-foreground/60 border-border-muted/40 hover:text-foreground hover:border-border"
                 }`}
             >

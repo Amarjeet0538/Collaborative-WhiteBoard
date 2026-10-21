@@ -40,6 +40,19 @@ export const resetPasswordValidation = [
   validate,
 ];
 
+export const updateProfileValidation = [
+  body('name').trim().notEmpty().withMessage('Name is required'),
+  body('email').trim().toLowerCase().isEmail().withMessage('Invalid email'),
+  validate,
+];
+
+export const changePasswordValidation = [
+  body('newPassword')
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters'),
+  validate,
+];
+
 export const whiteboardIdValidation = [
   param('id').isMongoId().withMessage('Invalid whiteboard ID'),
   validate,

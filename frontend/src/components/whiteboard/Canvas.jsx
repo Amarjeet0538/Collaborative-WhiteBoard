@@ -27,8 +27,8 @@ const SnapToast = ({ snap }) => {
   return (
     <div
       className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50
-                 flex items-center gap-2 px-4 py-2 rounded-full
-                 bg-black/80 text-white text-sm font-medium
+                 flex items-center gap-2 px-4 py-2 rounded-md
+                 bg-foreground text-background text-sm font-semibold
                  pointer-events-none select-none
                  animate-fade-in-up"
       style={{ backdropFilter: "blur(8px)" }}

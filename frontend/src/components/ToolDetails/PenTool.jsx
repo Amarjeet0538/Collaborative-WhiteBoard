@@ -81,7 +81,7 @@ export default function PenTool({ color, setColor, penSize, setPenSize }) {
               className={`flex-1 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer
                 ${
                   penSize === s
-                    ? "bg-primary text-background"
+                    ? "bg-primary text-primary-foreground"
                     : "bg-background-highlight text-foreground/60 hover:text-foreground"
                 }`}
             >

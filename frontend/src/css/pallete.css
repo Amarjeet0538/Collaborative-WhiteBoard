@@ -1,86 +1,63 @@
+/* App palette, matched to the landing page (components/landing/landing.css) */
+
 :root {
   /* Base Canvas & Text */
-  --background: hsl(300 0% 93%);
-  --foreground: hsl(330 0% 4%);
+  --background: #ffffff;
+  --foreground: #0a0a0a;
 
   /* Muted/Highlight Canvas & Text */
-  /*--background-muted: hsl(300 10% 90%);
-  --background-highlight: hsl(300 50% 93%);*/
-  --background-highlight: hsl(300 0% 95%);
-  --background-muted: hsl(300 0% 90%);
-  --foreground-highlighted: hsl(330 0% 1%);
-  --foreground-muted: hsl(0 0% 28%);
+  --background-highlight: #f2f2f2;
+  --background-muted: #e6e6e6;
+  --foreground-highlighted: #000000;
+  --foreground-muted: #5c5c5c;
 
   /* Borders */
-  --border: hsl(300 0% 30%);
-  --border-muted: hsl(340 0% 62%);
+  --border: #737373;
+  --border-muted: #d9d9d9;
 
   /* Brand Colors (with Hover states) */
-  --primary: hsl(219 51% 32%);
-  --primary-hover: hsl(219 51% 42%); /* +10% lightness */
-  --secondary: hsl(43 100% 40%);
-  --secondary-hover: hsl(43 100% 25%); /* +10% lightness */
+  --primary: #d92b21;
+  --primary-hover: #b8231b;
+  --primary-foreground: #ffffff;
+  --secondary: #e6e6e6;
+  --secondary-hover: #d9d9d9;
+  --secondary-foreground: #0a0a0a;
 
   /* Semantic Colors */
-  --danger: hsl(9 21% 41%);
-  --warning: hsl(52 23% 34%);
-  --success: hsl(147 19% 36%);
-  --info: hsl(217 22% 41%);
-
-  /* Gradients */
-  --gradient: linear-gradient(
-    0deg,
-    var(--background) 95%,
-    var(--background-highlight)
-  );
-  --gradient-hover: linear-gradient(
-    0deg,
-    var(--background),
-    var(--background-highlight)
-  );
+  --danger: #b8231b;
+  --warning: #8a6100;
+  --success: #1f7a4d;
+  --info: #5c5c5c;
 }
 
 body.dark {
   /* Base Canvas & Text */
-  --background: hsl(0 0% 6%);
-  --foreground: hsl(0 0% 93%);
+  --background: #0e0e0e;
+  --foreground: #f2f2f2;
 
   /* Muted/Highlight Canvas & Text */
-  --background-muted: hsl(0 0% 3%);
-  --background-highlight: hsl(0 0% 8%);
-  --foreground-highlighted: hsl(330 0% 100%);
-  --foreground-muted: hsl(300 0% 69%);
+  --background-highlight: #1b1b1b;
+  --background-muted: #070707;
+  --foreground-highlighted: #ffffff;
+  --foreground-muted: #a6a6a6;
 
   /* Borders */
-  --border: hsl(0 0% 28%);
-  --border-muted: hsl(300 0% 18%);
+  --border: #5c5c5c;
+  --border-muted: #333333;
 
   /* Brand Colors (with Hover states) */
-  --primary: hsl(219 78% 75%);
-  --primary-hover: hsl(219 78% 81%); /* +10% lightness */
-  --secondary: hsl(39 54% 61%);
-  --secondary-hover: hsl(39 54% 71%); /* +10% lightness */
+  --primary: #d92b21;
+  --primary-hover: #ee3a2f;
+  --primary-foreground: #ffffff;
+  --secondary: #262626;
+  --secondary-hover: #333333;
+  --secondary-foreground: #f2f2f2;
 
   /* Semantic Colors */
-  --danger: hsl(9 26% 64%);
-  --warning: hsl(52 19% 57%);
-  --success: hsl(146 17% 59%);
-  --info: hsl(217 28% 65%);
-
-  /* Gradients & Shadows */
-  --gradient: linear-gradient(
-    0deg,
-    var(--background) 95%,
-    var(--background-highlight)
-  );
-  --gradient-hover: linear-gradient(
-    0deg,
-    var(--background),
-    var(--background-highlight)
-  );
-  --shadow-s: var(--background-highlight);
-  --shadow-m: var(--background-highlight);
-  --shadow-l: var(--background-highlight);
+  --danger: #ff6b61;
+  --warning: #e0b04c;
+  --success: #5cc08a;
+  --info: #a6a6a6;
 }
 
 @theme inline {
@@ -97,12 +74,41 @@ body.dark {
 
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
 
   --color-secondary: var(--secondary);
   --color-secondary-hover: var(--secondary-hover);
+  --color-secondary-foreground: var(--secondary-foreground);
 
   --color-danger: var(--danger);
   --color-warning: var(--warning);
   --color-success: var(--success);
   --color-info: var(--info);
+
+  /* shadcn/ui names, used by components/ui */
+  --color-destructive: var(--danger);
+  --color-accent: var(--background-highlight);
+  --color-accent-foreground: var(--foreground);
+  --color-input: var(--border-muted);
+  --color-ring: var(--primary);
+}
+
+/* Landing radii: 8px panels, 6px controls */
+@theme {
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.5rem;
+  --radius-3xl: 0.5rem;
+}
+
+@layer base {
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
 }
