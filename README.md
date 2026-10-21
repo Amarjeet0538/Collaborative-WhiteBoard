@@ -2,9 +2,7 @@
 
 A real-time collaborative whiteboard where multiple people can draw, sketch and brainstorm on the same infinite canvas. A built-in ML model recognizes hand-drawn shapes and snaps them into clean geometry.
 
-**Live:** https://lienwand.vercel.app
-
----
+## **Live:** https://lienwand.vercel.app
 
 ## Features
 
@@ -24,12 +22,12 @@ A real-time collaborative whiteboard where multiple people can draw, sketch and 
 
 ## Tech Stack
 
-| Layer     | Tech |
-| --------- | ---- |
+| Layer     | Tech                                                                                                               |
+| --------- | ------------------------------------------------------------------------------------------------------------------ |
 | Frontend  | React 19, Vite, Tailwind CSS v4, shadcn/ui (Radix), Framer Motion, React Router, React Hook Form, Socket.io client |
-| Backend   | Node.js, Express 5, Socket.io, MongoDB + Mongoose, JWT, express-validator, Multer, Cloudinary, Nodemailer |
-| ML server | Python, FastAPI, TensorFlow/Keras CNN, trained on Google QuickDraw (circle, square, triangle, line) |
-| Hosting   | Frontend on Vercel, backend on Azure Web App (GitHub Actions) |
+| Backend   | Node.js, Express 5, Socket.io, MongoDB + Mongoose, JWT, express-validator, Multer, Cloudinary, Nodemailer          |
+| ML server | Python, FastAPI, TensorFlow/Keras CNN, trained on Google QuickDraw (circle, square, triangle, line)                |
+| Hosting   | Frontend on Vercel, backend on Azure Web App (GitHub Actions)                                                      |
 
 ---
 
@@ -170,11 +168,11 @@ Set `FRONTEND_URL` (comma-separated) to change the allowed CORS origins.
 
 All routes are prefixed with `/api`. Every route except register, login, password reset and OAuth needs an `Authorization: Bearer <token>` header.
 
-| Area          | Endpoints |
-| ------------- | --------- |
-| Auth          | `POST /auth/register`, `POST /auth/login`, `POST /auth/forgot-password`, `POST /auth/reset-password`, `GET/PATCH/DELETE /auth/me`, `PATCH /auth/me/password`, `GET /auth/:provider`, `GET /auth/:provider/callback` |
+| Area          | Endpoints                                                                                                                                                                                                                                                           |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Auth          | `POST /auth/register`, `POST /auth/login`, `POST /auth/forgot-password`, `POST /auth/reset-password`, `GET/PATCH/DELETE /auth/me`, `PATCH /auth/me/password`, `GET /auth/:provider`, `GET /auth/:provider/callback`                                                 |
 | Whiteboards   | `GET /whiteboards`, `POST /whiteboards`, `GET/PUT/DELETE /whiteboards/:id`, `GET /whiteboards/join/:code`, `POST /whiteboards/:id/request-access`, `POST /whiteboards/:id/respond-request`, `POST /whiteboards/:id/upload-image`, `POST /whiteboards/:id/thumbnail` |
-| Notifications | `GET /notifications`, `GET /notifications/unread-count`, `PATCH /notifications/:id/read`, `PATCH /notifications/read-all`, `DELETE /notifications/:id`, `POST /notifications/:id/action` |
+| Notifications | `GET /notifications`, `GET /notifications/unread-count`, `PATCH /notifications/:id/read`, `PATCH /notifications/read-all`, `DELETE /notifications/:id`, `POST /notifications/:id/action`                                                                            |
 
 **Socket events**: `join-board`, `leave-board`, `stroke-update`, `board-sync` and `cursor-move` are sent by the client. `presence-update` and `cursor-leave` are sent by the server.
 
